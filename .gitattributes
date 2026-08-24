@@ -1,0 +1,31 @@
+# Auto-detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Explicitly declare text files that must use LF
+*.sh text eol=lf
+*.bash text eol=lf
+gradlew text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+
+# Declare binary files to ensure Git never alters CRLF/LF line endings
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.so binary
+*.aar binary
+*.apk binary
+*.aab binary
+*.zip binary
