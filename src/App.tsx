@@ -151,7 +151,7 @@ export default function App() {
   };
 
   return (
-    <div className="w-full min-h-[100dvh] h-[100dvh] bg-white text-stone-950 overflow-hidden font-sans relative flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="w-full h-full h-[100dvh] max-h-[100dvh] bg-white text-stone-950 overflow-hidden font-sans relative flex flex-col selection:bg-emerald-100 selection:text-emerald-900 overscroll-none touch-none">
       {/* Top Application Header */}
       <Header
         currentDocTitle={currentDoc.title}

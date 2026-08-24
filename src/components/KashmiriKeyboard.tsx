@@ -131,6 +131,8 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
       className="relative w-full bg-[#e8e6df] border-t border-stone-300 shadow-2xl z-40 select-none pb-1 flex flex-col font-sans"
       style={{
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.25rem)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
       }}
       dir="rtl"
     >

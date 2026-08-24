@@ -87,7 +87,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
 
   return (
     <div
-      className="absolute top-12 left-3 sm:left-4 z-40 w-80 bg-white rounded-2xl shadow-2xl border-2 border-stone-300 p-3 flex flex-col gap-2.5 animate-in slide-in-from-top-2"
+      className="absolute top-12 left-3 sm:left-4 z-40 w-80 max-h-[calc(100dvh-5rem)] bg-white rounded-2xl shadow-2xl border-2 border-stone-300 p-3 flex flex-col gap-2.5 animate-in slide-in-from-top-2 overflow-hidden"
       dir="rtl"
     >
       {/* Header */}
@@ -155,7 +155,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
       )}
 
       {/* Layers List */}
-      <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-0.5">
+      <div className="flex flex-col gap-1.5 max-h-64 sm:max-h-80 overflow-y-auto custom-scrollbar touch-pan-y overscroll-contain pr-0.5 flex-1 min-h-0">
         {sortedLayers.map((layer, index) => {
           const isSelected = effectiveSelectedIds.includes(layer.id);
           const snippet = layer.text.slice(0, 22) || 'خالی متن';

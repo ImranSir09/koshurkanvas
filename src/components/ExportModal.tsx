@@ -250,9 +250,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       : SOCIAL_SIZES.find((s) => s.id === selectedSize) || SOCIAL_SIZES[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/55 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/55 backdrop-blur-xs animate-in fade-in duration-150 overscroll-none touch-none">
       <div
         className="w-full max-w-2xl max-h-[92vh] bg-white border border-stone-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-stone-900"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0rem)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
+        }}
         dir="rtl"
       >
         {/* Modal Header */}

@@ -63,8 +63,15 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white border border-stone-200 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200 overscroll-none touch-none">
+      <div
+        className="bg-white border border-stone-200 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0rem)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
+        }}
+      >
         {/* Modal Header */}
         <div className="px-4 py-3.5 bg-stone-900 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">

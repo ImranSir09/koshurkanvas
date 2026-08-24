@@ -68,6 +68,8 @@ export const Header: React.FC<HeaderProps> = ({
       className="w-full bg-white border-b border-stone-300 px-3 sm:px-4 h-12 sm:h-13 flex items-center justify-between gap-2 select-none z-30 shrink-0 shadow-2xs backdrop-blur-md relative"
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0px), 0.2rem)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px), 0.75rem)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px), 0.75rem)',
       }}
       dir="rtl"
     >

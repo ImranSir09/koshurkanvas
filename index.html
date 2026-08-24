@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="ks" dir="rtl">
+<html lang="ks" dir="rtl" class="h-full w-full overflow-hidden select-none touch-none">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
     <title>کٲشُر لیٚکھُن سٹوڈیو — Kashur Lekhun Studio</title>
     <meta name="description" content="Dedicated Kashmiri Unicode writing editor, Noto Nastaliq Urdu typography, custom keyboard, and visual design studio." />
     <link rel="manifest" href="manifest.json" crossorigin="anonymous" />
@@ -39,8 +39,8 @@
       }(window.location));
     </script>
   </head>
-  <body class="bg-white text-stone-900 antialiased overflow-x-hidden selection:bg-emerald-500/20 selection:text-emerald-900">
-    <div id="root"></div>
+  <body class="bg-white text-stone-900 antialiased selection:bg-emerald-500/20 selection:text-emerald-900 fixed inset-0 w-full h-[100dvh] max-h-[100dvh] overflow-hidden overscroll-none touch-none select-none">
+    <div id="root" class="w-full h-full h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col relative"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -33,9 +33,14 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 overscroll-none touch-none">
       <div
         className="w-full max-w-lg bg-white border border-stone-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0rem)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
+        }}
         dir="rtl"
       >
         {/* Header */}

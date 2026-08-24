@@ -367,7 +367,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
   if (!isOpen && !isClosing) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/45 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/45 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in overscroll-none touch-none">
       {/* Backdrop tap to close */}
       <div
         className="fixed inset-0"
@@ -386,6 +386,9 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
             ? `translateY(${Math.max(0, dragY)}px)`
             : 'translateY(0)',
           transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
         }}
         className="relative z-10 w-full max-w-2xl mx-auto bg-white rounded-t-2xl border-t border-x border-stone-200 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden text-stone-900 animate-in slide-in-from-bottom duration-250 ease-out select-none"
       >

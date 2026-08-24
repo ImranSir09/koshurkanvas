@@ -269,6 +269,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
       className="w-full bg-white border-t-2 border-stone-300 shadow-xl z-30 flex flex-col shrink-0"
       style={{
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.25rem)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
       }}
       dir="ltr"
     >

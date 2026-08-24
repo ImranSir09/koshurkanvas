@@ -939,7 +939,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   const totalScale = parseFloat((autoFitScale * zoomScale).toFixed(3));
 
   return (
-    <div className="relative flex flex-col w-full h-full bg-[#f4f3ee] overflow-hidden font-sans select-none">
+    <div className="relative flex flex-col w-full h-full min-h-0 bg-[#f4f3ee] overflow-hidden font-sans select-none">
       {/* 1. TOP MOBILE TWO-TAB NAVIGATION BAR */}
       <div className="w-full bg-white border-b border-stone-300 shadow-2xs z-30 flex flex-col shrink-0">
         <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 gap-2 overflow-x-auto custom-scrollbar">
@@ -1130,10 +1130,10 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       {/* 2. TAB 1: INPUT TEXT (Text Input Area and Keyboard Options ONLY) */}
       {/* ========================================================================= */}
       {activeTab === 'input_text' && (
-        <div className="relative flex-1 w-full h-full flex flex-col bg-[#fbfaf8] overflow-hidden">
+        <div className="relative flex-1 w-full h-full min-h-0 flex flex-col bg-[#fbfaf8] overflow-hidden">
           {/* 1. Authoritative Native Text Input Area (Dominating, Scrollable, Clean UI) */}
           <div className="relative flex-1 w-full p-1.5 sm:p-2.5 overflow-hidden flex flex-col min-h-0">
-            <div className="relative w-full h-full bg-white rounded-xl border border-stone-200 shadow-2xs p-3 sm:p-4 flex flex-col transition-all focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/15">
+            <div className="relative w-full h-full min-h-0 bg-white rounded-xl border border-stone-200 shadow-2xs p-3 sm:p-4 flex flex-col overflow-hidden transition-all focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/15">
               <textarea
                 ref={textareaRef}
                 id="kashmiri-authoritative-native-textarea"
@@ -1145,7 +1145,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 dir={editorDirection}
                 inputMode={activeKeyboard === 'android' ? 'text' : 'none'}
                 placeholder="ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو... (Type Kashmiri Unicode text here)"
-                className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6]"
+                className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6] touch-pan-y overscroll-contain"
                 style={{
                   fontFamily: getFontFamilyCSS(activeFormatting.fontFamily || 'Noto Nastaliq Urdu'),
                   fontSize: `${Math.max(20, activeFormatting.fontSize)}px`,
@@ -1251,11 +1251,11 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       {/* 3. TAB 2: CANVAS (Maximum Available Design Space + Design Toolbar) */}
       {/* ========================================================================= */}
       {activeTab === 'canvas' && (
-        <div className="relative flex-1 w-full h-full flex flex-col overflow-hidden">
+        <div className="relative flex-1 w-full h-full min-h-0 flex flex-col overflow-hidden">
           {/* Main Visual Canvas Stage */}
           <div
             ref={stageViewportRef}
-            className="relative flex-1 w-full h-full flex flex-col items-center justify-center p-1 sm:p-2.5 overflow-auto custom-scrollbar bg-stone-200/50 cursor-default"
+            className="relative flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center p-1 sm:p-2.5 overflow-auto custom-scrollbar bg-stone-200/50 cursor-default touch-pan-x touch-pan-y overscroll-contain"
             onPointerDown={handleDeselectLayerOnStageClick}
             onTouchStart={handleCanvasTouchStart}
             onTouchMove={handleCanvasTouchMove}

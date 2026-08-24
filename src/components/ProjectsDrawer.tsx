@@ -75,7 +75,7 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 overscroll-none touch-none"
       onClick={() => {
         setActiveMenuDocId(null);
         setRenamingDocId(null);
@@ -85,6 +85,8 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
         className="w-full sm:max-w-xl max-h-[88vh] sm:max-h-[85vh] bg-white border border-stone-200 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.75rem)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
         }}
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
