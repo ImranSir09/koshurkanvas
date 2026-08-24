@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="parchmentBg" cx="45%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#FCFAF5" />
+      <stop offset="60%" stop-color="#F5EFE3" />
+      <stop offset="100%" stop-color="#ECE3D2" />
+    </radialGradient>
+
+    <!-- Gold Gradients -->
+    <linearGradient id="goldChinar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE898" />
+      <stop offset="35%" stop-color="#DFAC38" />
+      <stop offset="70%" stop-color="#C58C1B" />
+      <stop offset="100%" stop-color="#8F5E0B" />
+    </linearGradient>
+
+    <linearGradient id="goldStroke" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#8F5E0B" stop-opacity="0.2" />
+      <stop offset="30%" stop-color="#DFAC38" />
+      <stop offset="70%" stop-color="#FFE898" />
+      <stop offset="100%" stop-color="#B87F14" stop-opacity="0.8" />
+    </linearGradient>
+
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF0BA" />
+      <stop offset="50%" stop-color="#DDA62F" />
+      <stop offset="100%" stop-color="#885705" />
+    </linearGradient>
+
+    <!-- Royal Sapphire Blue Brush Gradients -->
+    <linearGradient id="royalBlueBrush" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#244E96" />
+      <stop offset="40%" stop-color="#14346E" />
+      <stop offset="85%" stop-color="#0B1F48" />
+      <stop offset="100%" stop-color="#06122D" />
+    </linearGradient>
+
+    <linearGradient id="navyTextGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#163772" />
+      <stop offset="50%" stop-color="#0E244F" />
+      <stop offset="100%" stop-color="#071533" />
+    </linearGradient>
+
+    <!-- Subtle 3D Shadows -->
+    <filter id="softShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#543C14" flood-opacity="0.18" />
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.12" />
+    </filter>
+
+    <filter id="embossShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#071533" flood-opacity="0.35" />
+    </filter>
+
+    <filter id="leafShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="6" stdDeviation="7" flood-color="#4A3408" flood-opacity="0.22" />
+    </filter>
+  </defs>
+
+  <!-- Squircle App Icon Base -->
+  <rect width="512" height="512" rx="112" fill="url(#parchmentBg)" />
+  
+  <!-- Subtle Parchment Texture & Inner Bevel Highlight -->
+  <rect x="3" y="3" width="506" height="506" rx="109" fill="none" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="2.5" />
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#DFCBB2" stroke-opacity="0.3" stroke-width="1.5" />
+
+  <!-- EMBLEM GROUP -->
+  <g transform="translate(0, -6)">
+    <!-- Golden Calligraphy Ink Flourish / Swoosh -->
+    <path d="M 188 268 C 240 274 300 248 335 220 C 310 238 250 258 200 248 Z" fill="url(#goldStroke)" filter="url(#leafShadow)" />
+
+    <!-- Kashmiri Golden Chinar Leaf (Top Left & Center) -->
+    <g filter="url(#leafShadow)">
+      <!-- Main Chinar Shape -->
+      <path d="M 285 85 
+               C 275 110, 260 115, 245 95 
+               C 240 120, 215 125, 196 100 
+               C 200 130, 180 145, 175 155 
+               C 195 160, 205 180, 185 198 
+               C 208 200, 222 215, 218 238 
+               C 240 220, 260 215, 282 230 
+               C 285 200, 310 185, 335 180 
+               C 310 155, 320 130, 310 110 
+               Z" 
+            fill="url(#goldChinar)" />
+
+      <!-- Kashmiri Tilla Embroidery & Paisley Motif Inlay on Chinar Leaf -->
+      <!-- Center Main Paisley (Kalka / Buta Motif) -->
+      <path d="M 235 140 
+               C 220 150, 212 170, 224 185 
+               C 232 195, 248 195, 252 182 
+               C 255 170, 240 162, 238 152 
+               C 237 145, 245 138, 248 132 
+               C 245 133, 238 135, 235 140 Z" 
+            fill="#FFF1C2" fill-opacity="0.6" stroke="#8C5C0B" stroke-width="1.2" />
+
+      <!-- Leaf Filigree Veins & Swirls -->
+      <path d="M 252 182 C 265 165, 275 140, 285 110" fill="none" stroke="#7A4E06" stroke-width="2.2" stroke-linecap="round" />
+      <path d="M 268 150 C 285 145, 298 155, 305 162" fill="none" stroke="#7A4E06" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M 260 165 C 275 175, 285 188, 290 200" fill="none" stroke="#7A4E06" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M 242 165 C 220 155, 205 145, 195 135" fill="none" stroke="#7A4E06" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M 230 180 C 210 185, 200 195, 195 205" fill="none" stroke="#7A4E06" stroke-width="1.5" stroke-linecap="round" />
+      
+      <!-- Paisley Floral Seed Accents -->
+      <circle cx="232" cy="172" r="3" fill="#8C5C0B" />
+      <circle cx="270" cy="130" r="2.5" fill="#8C5C0B" />
+      <circle cx="288" cy="145" r="2.5" fill="#8C5C0B" />
+      <circle cx="210" cy="165" r="2" fill="#8C5C0B" />
+    </g>
+
+    <!-- Ornamental Royal Blue & Gold Calligraphy Pen / Brush Feather Quill -->
+    <g filter="url(#leafShadow)">
+      <!-- Sweeping Blue Feather Blade Body -->
+      <path d="M 218 238 
+               C 230 195, 275 130, 336 108 
+               C 334 140, 320 190, 292 230 
+               C 272 258, 240 262, 218 238 Z" 
+            fill="url(#royalBlueBrush)" />
+
+      <!-- Delicate Gold Arabesque Vine Filigree on Blue Quill -->
+      <path d="M 295 138 C 285 160, 270 185, 248 215" fill="none" stroke="url(#goldTrim)" stroke-width="2.5" stroke-linecap="round" />
+      <path d="M 288 152 C 300 162, 305 178, 298 190 C 290 182, 282 170, 288 152 Z" fill="url(#goldTrim)" fill-opacity="0.8" />
+      <path d="M 272 178 C 282 188, 285 202, 278 212 C 270 205, 265 192, 272 178 Z" fill="url(#goldTrim)" fill-opacity="0.8" />
+      <path d="M 255 202 C 263 210, 264 222, 258 230 C 252 224, 248 215, 255 202 Z" fill="url(#goldTrim)" fill-opacity="0.8" />
+
+      <!-- Golden Ferrule Ring Collar -->
+      <path d="M 205 238 L 228 222 L 236 232 L 213 248 Z" fill="url(#goldTrim)" stroke="#5A3A02" stroke-width="0.8" />
+
+      <!-- Calligraphy Brush Nib Tip (Deep Indigo / Violet Gloss) -->
+      <path d="M 213 248 
+               C 205 255, 190 265, 185 266 
+               C 192 258, 202 242, 205 238 
+               Z" 
+            fill="#1E144D" stroke="url(#goldTrim)" stroke-width="1.2" />
+    </g>
+  </g>
+
+  <!-- TYPOGRAPHY SECTION -->
+  <!-- 3D Embossed Kashmiri Calligraphy "کٲشُر" -->
+  <g filter="url(#embossShadow)" transform="translate(0, 10)">
+    <!-- Elegant Kashmiri Nastaliq Glyphs: Kaf, Alif with Tser/Madda, Sheen, Re -->
+    <path d="M 345 272 
+             C 335 272, 310 282, 292 305 
+             C 292 288, 280 278, 268 285 
+             C 255 292, 248 308, 240 320 
+             C 230 335, 210 352, 185 358 
+             C 160 365, 155 358, 172 346 
+             C 195 330, 212 308, 222 285 
+             C 225 278, 220 274, 212 280 
+             C 198 290, 182 305, 168 322 
+             C 152 342, 142 362, 158 368 
+             C 178 375, 215 365, 245 338 
+             C 255 330, 268 305, 280 295 
+             C 288 290, 295 300, 292 315 
+             C 288 335, 282 355, 280 370 
+             C 285 372, 292 368, 296 355 
+             C 305 328, 320 300, 342 290 
+             C 350 286, 355 272, 345 272 Z" 
+          fill="url(#navyTextGrad)" />
+
+    <!-- Kaf Upper Stroke (Markaz) -->
+    <path d="M 338 270 C 315 285, 290 295, 265 300" fill="none" stroke="url(#navyTextGrad)" stroke-width="7" stroke-linecap="round" />
+
+    <!-- Sheen Nuqtas (Three Calligraphic Dots) -->
+    <circle cx="248" cy="275" r="4.5" fill="url(#navyTextGrad)" />
+    <circle cx="258" cy="264" r="4.5" fill="url(#navyTextGrad)" />
+    <circle cx="268" cy="275" r="4.5" fill="url(#navyTextGrad)" />
+
+    <!-- Kashmiri Diacritic Accent (Tser / Vowel Accent) -->
+    <path d="M 302 260 C 298 266, 290 272, 284 274" fill="none" stroke="url(#navyTextGrad)" stroke-width="4.5" stroke-linecap="round" />
+  </g>
+
+  <!-- Modern Clean Lowercase Brand: "kanvas" -->
+  <g filter="url(#embossShadow)" transform="translate(0, 15)">
+    <text x="256" y="415" 
+          font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+          font-size="52" 
+          font-weight="800" 
+          letter-spacing="2.5" 
+          fill="url(#navyTextGrad)" 
+          text-anchor="middle">
+      kanvas
+    </text>
+  </g>
+</svg>

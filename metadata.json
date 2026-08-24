@@ -1,0 +1,8 @@
+{
+  "name": "Kashur Kanvas",
+  "description": "A modern, mobile-first Kashmiri Unicode writing editor, dedicated Nastaliq keyboard, arbitrary selection formatting engine, voice-to-text, and visual design studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

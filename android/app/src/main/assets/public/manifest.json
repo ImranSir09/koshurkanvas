@@ -1,0 +1,61 @@
+{
+  "id": "kashur-kanvas-app",
+  "name": "کٲشُر لیٚکھُن سٹوڈیو — Koshur Kanvas",
+  "short_name": "KoshurKanvas",
+  "description": "Modern Kashmiri Unicode writing and calligraphy editor with virtual Nastaliq keyboard, rich formatting, and multi-format export.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F3EA",
+  "theme_color": "#0E244F",
+  "prefer_related_applications": false,
+  "categories": ["utilities", "productivity", "graphics", "lifestyle"],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Canvas",
+      "short_name": "New",
+      "description": "Create a new Kashmiri design canvas",
+      "url": "./?action=new",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

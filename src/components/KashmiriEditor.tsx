@@ -1,0 +1,1480 @@
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import {
+  CanvasAspectRatio,
+  CanvasBackgroundConfig,
+  KashurDocument,
+  SelectionRange,
+  TextStyleProperties,
+  TextStyleSpan,
+  TextLayer,
+} from '../types';
+import { KashmiriKeyboard } from './KashmiriKeyboard';
+import { MobileTextDesignToolbar } from './MobileTextDesignToolbar';
+import { CanvasSettingsPanel } from './CanvasSettingsPanel';
+import { CanvasTextLayerObject } from './CanvasTextLayerObject';
+import { LayerManagerPanel } from './LayerManagerPanel';
+import { VoiceInputButton } from './VoiceInputButton';
+import { useVisualViewport } from '../lib/useVisualViewport';
+import {
+  shiftSpansOnTextChange,
+  normalizeSelection,
+  getEffectiveStyleAtRange,
+} from '../lib/textEngine';
+import { DEFAULT_TEXT_STYLE } from '../lib/kashmiriData';
+import { getFontFamilyCSS } from '../lib/fontUtils';
+import {
+  RotateCcw,
+  RotateCw,
+  Layers,
+  Settings,
+  Plus,
+  Edit3,
+  FileText,
+  Copy,
+  Check,
+  Trash2,
+  ClipboardPaste,
+  MoveHorizontal,
+  ZoomIn,
+  ZoomOut,
+  Keyboard,
+  Smartphone,
+  Layout,
+  Type,
+  Eye,
+  ChevronDown,
+  Magnet,
+} from 'lucide-react';
+import { calculateSnapping, SnapGuide } from '../lib/snappingEngine';
+import { playSnapSound } from '../lib/soundEffects';
+import { toKashmiriNumerals } from '../lib/kashmiriTextTools';
+
+export const QUICK_KASHMIRI_SPECIAL_CHARS = [
+  { char: 'ٲ', label: 'Alif Madda (ٲ)', title: 'ٲ - Alif Madda' },
+  { char: 'ۄ', label: 'Waw Ring (ۄ)', title: 'ۄ - Waw Ring' },
+  { char: 'ؠ', label: 'Tshae Yeh (ؠ)', title: 'ؠ - Tshae Yeh' },
+  { char: 'ژ', label: 'Tse (ژ)', title: 'ژ - Tse' },
+  { char: 'ۆ', label: 'Short O (ۆ)', title: 'ۆ - Short O' },
+  { char: 'ےٚ', label: 'Bari Yeh Inverted V (ےٚ)', title: 'ےٚ - Bari Yeh Inverted V' },
+  { char: 'ـ', label: 'Kashida (ـ)', title: 'ـ - Kashida (Tatweel)' },
+  { char: 'ٕ', label: 'Kashmiri Zer (ٕ)', title: 'ٕ - Kashmiri Zer (Inverted V below)' },
+  { char: 'ٔ', label: 'Hamza (ٔ)', title: 'ٔ - Hamza above' },
+  { char: 'ٚ', label: 'Inverted V (ٚ)', title: 'ٚ - Inverted V above' },
+  { char: '٘', label: 'Noon Ghunna (٘)', title: '٘ - Noon Ghunna above' },
+  { char: 'ْ', label: 'Jazm (ْ)', title: 'ْ - Jazm / Sukun' },
+  { char: 'َ', label: 'Zabar (َ)', title: 'َ - Zabar (Fatha)' },
+  { char: 'ِ', label: 'Zer (ِ)', title: 'ِ - Zer (Kasra)' },
+  { char: 'ُ', label: 'Pesh (ُ)', title: 'ُ - Pesh (Damma)' },
+  { char: '۔', label: 'Full Stop (۔)', title: '۔ - Kashmiri Full Stop' },
+  { char: '،', label: 'Comma (،)', title: '، - Kashmiri Comma' },
+  { char: '؟', label: 'Question (؟)', title: '؟ - Kashmiri Question Mark' },
+  { char: '؛', label: 'Semicolon (؛)', title: '؛ - Semicolon' },
+  { char: '«', label: 'Quote («)', title: '« - Right Guilloche' },
+  { char: '»', label: 'Quote (»)', title: '» - Left Guilloche' },
+];
+
+export function getCanvasRefDimensions(
+  aspectRatio?: CanvasAspectRatio,
+  orientation?: 'portrait' | 'landscape',
+  customW?: number,
+  customH?: number
+): { refWidth: number; refHeight: number } {
+  const isLandscape = orientation === 'landscape';
+
+  if (aspectRatio === 'custom' && customW && customH) {
+    const w = isLandscape ? Math.max(customW, customH) : customW;
+    const h = isLandscape ? Math.min(customW, customH) : customH;
+    return {
+      refWidth: isLandscape ? 680 : 520,
+      refHeight: Math.max(100, Math.round((isLandscape ? 680 : 520) * (h / w))),
+    };
+  }
+
+  switch (aspectRatio) {
+    case '1:1':
+      return { refWidth: 520, refHeight: 520 };
+    case '4:5':
+      return isLandscape ? { refWidth: 575, refHeight: 460 } : { refWidth: 460, refHeight: 575 };
+    case '9:16':
+      return isLandscape ? { refWidth: 640, refHeight: 360 } : { refWidth: 360, refHeight: 640 };
+    case '16:9':
+      return isLandscape ? { refWidth: 720, refHeight: 405 } : { refWidth: 405, refHeight: 720 };
+    case '3:4':
+      return isLandscape ? { refWidth: 640, refHeight: 480 } : { refWidth: 480, refHeight: 640 };
+    case '2:3':
+      return isLandscape ? { refWidth: 640, refHeight: 426 } : { refWidth: 426, refHeight: 640 };
+    case 'a3':
+      return isLandscape ? { refWidth: 720, refHeight: 509 } : { refWidth: 509, refHeight: 720 };
+    case 'a4':
+      return isLandscape ? { refWidth: 680, refHeight: 480 } : { refWidth: 520, refHeight: 735 };
+    case 'a5':
+      return isLandscape ? { refWidth: 600, refHeight: 424 } : { refWidth: 424, refHeight: 600 };
+    case 'a6':
+      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
+    case 'letter':
+      return isLandscape ? { refWidth: 680, refHeight: 525 } : { refWidth: 525, refHeight: 680 };
+    case 'legal':
+      return isLandscape ? { refWidth: 720, refHeight: 437 } : { refWidth: 437, refHeight: 720 };
+    case 'tabloid':
+      return isLandscape ? { refWidth: 720, refHeight: 465 } : { refWidth: 465, refHeight: 720 };
+    case 'b4':
+    case 'b5':
+    case 'b6':
+      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
+    case 'auto':
+    default:
+      return { refWidth: 620, refHeight: 480 };
+  }
+}
+
+export type MobileTab = 'input_text' | 'canvas';
+export type KeyboardType = 'android' | 'kashmiri' | 'none';
+
+interface KashmiriEditorProps {
+  document: KashurDocument;
+  onUpdateDocument: (updated: Partial<KashurDocument>) => void;
+  onOpenCharacterPicker?: () => void;
+  onOpenExport: () => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
+  isFocusedWritingMode: boolean;
+  setIsFocusedWritingMode: (val: boolean) => void;
+}
+
+export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
+  document: doc,
+  onUpdateDocument,
+  onOpenCharacterPicker,
+  onOpenExport,
+  soundEnabled,
+  onToggleSound,
+  isFocusedWritingMode,
+  setIsFocusedWritingMode,
+}) => {
+  // Primary Two-Tab Workflow: 'input_text' (Unicode entry) and 'canvas' (Visual design)
+  const [activeTab, setActiveTab] = useState<MobileTab>('input_text');
+
+  // Keyboard Selector State (Input Text tab only): 'android' | 'kashmiri' | 'none'
+  const [activeKeyboard, setActiveKeyboard] = useState<KeyboardType>('kashmiri');
+
+  // Authoritative Native Input State (Input Text tab)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [cursorPos, setCursorPos] = useState<number>(doc.content.length);
+  const [, setSelection] = useState<SelectionRange>({
+    start: 0,
+    end: 0,
+    text: '',
+  });
+
+  // UI Panels
+  const [showCanvasPanel, setShowCanvasPanel] = useState<boolean>(false);
+  const [showLayersPanel, setShowLayersPanel] = useState<boolean>(false);
+  const [copiedToast, setCopiedToast] = useState<boolean>(false);
+  const [editorDirection, setEditorDirection] = useState<'rtl' | 'ltr'>('rtl');
+
+  // Preview container ref for auto-scrolling to active text object
+  const previewScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const activePreviewLayerRef = useRef<HTMLDivElement | null>(null);
+
+  // Initialize or ensure TextLayers exist
+  const textLayers: TextLayer[] = useMemo(() => {
+    if (doc.textLayers && doc.textLayers.length > 0) {
+      return doc.textLayers;
+    }
+    return [
+      {
+        id: 'layer-primary',
+        name: 'متن ۱',
+        type: 'text',
+        text: doc.content || 'ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو',
+        x: 40,
+        y: 80,
+        width: 480,
+        height: 180,
+        rotation: 0,
+        scale: 1,
+        opacity: 1,
+        zIndex: 10,
+        isLocked: false,
+        isHidden: false,
+        style: { ...(doc.defaultStyle || DEFAULT_TEXT_STYLE), fontSize: 32 },
+      },
+    ];
+  }, [doc.textLayers, doc.content, doc.defaultStyle]);
+
+  // Active Selected Layer (null when clicking outside on canvas to hide outline and floating menus)
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(
+    doc.activeLayerId || (textLayers[0] ? textLayers[0].id : null)
+  );
+
+  const activeLayer = useMemo(() => {
+    if (!activeLayerId) return null;
+    return textLayers.find((l) => l.id === activeLayerId) || null;
+  }, [textLayers, activeLayerId]);
+
+  // When switching to input_text tab, ensure an active layer is selected so writing works directly
+  useEffect(() => {
+    if (activeTab === 'input_text' && !activeLayerId && textLayers.length > 0) {
+      const firstId = textLayers[0].id;
+      setActiveLayerId(firstId);
+      setActiveFormatting(textLayers[0].style);
+      onUpdateDocument({ activeLayerId: firstId, content: textLayers[0].text });
+    }
+  }, [activeTab, activeLayerId, textLayers, onUpdateDocument]);
+
+  // Active Formatting State
+  const [activeFormatting, setActiveFormatting] = useState<TextStyleProperties>(
+    activeLayer?.style || doc.defaultStyle || DEFAULT_TEXT_STYLE
+  );
+
+  // History for Undo/Redo
+  const historyRef = useRef<{ content: string; layers: TextLayer[]; spans: TextStyleSpan[] }[]>([
+    { content: doc.content, layers: textLayers, spans: doc.spans || [] },
+  ]);
+  const historyIndexRef = useRef<number>(0);
+  const [, setHistoryVersion] = useState<number>(0);
+
+  const pushHistory = useCallback(
+    (content: string, layers: TextLayer[], spans: TextStyleSpan[]) => {
+      const currentHist = historyRef.current.slice(0, historyIndexRef.current + 1);
+      currentHist.push({ content, layers, spans });
+      if (currentHist.length > 50) currentHist.shift();
+      historyRef.current = currentHist;
+      historyIndexRef.current = currentHist.length - 1;
+      setHistoryVersion((v) => v + 1);
+    },
+    []
+  );
+
+  const handleUndo = useCallback(() => {
+    if (historyIndexRef.current > 0) {
+      historyIndexRef.current -= 1;
+      const state = historyRef.current[historyIndexRef.current];
+      onUpdateDocument({
+        content: state.content,
+        textLayers: state.layers,
+        spans: state.spans,
+      });
+      setHistoryVersion((v) => v + 1);
+    }
+  }, [onUpdateDocument]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      historyIndexRef.current += 1;
+      const state = historyRef.current[historyIndexRef.current];
+      onUpdateDocument({
+        content: state.content,
+        textLayers: state.layers,
+        spans: state.spans,
+      });
+      setHistoryVersion((v) => v + 1);
+    }
+  }, [onUpdateDocument]);
+
+  // Sync activeLayer style when activeLayer changes
+  useEffect(() => {
+    if (activeLayer) {
+      setActiveFormatting(activeLayer.style);
+    }
+  }, [activeLayer]);
+
+  // Auto-scroll the live preview to active layer when layer changes or activeTab becomes input_text
+  useEffect(() => {
+    if (activeTab === 'input_text' && activePreviewLayerRef.current) {
+      try {
+        activePreviewLayerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest',
+        });
+      } catch (e) {
+        // Fallback safely
+      }
+    }
+  }, [activeLayerId, activeTab]);
+
+  // Handle external insert character events
+  useEffect(() => {
+    const handleInsertEvent = (e: any) => {
+      if (e.detail && e.detail.char) {
+        handleInsertText(e.detail.char);
+      }
+    };
+    window.addEventListener('app-insert-char', handleInsertEvent);
+    return () => window.removeEventListener('app-insert-char', handleInsertEvent);
+  });
+
+  // Update selection tracking from native textarea
+  const updateSelectionFromDOM = useCallback(() => {
+    if (!textareaRef.current) return;
+    const rawStart = textareaRef.current.selectionStart ?? 0;
+    const rawEnd = textareaRef.current.selectionEnd ?? 0;
+    const normalized = normalizeSelection(doc.content, rawStart, rawEnd);
+    const start = normalized.start;
+    const end = normalized.end;
+
+    setCursorPos(start);
+
+    if (start !== end) {
+      const selectedSubstr = doc.content.substring(start, end);
+      setSelection({
+        start,
+        end,
+        text: selectedSubstr,
+      });
+      const effective = getEffectiveStyleAtRange(
+        doc.content.length,
+        doc.spans || [],
+        activeLayer?.style || doc.defaultStyle || DEFAULT_TEXT_STYLE,
+        start,
+        end
+      );
+      setActiveFormatting(effective);
+    } else {
+      setSelection({
+        start,
+        end: start,
+        text: '',
+      });
+      const effective = getEffectiveStyleAtRange(
+        doc.content.length,
+        doc.spans || [],
+        activeLayer?.style || doc.defaultStyle || DEFAULT_TEXT_STYLE,
+        start,
+        start
+      );
+      setActiveFormatting(effective);
+    }
+  }, [doc.content, doc.spans, activeLayer?.style, doc.defaultStyle]);
+
+  // Handle native typing in textarea
+  const handleNativeTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    const deltaLength = newContent.length - doc.content.length;
+    const changePos = e.target.selectionStart - (deltaLength > 0 ? deltaLength : 0);
+    const updatedSpans = shiftSpansOnTextChange(doc.spans || [], changePos, deltaLength);
+
+    const updatedLayers = textLayers.map((layer) => {
+      if (layer.id === activeLayerId) {
+        return {
+          ...layer,
+          text: newContent,
+        };
+      }
+      return layer;
+    });
+
+    onUpdateDocument({
+      content: newContent,
+      spans: updatedSpans,
+      textLayers: updatedLayers,
+      activeLayerId,
+    });
+    pushHistory(newContent, updatedLayers, updatedSpans);
+    updateSelectionFromDOM();
+  };
+
+  // Insert Text at exact cursor position
+  const handleInsertText = useCallback(
+    (textToInsert: string) => {
+      const activeStart = textareaRef.current ? textareaRef.current.selectionStart : cursorPos;
+      const activeEnd = textareaRef.current ? textareaRef.current.selectionEnd : cursorPos;
+      const insertStart = activeStart;
+      const insertEnd = activeEnd;
+
+      const before = doc.content.slice(0, insertStart);
+      const after = doc.content.slice(insertEnd);
+      const newContent = before + textToInsert + after;
+      const newPos = insertStart + textToInsert.length;
+
+      const delta = textToInsert.length - (insertEnd - insertStart);
+      const updatedSpans = shiftSpansOnTextChange(doc.spans || [], insertStart, delta);
+
+      const updatedLayers = textLayers.map((layer) => {
+        if (layer.id === activeLayerId) {
+          return {
+            ...layer,
+            text: newContent,
+          };
+        }
+        return layer;
+      });
+
+      onUpdateDocument({
+        content: newContent,
+        spans: updatedSpans,
+        textLayers: updatedLayers,
+        activeLayerId,
+      });
+
+      pushHistory(newContent, updatedLayers, updatedSpans);
+      setCursorPos(newPos);
+      setSelection({ start: newPos, end: newPos, text: '' });
+
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus({ preventScroll: true });
+          textareaRef.current.setSelectionRange(newPos, newPos);
+        }
+      }, 10);
+    },
+    [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushHistory]
+  );
+
+  const handleKeyboardBackspace = useCallback(() => {
+    const activeStart = textareaRef.current ? textareaRef.current.selectionStart : cursorPos;
+    const activeEnd = textareaRef.current ? textareaRef.current.selectionEnd : cursorPos;
+
+    if (activeStart !== activeEnd) {
+      const before = doc.content.slice(0, activeStart);
+      const after = doc.content.slice(activeEnd);
+      const newContent = before + after;
+      const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart, -(activeEnd - activeStart));
+      const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
+      onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
+      pushHistory(newContent, updatedLayers, updatedSpans);
+      setCursorPos(activeStart);
+      setSelection({ start: activeStart, end: activeStart, text: '' });
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus({ preventScroll: true });
+          textareaRef.current.setSelectionRange(activeStart, activeStart);
+        }
+      }, 10);
+    } else if (activeStart > 0) {
+      const before = doc.content.slice(0, activeStart - 1);
+      const after = doc.content.slice(activeStart);
+      const newContent = before + after;
+      const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart - 1, -1);
+      const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
+      onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
+      pushHistory(newContent, updatedLayers, updatedSpans);
+      const newPos = activeStart - 1;
+      setCursorPos(newPos);
+      setSelection({ start: newPos, end: newPos, text: '' });
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus({ preventScroll: true });
+          textareaRef.current.setSelectionRange(newPos, newPos);
+        }
+      }, 10);
+    }
+  }, [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushHistory]);
+
+  const handleKeyboardEnter = useCallback(() => {
+    handleInsertText('\n');
+  }, [handleInsertText]);
+
+  const handleKeyboardSpace = useCallback(() => {
+    handleInsertText(' ');
+  }, [handleInsertText]);
+
+  // Formatting Update Handlers
+  const handleUpdateStyle = useCallback(
+    (styleUpdates: Partial<TextStyleProperties>) => {
+      const newActiveStyle = { ...activeFormatting, ...styleUpdates };
+      setActiveFormatting(newActiveStyle);
+
+      const updatedLayers = textLayers.map((layer) => {
+        if (layer.id === activeLayerId) {
+          return {
+            ...layer,
+            style: { ...layer.style, ...styleUpdates },
+          };
+        }
+        return layer;
+      });
+
+      onUpdateDocument({
+        textLayers: updatedLayers,
+        defaultStyle: newActiveStyle,
+      });
+      pushHistory(doc.content, updatedLayers, doc.spans || []);
+    },
+    [activeFormatting, textLayers, activeLayerId, doc.content, doc.spans, onUpdateDocument, pushHistory]
+  );
+
+  // Layer Management Callbacks
+  const handleSelectLayer = (layerId: string) => {
+    setActiveLayerId(layerId);
+    const target = textLayers.find((l) => l.id === layerId);
+    if (target) {
+      setActiveFormatting(target.style);
+      onUpdateDocument({
+        activeLayerId: layerId,
+        content: target.text,
+      });
+    }
+  };
+
+  const handleUpdateLayer = (layerId: string, updates: Partial<TextLayer>) => {
+    const updatedLayers = textLayers.map((l) => {
+      if (l.id === layerId) {
+        const next = { ...l, ...updates };
+        if (updates.style) {
+          next.style = { ...l.style, ...updates.style };
+        }
+        return next;
+      }
+      return l;
+    });
+
+    const isCurrentActive = layerId === activeLayerId;
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      content: isCurrentActive && updates.text !== undefined ? updates.text : doc.content,
+    });
+  };
+
+  // Open Native Input Text Editing for a Layer (Switches to Input Text Tab)
+  const handleEditInNativeInput = (layer: TextLayer) => {
+    setActiveLayerId(layer.id);
+    setActiveFormatting(layer.style);
+    onUpdateDocument({
+      activeLayerId: layer.id,
+      content: layer.text,
+    });
+    setActiveTab('input_text');
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus({ preventScroll: true });
+      }
+    }, 50);
+  };
+
+  // Add New Text Layer
+  const handleAddTextLayer = () => {
+    const newLayerId = `layer-${Date.now()}`;
+    const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
+    const newLayer: TextLayer = {
+      id: newLayerId,
+      name: `متن ${toKashmiriNumerals(textLayers.length + 1)}`,
+      type: 'text',
+      text: 'نواں کٲشُر متن',
+      x: 60 + (textLayers.length % 4) * 20,
+      y: 100 + (textLayers.length % 4) * 35,
+      width: 440,
+      height: 140,
+      rotation: 0,
+      scale: 1,
+      opacity: 1,
+      zIndex: maxZ + 1,
+      isLocked: false,
+      isHidden: false,
+      style: { ...(doc.defaultStyle || DEFAULT_TEXT_STYLE), fontSize: 32 },
+    };
+
+    const updatedLayers = [...textLayers, newLayer];
+    setActiveLayerId(newLayerId);
+    setActiveFormatting(newLayer.style);
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+      content: newLayer.text,
+    });
+    pushHistory(newLayer.text, updatedLayers, doc.spans || []);
+
+    // Switch to Input Text tab to immediately allow writing
+    setActiveTab('input_text');
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus({ preventScroll: true });
+      }
+    }, 50);
+  };
+
+  const handleDuplicateLayer = (layerId: string) => {
+    const source = textLayers.find((l) => l.id === layerId);
+    if (!source) return;
+
+    const newLayerId = `layer-${Date.now()}`;
+    const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
+    const cloned: TextLayer = {
+      ...source,
+      id: newLayerId,
+      name: `${source.name} (نقل)`,
+      x: source.x + 24,
+      y: source.y + 24,
+      zIndex: maxZ + 1,
+    };
+
+    const updatedLayers = [...textLayers, cloned];
+    setActiveLayerId(newLayerId);
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+      content: cloned.text,
+    });
+    pushHistory(cloned.text, updatedLayers, doc.spans || []);
+  };
+
+  const handleDeleteLayer = (layerId: string) => {
+    if (textLayers.length <= 1) {
+      handleUpdateLayer(layerId, { text: '' });
+      return;
+    }
+    const updatedLayers = textLayers.filter((l) => l.id !== layerId);
+    const nextActive = updatedLayers[0]?.id || '';
+    setActiveLayerId(nextActive);
+    const nextLayer = updatedLayers[0];
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: nextActive,
+      content: nextLayer ? nextLayer.text : '',
+    });
+    pushHistory(nextLayer ? nextLayer.text : '', updatedLayers, doc.spans || []);
+  };
+
+  const handleBringToFront = (layerId: string) => {
+    const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
+    handleUpdateLayer(layerId, { zIndex: maxZ + 1 });
+  };
+
+  const handleSendToBack = (layerId: string) => {
+    const minZ = Math.min(1, ...textLayers.map((l) => l.zIndex ?? 0));
+    handleUpdateLayer(layerId, { zIndex: Math.max(0, minZ - 1) });
+  };
+
+  const handleMoveLayerUp = (layerId: string) => {
+    const layer = textLayers.find((l) => l.id === layerId);
+    if (!layer) return;
+    handleUpdateLayer(layerId, { zIndex: (layer.zIndex ?? 0) + 1 });
+  };
+
+  const handleMoveLayerDown = (layerId: string) => {
+    const layer = textLayers.find((l) => l.id === layerId);
+    if (!layer) return;
+    handleUpdateLayer(layerId, { zIndex: Math.max(0, (layer.zIndex ?? 0) - 1) });
+  };
+
+  const handleCenterLayerHorizontally = (layerId: string) => {
+    const targetLayer = textLayers.find((l) => l.id === layerId);
+    if (!targetLayer) return;
+    const layerEl = document.getElementById(`canvas-text-layer-${layerId}`);
+    const actualWidth = layerEl ? layerEl.offsetWidth : (targetLayer.width || 240);
+    const centeredX = Math.round((refWidth - actualWidth) / 2);
+    handleUpdateLayer(layerId, { x: centeredX });
+  };
+
+  const handleCenterLayerVertically = (layerId: string) => {
+    const targetLayer = textLayers.find((l) => l.id === layerId);
+    if (!targetLayer) return;
+    const layerEl = document.getElementById(`canvas-text-layer-${layerId}`);
+    const actualHeight = layerEl ? layerEl.offsetHeight : (targetLayer.height || 80);
+    const centeredY = Math.round((refHeight - actualHeight) / 2);
+    handleUpdateLayer(layerId, { y: centeredY });
+  };
+
+  // Deselect active layer when clicking outside on the canvas stage or sheet background
+  const handleDeselectLayerOnStageClick = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      !target.closest('[data-layer-id]') &&
+      !target.closest('#mobile-text-design-toolbar-container') &&
+      !target.closest('[data-export-exclude]') &&
+      !target.closest('button') &&
+      !target.closest('input') &&
+      !target.closest('select')
+    ) {
+      setActiveLayerId(null);
+    }
+  }, []);
+
+  // Dragging Mid-line & Magnet Snapping Guide State
+  const [snapEnabled, setSnapEnabled] = useState<boolean>(true);
+  const [snapSensitivity, setSnapSensitivity] = useState<number>(8);
+  const [activeGuides, setActiveGuides] = useState<SnapGuide[]>([]);
+  const lastSnapSoundTimeRef = useRef<number>(0);
+
+  const [activeDragInfo, setActiveDragInfo] = useState<{
+    isDragging: boolean;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>({
+    isDragging: false,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const handleSnapPosition = useCallback(
+    (
+      layerId: string,
+      rawX: number,
+      rawY: number,
+      width: number,
+      height: number
+    ) => {
+      const cfg = doc.canvasConfig || {
+        aspectRatio: 'auto',
+        color: '#ffffff',
+      };
+      const { refWidth: stageW, refHeight: stageH } = getCanvasRefDimensions(
+        cfg.aspectRatio,
+        cfg.orientation,
+        cfg.customWidth,
+        cfg.customHeight
+      );
+
+      const result = calculateSnapping(
+        layerId,
+        rawX,
+        rawY,
+        width,
+        height,
+        stageW,
+        stageH,
+        textLayers,
+        snapEnabled,
+        snapSensitivity
+      );
+
+      setActiveGuides(result.activeGuides);
+
+      // Play subtle acoustic click on snap lock
+      if ((result.isSnappedX || result.isSnappedY) && soundEnabled) {
+        const now = Date.now();
+        if (now - lastSnapSoundTimeRef.current > 150) {
+          lastSnapSoundTimeRef.current = now;
+          playSnapSound(soundEnabled);
+        }
+      }
+
+      return {
+        snappedX: result.snappedX,
+        snappedY: result.snappedY,
+        isSnappedX: result.isSnappedX,
+        isSnappedY: result.isSnappedY,
+      };
+    },
+    [doc.canvasConfig, textLayers, snapEnabled, snapSensitivity, soundEnabled]
+  );
+
+  const handleLayerDragStateChange = useCallback(
+    (isDragging: boolean, layerX: number, layerY: number, layerWidth: number, layerHeight: number) => {
+      setActiveDragInfo({
+        isDragging,
+        x: layerX,
+        y: layerY,
+        width: layerWidth,
+        height: layerHeight,
+      });
+      if (!isDragging) {
+        setActiveGuides([]);
+      }
+    },
+    []
+  );
+
+  // Quick Action Handlers for Input Text Mode
+  const handleCopyAllText = useCallback(async () => {
+    if (!doc.content) return;
+    try {
+      await navigator.clipboard.writeText(doc.content);
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2200);
+    } catch (e) {
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2200);
+    }
+  }, [doc.content]);
+
+  const handlePasteClipboardText = useCallback(async () => {
+    try {
+      const clipText = await navigator.clipboard.readText();
+      if (clipText) {
+        handleInsertText(clipText);
+      }
+    } catch (e) {
+      textareaRef.current?.focus({ preventScroll: true });
+    }
+  }, [handleInsertText]);
+
+  const handleClearAllText = useCallback(() => {
+    if (!doc.content) return;
+    const updatedLayers = textLayers.map((layer) => {
+      if (layer.id === activeLayerId) {
+        return { ...layer, text: '' };
+      }
+      return layer;
+    });
+    onUpdateDocument({
+      content: '',
+      spans: [],
+      textLayers: updatedLayers,
+    });
+    pushHistory('', updatedLayers, []);
+    setCursorPos(0);
+    setSelection({ start: 0, end: 0, text: '' });
+    setTimeout(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    }, 20);
+  }, [doc.content, textLayers, activeLayerId, onUpdateDocument, pushHistory]);
+
+  // Visual Viewport tracking for Android Keyboard
+  const { isKeyboardOpen, keyboardHeight } = useVisualViewport();
+
+  // Zoom & Pan state for Canvas Stage
+  const [zoomScale, setZoomScale] = useState<number>(1);
+  const touchStartDistRef = useRef<number | null>(null);
+  const initialZoomRef = useRef<number>(1);
+
+  const handleCanvasTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchStartDistRef.current = Math.hypot(dx, dy);
+      initialZoomRef.current = zoomScale;
+    }
+  };
+
+  const handleCanvasTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDistRef.current !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const currentDist = Math.hypot(dx, dy);
+      const factor = currentDist / touchStartDistRef.current;
+      const nextScale = Math.min(2.5, Math.max(0.5, initialZoomRef.current * factor));
+      setZoomScale(parseFloat(nextScale.toFixed(2)));
+    }
+  };
+
+  const handleCanvasTouchEnd = () => {
+    touchStartDistRef.current = null;
+  };
+
+  // Canvas Config & Aspect Ratio
+  const canvasConfig: CanvasBackgroundConfig = doc.canvasConfig || {
+    aspectRatio: 'auto',
+    color: '#ffffff',
+    imageOpacity: 1,
+    overlayOpacity: 0,
+  };
+
+  const handleUpdateCanvasConfig = useCallback(
+    (updates: Partial<CanvasBackgroundConfig>) => {
+      const currentConfig = doc.canvasConfig || {
+        aspectRatio: 'auto',
+        color: '#ffffff',
+        imageOpacity: 1,
+        overlayOpacity: 0,
+      };
+      onUpdateDocument({
+        canvasConfig: { ...currentConfig, ...updates },
+      });
+    },
+    [doc.canvasConfig, onUpdateDocument]
+  );
+
+  const stageViewportRef = useRef<HTMLDivElement | null>(null);
+  const [viewportSize, setViewportSize] = useState<{ width: number; height: number }>({
+    width: 600,
+    height: 600,
+  });
+
+  useEffect(() => {
+    if (!stageViewportRef.current) return;
+    const el = stageViewportRef.current;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect && entry.contentRect.width > 0) {
+          setViewportSize({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+        }
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeTab]);
+
+  const { refWidth, refHeight } = getCanvasRefDimensions(
+    canvasConfig.aspectRatio,
+    canvasConfig.orientation,
+    canvasConfig.customWidth,
+    canvasConfig.customHeight
+  );
+
+  const availW = Math.max(280, viewportSize.width - 16);
+  const availH = Math.max(260, viewportSize.height - 12);
+  const autoFitScale = Math.min(1.0, availW / refWidth, availH / refHeight);
+  const totalScale = parseFloat((autoFitScale * zoomScale).toFixed(3));
+
+  return (
+    <div className="relative flex flex-col w-full h-full bg-[#f4f3ee] overflow-hidden font-sans select-none">
+      {/* 1. TOP MOBILE TWO-TAB NAVIGATION BAR */}
+      <div className="w-full bg-white border-b border-stone-300 shadow-2xs z-30 flex flex-col shrink-0">
+        <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 gap-2 overflow-x-auto custom-scrollbar">
+          {/* Main Two-Tab Switcher: [Input Text] | [Canvas] */}
+          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg shrink-0 border border-stone-300" dir="rtl">
+            <button
+              id="tab-input-text"
+              type="button"
+              onClick={() => {
+                setActiveTab('input_text');
+                setTimeout(() => textareaRef.current?.focus(), 50);
+              }}
+              className={`w-9 h-8 rounded-md flex items-center justify-center transition-all cursor-pointer ${
+                activeTab === 'input_text'
+                  ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
+                  : 'text-stone-700 hover:text-black hover:bg-stone-200'
+              }`}
+              title="Input Text (متن لؠکھُن)"
+              aria-label="Input Text"
+            >
+              <Type size={16} />
+            </button>
+
+            <button
+              id="tab-canvas"
+              type="button"
+              onClick={() => setActiveTab('canvas')}
+              className={`w-9 h-8 rounded-md flex items-center justify-center transition-all cursor-pointer ${
+                activeTab === 'canvas'
+                  ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
+                  : 'text-stone-700 hover:text-black hover:bg-stone-200'
+              }`}
+              title="Canvas Stage (کینوس ڈِزائن)"
+              aria-label="Canvas Stage"
+            >
+              <Layout size={16} />
+            </button>
+          </div>
+
+          {/* Center: Context Actions depending on Tab */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Add Text Button (available in both tabs) */}
+            <button
+              id="btn-add-text-layer-primary"
+              type="button"
+              onClick={handleAddTextLayer}
+              className="w-9 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer border border-emerald-800"
+              title="Add New Text (نواں متن)"
+              aria-label="Add Text"
+            >
+              <Plus size={16} />
+            </button>
+
+            {/* Canvas-only tools: Layers Manager & Canvas Settings */}
+            {activeTab === 'canvas' && (
+              <>
+                <button
+                  id="btn-toggle-layers-panel"
+                  type="button"
+                  onClick={() => setShowLayersPanel(!showLayersPanel)}
+                  className={`relative w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                    showLayersPanel
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
+                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
+                  }`}
+                  title="Layers Manager (لئیر منیجر)"
+                  aria-label="Layers"
+                >
+                  <Layers size={16} className={showLayersPanel ? 'text-emerald-900' : 'text-stone-800'} />
+                  {textLayers.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-700 text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                      {textLayers.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  id="btn-toggle-canvas-settings"
+                  type="button"
+                  onClick={() => setShowCanvasPanel(!showCanvasPanel)}
+                  className={`w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                    showCanvasPanel
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
+                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
+                  }`}
+                  title="Canvas Settings (کینوس سیٹنگس)"
+                  aria-label="Canvas Settings"
+                >
+                  <Settings size={16} className={showCanvasPanel ? 'text-emerald-900' : 'text-stone-800'} />
+                </button>
+
+                <button
+                  id="btn-toggle-snap-guides"
+                  type="button"
+                  onClick={() => setSnapEnabled(!snapEnabled)}
+                  className={`relative w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                    snapEnabled
+                      ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs'
+                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
+                  }`}
+                  title={snapEnabled ? 'Magnet Snap: ON (نیٚمبرٕ سِنیپ چَالو)' : 'Magnet Snap: OFF (نیٚمبرٕ سِنیپ بَنٛد)'}
+                  aria-label="Toggle Magnet Snap"
+                >
+                  <Magnet size={16} />
+                  {snapEnabled && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border border-emerald-800 rounded-full shadow-2xs" />
+                  )}
+                </button>
+              </>
+            )}
+
+            {/* Input Text-only tools: Layer Switcher Dropdown if multi-layer */}
+            {activeTab === 'input_text' && textLayers.length > 1 && (
+              <div className="flex items-center gap-1 bg-stone-100 border border-stone-300 px-2 py-0.5 rounded-lg text-xs" dir="rtl">
+                <Layers size={13} className="text-stone-600" />
+                <select
+                  value={activeLayerId || ''}
+                  onChange={(e) => handleSelectLayer(e.target.value)}
+                  className="bg-transparent font-nastaliq text-emerald-900 font-bold outline-none cursor-pointer text-xs"
+                  title="Select Layer"
+                >
+                  {textLayers.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Undo / Redo */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={historyIndexRef.current <= 0}
+              className="w-8.5 h-8 flex items-center justify-center rounded-lg bg-stone-100 border border-stone-300 text-stone-900 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+              title="Undo (Ctrl+Z)"
+              aria-label="Undo"
+            >
+              <RotateCcw size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={handleRedo}
+              disabled={historyIndexRef.current >= historyRef.current.length - 1}
+              className="w-8.5 h-8 flex items-center justify-center rounded-lg bg-stone-100 border border-stone-300 text-stone-900 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+              title="Redo (Ctrl+Y)"
+              aria-label="Redo"
+            >
+              <RotateCw size={15} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Layers Manager Floating Drawer */}
+      <LayerManagerPanel
+        layers={textLayers}
+        activeLayerId={activeLayerId}
+        onSelectLayer={(id) => {
+          handleSelectLayer(id);
+          setShowLayersPanel(false);
+        }}
+        onAddTextLayer={handleAddTextLayer}
+        onUpdateLayer={handleUpdateLayer}
+        onDuplicateLayer={handleDuplicateLayer}
+        onDeleteLayer={handleDeleteLayer}
+        onMoveLayerUp={handleMoveLayerUp}
+        onMoveLayerDown={handleMoveLayerDown}
+        isOpen={showLayersPanel}
+        onClose={() => setShowLayersPanel(false)}
+      />
+
+      {/* Canvas Settings Bottom Sheet */}
+      <CanvasSettingsPanel
+        isOpen={showCanvasPanel}
+        canvasConfig={canvasConfig}
+        onUpdateCanvasConfig={handleUpdateCanvasConfig}
+        onClose={() => setShowCanvasPanel(false)}
+      />
+
+      {/* ========================================================================= */}
+      {/* 2. TAB 1: INPUT TEXT (Text Input Area and Keyboard Options ONLY) */}
+      {/* ========================================================================= */}
+      {activeTab === 'input_text' && (
+        <div className="relative flex-1 w-full h-full flex flex-col bg-[#fbfaf8] overflow-hidden">
+          {/* 1. Authoritative Native Text Input Area (Dominating, Scrollable, Clean UI) */}
+          <div className="relative flex-1 w-full p-1.5 sm:p-2.5 overflow-hidden flex flex-col min-h-0">
+            <div className="relative w-full h-full bg-white rounded-xl border border-stone-200 shadow-2xs p-3 sm:p-4 flex flex-col transition-all focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/15">
+              <textarea
+                ref={textareaRef}
+                id="kashmiri-authoritative-native-textarea"
+                value={doc.content}
+                onChange={handleNativeTextChange}
+                onClick={updateSelectionFromDOM}
+                onSelect={updateSelectionFromDOM}
+                onKeyUp={updateSelectionFromDOM}
+                dir={editorDirection}
+                inputMode={activeKeyboard === 'android' ? 'text' : 'none'}
+                placeholder="ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو... (Type Kashmiri Unicode text here)"
+                className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6]"
+                style={{
+                  fontFamily: getFontFamilyCSS(activeFormatting.fontFamily || 'Noto Nastaliq Urdu'),
+                  fontSize: `${Math.max(20, activeFormatting.fontSize)}px`,
+                  lineHeight: activeFormatting.lineHeight || 2.6,
+                  letterSpacing: `${activeFormatting.letterSpacing || 0}px`,
+                  textAlign: activeFormatting.align || 'right',
+                }}
+                autoFocus={activeKeyboard === 'android'}
+              />
+            </div>
+          </div>
+
+          {/* 2. Keyboard Options Bar (Input Text Tab ONLY) */}
+          <div
+            id="keyboard-selector-bar"
+            className="w-full bg-[#f0ede6] border-t border-stone-300 px-3.5 py-2 flex items-center justify-between gap-2 shrink-0 select-none"
+            dir="rtl"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-700">
+              <Keyboard size={16} className="text-emerald-800" />
+              <span>
+                {activeKeyboard === 'kashmiri'
+                  ? 'کٲشُر کیبورڈ (Kashmiri)'
+                  : activeKeyboard === 'android'
+                  ? 'اینڈرائیڈ کیبورڈ (Android)'
+                  : 'کیبورڈ بنٛد (Keyboard Hidden)'}
+              </span>
+            </div>
+
+            {/* Segment Selector for Android vs Kashmiri Keyboard */}
+            <div className="flex items-center gap-1.5 bg-stone-200/90 p-1 rounded-xl border border-stone-300" dir="ltr">
+              <button
+                type="button"
+                id="btn-select-android-keyboard"
+                onClick={() => {
+                  setActiveKeyboard('android');
+                  setTimeout(() => {
+                    if (textareaRef.current) {
+                      textareaRef.current.focus();
+                    }
+                  }, 50);
+                }}
+                className={`px-2.5 h-8 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  activeKeyboard === 'android'
+                    ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
+                    : 'text-stone-800 hover:text-black hover:bg-stone-300'
+                }`}
+                title="Android System Keyboard"
+                aria-label="Android System Keyboard"
+              >
+                <Smartphone size={15} />
+                <span className="hidden sm:inline">Android</span>
+              </button>
+
+              <button
+                type="button"
+                id="btn-select-kashmiri-keyboard"
+                onClick={() => {
+                  setActiveKeyboard('kashmiri');
+                  setTimeout(() => {
+                    if (textareaRef.current) {
+                      textareaRef.current.focus({ preventScroll: true });
+                    }
+                  }, 50);
+                }}
+                className={`px-2.5 h-8 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  activeKeyboard === 'kashmiri'
+                    ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
+                    : 'text-stone-800 hover:text-black hover:bg-stone-300'
+                }`}
+                title="Kashmiri Custom Keyboard (کٲشُر کیبورڈ)"
+                aria-label="Kashmiri Keyboard"
+              >
+                <Keyboard size={15} />
+                <span className="font-nastaliq text-xs">کٲشُر</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Dedicated Docked Kashmiri Keyboard Area in Real Space */}
+          {activeKeyboard === 'kashmiri' && (
+            <div className="w-full shrink-0 z-40 shadow-xl border-t border-stone-300">
+              <KashmiriKeyboard
+                onInsertChar={handleInsertText}
+                onBackspace={handleKeyboardBackspace}
+                onEnter={handleKeyboardEnter}
+                onSpace={handleKeyboardSpace}
+                soundEnabled={soundEnabled}
+                onToggleSound={onToggleSound}
+                onCloseKeyboard={() => {
+                  setActiveKeyboard('none');
+                  if (textareaRef.current) {
+                    textareaRef.current.blur();
+                  }
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. TAB 2: CANVAS (Maximum Available Design Space + Design Toolbar) */}
+      {/* ========================================================================= */}
+      {activeTab === 'canvas' && (
+        <div className="relative flex-1 w-full h-full flex flex-col overflow-hidden">
+          {/* Main Visual Canvas Stage */}
+          <div
+            ref={stageViewportRef}
+            className="relative flex-1 w-full h-full flex flex-col items-center justify-center p-1 sm:p-2.5 overflow-auto custom-scrollbar bg-stone-200/50 cursor-default"
+            onPointerDown={handleDeselectLayerOnStageClick}
+            onTouchStart={handleCanvasTouchStart}
+            onTouchMove={handleCanvasTouchMove}
+            onTouchEnd={handleCanvasTouchEnd}
+          >
+            {/* Scaled Layout Wrapper */}
+            <div
+              className="relative flex items-center justify-center my-auto transition-all duration-75"
+              style={{
+                width: `${Math.round(refWidth * totalScale)}px`,
+                height: `${Math.round(refHeight * totalScale)}px`,
+              }}
+            >
+              {/* Canvas Stage Sheet */}
+              <div
+                id="kashmiri-canvas-document-sheet"
+                data-canvas-stage="true"
+                onPointerDown={handleDeselectLayerOnStageClick}
+                className="absolute bg-white shadow-xl rounded-2xl border border-stone-300 overflow-hidden select-none flex flex-col transition-transform duration-75"
+                style={{
+                  width: `${refWidth}px`,
+                  height: `${refHeight}px`,
+                  transform: `scale(${totalScale})`,
+                  transformOrigin: 'center center',
+                  backgroundColor: canvasConfig.color || '#ffffff',
+                  backgroundImage: canvasConfig.image ? `url(${canvasConfig.image})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {/* Background Overlay */}
+                {canvasConfig.overlayOpacity && canvasConfig.overlayOpacity > 0 ? (
+                  <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                      backgroundColor: canvasConfig.overlayColor || '#000000',
+                      opacity: canvasConfig.overlayOpacity,
+                    }}
+                  />
+                ) : null}
+
+                {/* Dynamic Alignment Guidelines (Vertical & Horizontal magnet lines) */}
+                {activeDragInfo.isDragging && (activeGuides.length > 0 || snapEnabled) && (
+                  <div className="absolute inset-0 pointer-events-none z-20 export-exclude" data-export-exclude="true">
+                    {activeGuides.map((guide) => {
+                      if (guide.type === 'vertical') {
+                        const startY = guide.start !== undefined ? guide.start : 0;
+                        const endY = guide.end !== undefined ? guide.end : refHeight;
+                        const heightPx = Math.max(20, endY - startY);
+                        return (
+                          <div
+                            key={guide.id}
+                            className="absolute top-0 bottom-0 pointer-events-none transition-opacity duration-75"
+                            style={{ left: `${guide.position}px` }}
+                          >
+                            <div
+                              className={`absolute -translate-x-1/2 shadow-xs ${
+                                guide.source === 'canvas'
+                                  ? 'w-[2px] bg-emerald-600 shadow-emerald-500/50'
+                                  : guide.source === 'margin'
+                                  ? 'w-[1.5px] bg-amber-500 border-x border-amber-300/40'
+                                  : 'w-[1.5px] bg-indigo-600 shadow-indigo-500/50'
+                              }`}
+                              style={{
+                                top: `${startY}px`,
+                                height: `${heightPx}px`,
+                              }}
+                            />
+                            <div
+                              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white shadow-2xs ${
+                                guide.source === 'canvas' ? 'bg-emerald-600' : guide.source === 'margin' ? 'bg-amber-600' : 'bg-indigo-600'
+                              }`}
+                              style={{ top: `${startY}px` }}
+                            />
+                            <div
+                              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white shadow-2xs ${
+                                guide.source === 'canvas' ? 'bg-emerald-600' : guide.source === 'margin' ? 'bg-amber-600' : 'bg-indigo-600'
+                              }`}
+                              style={{ top: `${startY + heightPx}px` }}
+                            />
+                            <div
+                              className={`absolute top-2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-sans font-bold text-white shadow-xs whitespace-nowrap ${
+                                guide.source === 'canvas' ? 'bg-emerald-700' : guide.source === 'margin' ? 'bg-amber-700' : 'bg-indigo-700'
+                              }`}
+                            >
+                              {guide.label}
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        const startX = guide.start !== undefined ? guide.start : 0;
+                        const endX = guide.end !== undefined ? guide.end : refWidth;
+                        const widthPx = Math.max(20, endX - startX);
+                        return (
+                          <div
+                            key={guide.id}
+                            className="absolute left-0 right-0 pointer-events-none transition-opacity duration-75"
+                            style={{ top: `${guide.position}px` }}
+                          >
+                            <div
+                              className={`absolute -translate-y-1/2 shadow-xs ${
+                                guide.source === 'canvas'
+                                  ? 'h-[2px] bg-emerald-600 shadow-emerald-500/50'
+                                  : guide.source === 'margin'
+                                  ? 'h-[1.5px] bg-amber-500 border-y border-amber-300/40'
+                                  : 'h-[1.5px] bg-indigo-600 shadow-indigo-500/50'
+                              }`}
+                              style={{
+                                left: `${startX}px`,
+                                width: `${widthPx}px`,
+                              }}
+                            />
+                            <div
+                              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white shadow-2xs ${
+                                guide.source === 'canvas' ? 'bg-emerald-600' : guide.source === 'margin' ? 'bg-amber-600' : 'bg-indigo-600'
+                              }`}
+                              style={{ left: `${startX}px` }}
+                            />
+                            <div
+                              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white shadow-2xs ${
+                                guide.source === 'canvas' ? 'bg-emerald-600' : guide.source === 'margin' ? 'bg-amber-600' : 'bg-indigo-600'
+                              }`}
+                              style={{ left: `${startX + widthPx}px` }}
+                            />
+                            <div
+                              className={`absolute left-2 -translate-y-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-sans font-bold text-white shadow-xs whitespace-nowrap ${
+                                guide.source === 'canvas' ? 'bg-emerald-700' : guide.source === 'margin' ? 'bg-amber-700' : 'bg-indigo-700'
+                              }`}
+                            >
+                              {guide.label}
+                            </div>
+                          </div>
+                        );
+                      }
+                    })}
+                  </div>
+                )}
+
+                {/* Rendered Text Layers */}
+                <div className="relative w-full h-full flex-1 z-10 overflow-hidden">
+                  {textLayers.map((layer) => (
+                    <CanvasTextLayerObject
+                      key={layer.id}
+                      layer={layer}
+                      isSelected={layer.id === activeLayerId}
+                      onSelect={handleSelectLayer}
+                      onUpdateLayer={handleUpdateLayer}
+                      onEditInNativeInput={handleEditInNativeInput}
+                      onDuplicateLayer={handleDuplicateLayer}
+                      onDeleteLayer={handleDeleteLayer}
+                      onBringToFront={handleBringToFront}
+                      onSendToBack={handleSendToBack}
+                      onMoveUp={handleMoveLayerUp}
+                      onMoveDown={handleMoveLayerDown}
+                      canvasScale={totalScale}
+                      onDragStateChange={handleLayerDragStateChange}
+                      onSnapPosition={handleSnapPosition}
+                    />
+                  ))}
+                </div>
+
+                {/* Minimal Brand Attribution */}
+                <div className="w-full px-4 py-2 flex items-center justify-between text-[11px] text-stone-400 font-sans z-10 pointer-events-none select-none">
+                  <span>KoshurKanvas</span>
+                  <span className="font-nastaliq">کٲشُر لؠکھٲرؠ</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating High-Contrast Zoom Control Pill */}
+            <div className="fixed bottom-20 left-3 z-30 flex items-center gap-1 bg-white border-2 border-stone-300 rounded-full shadow-lg p-1">
+              <button
+                type="button"
+                onClick={() => setZoomScale((s) => Math.max(0.5, parseFloat((s - 0.1).toFixed(2))))}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-900 hover:bg-stone-200 active:scale-95 transition-all cursor-pointer"
+                title="Zoom Out"
+                aria-label="Zoom Out"
+              >
+                <ZoomOut size={16} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setZoomScale(1)}
+                className="px-2.5 py-1 text-xs font-mono font-bold text-stone-900 hover:bg-stone-200 rounded-full transition-all cursor-pointer"
+                title="Reset Zoom (100%)"
+                aria-label="Reset Zoom"
+              >
+                {Math.round(zoomScale * 100)}%
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setZoomScale((s) => Math.min(2.5, parseFloat((s + 0.1).toFixed(2))))}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-900 hover:bg-stone-200 active:scale-95 transition-all cursor-pointer"
+                title="Zoom In"
+                aria-label="Zoom In"
+              >
+                <ZoomIn size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Canvas Design Toolbar */}
+          <MobileTextDesignToolbar
+            activeLayer={activeLayer}
+            currentStyle={activeFormatting}
+            onUpdateStyle={handleUpdateStyle}
+            onOpenUnicodeEditor={() => {
+              if (activeLayer) {
+                handleEditInNativeInput(activeLayer);
+              } else {
+                handleAddTextLayer();
+              }
+            }}
+            onAddNewText={handleAddTextLayer}
+            onDuplicateLayer={handleDuplicateLayer}
+            onDeleteLayer={handleDeleteLayer}
+            onBringToFront={handleBringToFront}
+            onSendToBack={handleSendToBack}
+            onOpenLayersPanel={() => setShowLayersPanel(true)}
+            onOpenCanvasSettings={() => setShowCanvasPanel(true)}
+            onCenterHorizontally={handleCenterLayerHorizontally}
+            onCenterVertically={handleCenterLayerVertically}
+          />
+        </div>
+      )}
+
+      {/* Slide-Up Layer Manager Panel */}
+      <LayerManagerPanel
+        isOpen={showLayersPanel}
+        layers={textLayers}
+        activeLayerId={activeLayerId}
+        onSelectLayer={handleSelectLayer}
+        onUpdateLayer={handleUpdateLayer}
+        onDeleteLayer={handleDeleteLayer}
+        onDuplicateLayer={handleDuplicateLayer}
+        onBringToFront={handleBringToFront}
+        onSendToBack={handleSendToBack}
+        onMoveUp={handleMoveLayerUp}
+        onMoveDown={handleMoveLayerDown}
+        onClose={() => setShowLayersPanel(false)}
+      />
+
+      {/* Slide-Up Canvas Settings & Alignment Panel */}
+      <CanvasSettingsPanel
+        isOpen={showCanvasPanel}
+        canvasConfig={canvasConfig}
+        onUpdateCanvasConfig={handleUpdateCanvasConfig}
+        onClose={() => setShowCanvasPanel(false)}
+        snapEnabled={snapEnabled}
+        onToggleSnap={setSnapEnabled}
+        snapSensitivity={snapSensitivity}
+        onChangeSnapSensitivity={setSnapSensitivity}
+      />
+    </div>
+  );
+};

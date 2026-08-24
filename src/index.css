@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* Explicit Local @font-face for Noto Nastaliq Urdu (100% Offline Resilience) */
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-400-normal.woff2') format('woff2'),
+       url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-500-normal.woff2') format('woff2'),
+       url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-500-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-600-normal.woff2') format('woff2'),
+       url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-600-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-700-normal.woff2') format('woff2'),
+       url('/fonts/noto-nastaliq-urdu/files/noto-nastaliq-urdu-arabic-700-normal.woff') format('woff');
+}
+
+@layer base {
+  :root {
+    --font-nastaliq: 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Jameel Noori Nastaleeq', 'Gulzar', 'Amiri', serif;
+    --font-gulzar: 'Gulzar', 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Jameel Noori Nastaleeq', 'Amiri', serif;
+    --font-amiri: 'Amiri', 'Noto Nastaliq Urdu', 'Gulzar', 'Urdu Typesetting', serif;
+    --font-arabic-sans: 'Noto Sans Arabic', 'Tahoma', 'Arial', 'Segoe UI', sans-serif;
+    --font-ui: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+.font-nastaliq {
+  font-family: 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Jameel Noori Nastaleeq', 'Gulzar', 'Amiri', serif;
+  line-height: 2.2;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+}
+
+.font-gulzar {
+  font-family: 'Gulzar', 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Jameel Noori Nastaleeq', 'Amiri', serif;
+  line-height: 2.0;
+}
+
+.font-amiri {
+  font-family: 'Amiri', 'Noto Nastaliq Urdu', 'Gulzar', 'Urdu Typesetting', serif;
+  line-height: 1.8;
+}
+
+.font-arabic-sans {
+  font-family: 'Noto Sans Arabic', 'Tahoma', 'Arial', 'Segoe UI', sans-serif;
+  line-height: 1.8;
+}
+
+/* Custom subtle scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* Prevent unwanted callouts on mobile touch keyboard */
+.touch-none-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Nastaliq text box baseline adjustment */
+.nastaliq-box {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+
