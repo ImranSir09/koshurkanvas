@@ -18,6 +18,7 @@ import {
 interface CanvasTextLayerObjectProps {
   layer: TextLayer;
   isSelected: boolean;
+  isPrimaryActive?: boolean;
   onSelect: (layerId: string, isMultiSelect?: boolean) => void;
   onUpdateLayer: (layerId: string, updates: Partial<TextLayer>) => void;
   onEditInNativeInput: (layer: TextLayer) => void;
@@ -44,6 +45,7 @@ interface CanvasTextLayerObjectProps {
 export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   layer,
   isSelected,
+  isPrimaryActive = true,
   onSelect,
   onUpdateLayer,
   onEditInNativeInput,
@@ -444,13 +446,14 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
             data-export-exclude="true"
           />
 
-          {/* Floating Action Controls Bar (Icon Only) */}
-          <div
-            className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-stone-950 text-white rounded-xl px-2 py-1 flex items-center gap-1 shadow-2xl border border-stone-700 z-50 pointer-events-auto whitespace-nowrap animate-in fade-in-50 zoom-in-95 export-exclude"
-            dir="ltr"
-            data-export-exclude="true"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
+          {/* Floating Action Controls Bar (Icon Only - Only shown on primary active layer to prevent clutter) */}
+          {isPrimaryActive && (
+            <div
+              className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-stone-950 text-white rounded-xl px-2 py-1 flex items-center gap-1 shadow-2xl border border-stone-700 z-50 pointer-events-auto whitespace-nowrap animate-in fade-in-50 zoom-in-95 export-exclude"
+              dir="ltr"
+              data-export-exclude="true"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
             {/* Edit in Native Input Icon Button */}
             <button
               type="button"
@@ -591,6 +594,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
               <Trash2 size={15} />
             </button>
           </div>
+          )}
         </div>
       )}
 

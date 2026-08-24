@@ -224,10 +224,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         const groupIds = textLayers.filter((l) => l.groupId === activeL.groupId).map((l) => l.id);
         setSelectedLayerIds((prev) => {
           const hasAll = groupIds.every((gid) => prev.includes(gid));
-          return hasAll ? prev : groupIds;
+          return hasAll ? prev : Array.from(new Set([...prev, ...groupIds]));
         });
-      } else {
-        setSelectedLayerIds((prev) => (prev.includes(activeLayerId) ? prev : [activeLayerId]));
       }
     } else {
       setSelectedLayerIds([]);
@@ -525,18 +523,10 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     if (isMultiSelect) {
       setSelectedLayerIds((prev) => {
         const exists = prev.includes(layerId);
-        const next = exists ? prev.filter((id) => id !== layerId) : [...prev, layerId];
-        const newPrimaryId = next.length > 0 ? next[next.length - 1] : null;
-        if (newPrimaryId) {
-          setActiveLayerId(newPrimaryId);
-          const primTarget = textLayers.find((l) => l.id === newPrimaryId);
-          if (primTarget) {
-            setActiveFormatting(primTarget.style);
-            onUpdateDocument({ activeLayerId: newPrimaryId, content: primTarget.text });
-          }
-        }
-        return next;
+        return exists ? prev.filter((id) => id !== layerId) : [...prev, layerId];
       });
+      setActiveLayerId(layerId);
+      setActiveFormatting(target.style);
     } else {
       if (target.groupId) {
         const groupMembers = textLayers.filter((l) => l.groupId === target.groupId).map((l) => l.id);
@@ -546,10 +536,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       }
       setActiveLayerId(layerId);
       setActiveFormatting(target.style);
-      onUpdateDocument({
-        activeLayerId: layerId,
-        content: target.text,
-      });
     }
   };
 
@@ -1466,12 +1452,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 <div className="relative w-full h-full flex-1 z-10 overflow-hidden">
                   {textLayers.map((layer) => {
                     const isSelected = selectedLayerIds.includes(layer.id) || layer.id === activeLayerId;
+                    const isPrimaryActive = layer.id === activeLayerId;
                     const canGroup = selectedLayerIds.length >= 2 && selectedLayerIds.includes(layer.id);
                     return (
                       <CanvasTextLayerObject
                         key={layer.id}
                         layer={layer}
                         isSelected={isSelected}
+                        isPrimaryActive={isPrimaryActive}
                         onSelect={handleSelectLayer}
                         onUpdateLayer={handleUpdateLayer}
                         onEditInNativeInput={handleEditInNativeInput}
