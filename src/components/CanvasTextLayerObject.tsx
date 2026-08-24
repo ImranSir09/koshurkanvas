@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { TextLayer, TextStyleProperties } from '../types';
+import React, { useRef, useState, useEffect } from 'react';
+import { TextLayer } from '../types';
 import { getFontFamilyCSS } from '../lib/fontUtils';
 import {
   Edit3,
@@ -7,19 +7,18 @@ import {
   Trash2,
   Lock,
   Unlock,
-  Eye,
   EyeOff,
   ArrowUp,
   ArrowDown,
   RotateCw,
-  Maximize2,
-  Move,
+  FolderPlus,
+  FolderMinus,
 } from 'lucide-react';
 
 interface CanvasTextLayerObjectProps {
   layer: TextLayer;
   isSelected: boolean;
-  onSelect: (layerId: string) => void;
+  onSelect: (layerId: string, isMultiSelect?: boolean) => void;
   onUpdateLayer: (layerId: string, updates: Partial<TextLayer>) => void;
   onEditInNativeInput: (layer: TextLayer) => void;
   onDuplicateLayer: (layerId: string) => void;
@@ -29,6 +28,9 @@ interface CanvasTextLayerObjectProps {
   onMoveUp: (layerId: string) => void;
   onMoveDown: (layerId: string) => void;
   canvasScale?: number;
+  canGroup?: boolean;
+  onGroupSelected?: () => void;
+  onUngroupSelected?: () => void;
   onDragStateChange?: (isDragging: boolean, layerX: number, layerY: number, layerWidth: number, layerHeight: number) => void;
   onSnapPosition?: (
     layerId: string,
@@ -49,9 +51,10 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   onDeleteLayer,
   onBringToFront,
   onSendToBack,
-  onMoveUp,
-  onMoveDown,
   canvasScale = 1,
+  canGroup,
+  onGroupSelected,
+  onUngroupSelected,
   onDragStateChange,
   onSnapPosition,
 }) => {
@@ -98,7 +101,8 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   // Handle Drag Move (Position x, y)
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
-    onSelect(layer.id);
+    const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
+    onSelect(layer.id, isMultiSelect);
 
     // Double tap / click detection to edit in native input
     const now = Date.now();
@@ -302,8 +306,9 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   const textShadowCSS = layer.style.shadowColor
     ? `${layer.style.shadowOffsetX || 0}px ${layer.style.shadowOffsetY || 2}px ${layer.style.shadowBlur || 4}px ${layer.style.shadowColor}`
     : 'none';
-  const strokeCSS = layer.style.strokeColor
-    ? `${layer.style.strokeWidth || 1}px ${layer.style.strokeColor}`
+  const strokeWidth = layer.style.strokeWidth ?? 0;
+  const strokeCSS = (layer.style.strokeColor && strokeWidth > 0)
+    ? `${strokeWidth}px ${layer.style.strokeColor}`
     : 'none';
 
   return (
@@ -351,6 +356,8 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
           lineHeight: layer.style.lineHeight || 2.2,
           letterSpacing: `${layer.style.letterSpacing || 0}px`,
           textShadow: textShadowCSS,
+          paintOrder: 'stroke fill',
+          WebkitPaintOrder: 'stroke fill',
           WebkitTextStroke: strokeCSS,
           opacity: layer.style.opacity ?? 1,
           fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
@@ -520,6 +527,39 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
             >
               <Lock size={15} />
             </button>
+
+            {/* Group or Ungroup Buttons */}
+            {canGroup && onGroupSelected && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onGroupSelected();
+                }}
+                className="w-8 h-8 rounded-lg bg-indigo-700 hover:bg-indigo-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
+                title="Group Selected Layers (گروپ بَنائِو)"
+                aria-label="Group Selected Layers"
+                data-export-exclude="true"
+              >
+                <FolderPlus size={15} />
+              </button>
+            )}
+
+            {layer.groupId && onUngroupSelected && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUngroupSelected();
+                }}
+                className="w-8 h-8 rounded-lg bg-amber-700 hover:bg-amber-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
+                title="Ungroup Layers (گروپ الگ کٔرِو)"
+                aria-label="Ungroup Layers"
+                data-export-exclude="true"
+              >
+                <FolderMinus size={15} />
+              </button>
+            )}
 
             {/* Hide */}
             <button

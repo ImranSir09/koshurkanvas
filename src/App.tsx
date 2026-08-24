@@ -59,20 +59,32 @@ export default function App() {
   // Update Document handler with auto-save
   const handleUpdateDocument = useCallback(
     (updatedFields: Partial<KashurDocument>) => {
+      const targetId = updatedFields.id || currentDoc.id;
+      const timestamp = Date.now();
+
       setCurrentDoc((prev) => {
         const nextDoc = {
           ...prev,
           ...updatedFields,
-          updatedAt: Date.now(),
+          updatedAt: timestamp,
         };
         saveDocument(nextDoc);
-        setDocuments((prevDocs) =>
-          prevDocs.map((d) => (d.id === nextDoc.id ? nextDoc : d))
-        );
         return nextDoc;
       });
+
+      setDocuments((prevDocs) =>
+        prevDocs.map((d) =>
+          d.id === targetId
+            ? {
+                ...d,
+                ...updatedFields,
+                updatedAt: timestamp,
+              }
+            : d
+        )
+      );
     },
-    []
+    [currentDoc.id]
   );
 
   // Rename Document

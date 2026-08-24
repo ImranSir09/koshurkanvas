@@ -137,6 +137,7 @@ export interface BaseLayer {
   zIndex: number;
   isLocked: boolean;
   isHidden: boolean;
+  groupId?: string;
 }
 
 export interface TextLayer extends BaseLayer {

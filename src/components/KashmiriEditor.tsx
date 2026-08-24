@@ -207,10 +207,32 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     doc.activeLayerId || (textLayers[0] ? textLayers[0].id : null)
   );
 
+  const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>(
+    activeLayerId ? [activeLayerId] : []
+  );
+
   const activeLayer = useMemo(() => {
     if (!activeLayerId) return null;
     return textLayers.find((l) => l.id === activeLayerId) || null;
   }, [textLayers, activeLayerId]);
+
+  // Keep selectedLayerIds in sync when activeLayerId changes
+  useEffect(() => {
+    if (activeLayerId) {
+      const activeL = textLayers.find((l) => l.id === activeLayerId);
+      if (activeL?.groupId) {
+        const groupIds = textLayers.filter((l) => l.groupId === activeL.groupId).map((l) => l.id);
+        setSelectedLayerIds((prev) => {
+          const hasAll = groupIds.every((gid) => prev.includes(gid));
+          return hasAll ? prev : groupIds;
+        });
+      } else {
+        setSelectedLayerIds((prev) => (prev.includes(activeLayerId) ? prev : [activeLayerId]));
+      }
+    } else {
+      setSelectedLayerIds([]);
+    }
+  }, [activeLayerId, textLayers]);
 
   // When switching to input_text tab, ensure an active layer is selected so writing works directly
   useEffect(() => {
@@ -293,17 +315,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       }
     }
   }, [activeLayerId, activeTab]);
-
-  // Handle external insert character events
-  useEffect(() => {
-    const handleInsertEvent = (e: any) => {
-      if (e.detail && e.detail.char) {
-        handleInsertText(e.detail.char);
-      }
-    };
-    window.addEventListener('app-insert-char', handleInsertEvent);
-    return () => window.removeEventListener('app-insert-char', handleInsertEvent);
-  });
 
   // Update selection tracking from native textarea
   const updateSelectionFromDOM = useCallback(() => {
@@ -422,6 +433,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushHistory]
   );
 
+  // Handle external insert character events
+  useEffect(() => {
+    const handleInsertEvent = (e: any) => {
+      if (e.detail && e.detail.char) {
+        handleInsertText(e.detail.char);
+      }
+    };
+    window.addEventListener('app-insert-char', handleInsertEvent);
+    return () => window.removeEventListener('app-insert-char', handleInsertEvent);
+  }, [handleInsertText]);
+
   const handleKeyboardBackspace = useCallback(() => {
     const activeStart = textareaRef.current ? textareaRef.current.selectionStart : cursorPos;
     const activeEnd = textareaRef.current ? textareaRef.current.selectionEnd : cursorPos;
@@ -496,10 +518,33 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   );
 
   // Layer Management Callbacks
-  const handleSelectLayer = (layerId: string) => {
-    setActiveLayerId(layerId);
+  const handleSelectLayer = (layerId: string, isMultiSelect = false) => {
     const target = textLayers.find((l) => l.id === layerId);
-    if (target) {
+    if (!target) return;
+
+    if (isMultiSelect) {
+      setSelectedLayerIds((prev) => {
+        const exists = prev.includes(layerId);
+        const next = exists ? prev.filter((id) => id !== layerId) : [...prev, layerId];
+        const newPrimaryId = next.length > 0 ? next[next.length - 1] : null;
+        if (newPrimaryId) {
+          setActiveLayerId(newPrimaryId);
+          const primTarget = textLayers.find((l) => l.id === newPrimaryId);
+          if (primTarget) {
+            setActiveFormatting(primTarget.style);
+            onUpdateDocument({ activeLayerId: newPrimaryId, content: primTarget.text });
+          }
+        }
+        return next;
+      });
+    } else {
+      if (target.groupId) {
+        const groupMembers = textLayers.filter((l) => l.groupId === target.groupId).map((l) => l.id);
+        setSelectedLayerIds(groupMembers);
+      } else {
+        setSelectedLayerIds([layerId]);
+      }
+      setActiveLayerId(layerId);
       setActiveFormatting(target.style);
       onUpdateDocument({
         activeLayerId: layerId,
@@ -508,7 +553,57 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     }
   };
 
+  const handleToggleSelectLayer = (layerId: string) => {
+    handleSelectLayer(layerId, true);
+  };
+
+  const handleGroupLayers = (idsToGroup: string[]) => {
+    if (idsToGroup.length < 2) return;
+    const newGroupId = `group-${Date.now()}`;
+    const updatedLayers = textLayers.map((l) => {
+      if (idsToGroup.includes(l.id)) {
+        return { ...l, groupId: newGroupId };
+      }
+      return l;
+    });
+    setSelectedLayerIds(idsToGroup);
+    onUpdateDocument({ textLayers: updatedLayers });
+    pushHistory(doc.content, updatedLayers, doc.spans || []);
+  };
+
+  const handleUngroupLayers = (targetGroupId: string) => {
+    const updatedLayers = textLayers.map((l) => {
+      if (l.groupId === targetGroupId) {
+        const copy = { ...l };
+        delete copy.groupId;
+        return copy;
+      }
+      return l;
+    });
+    onUpdateDocument({ textLayers: updatedLayers });
+    pushHistory(doc.content, updatedLayers, doc.spans || []);
+  };
+
   const handleUpdateLayer = (layerId: string, updates: Partial<TextLayer>) => {
+    const targetLayer = textLayers.find((l) => l.id === layerId);
+    let dx = 0;
+    let dy = 0;
+    const isMoving = updates.x !== undefined || updates.y !== undefined;
+
+    if (targetLayer && isMoving) {
+      dx = updates.x !== undefined ? updates.x - targetLayer.x : 0;
+      dy = updates.y !== undefined ? updates.y - targetLayer.y : 0;
+    }
+
+    const affectedIds = new Set<string>();
+    if (targetLayer?.groupId) {
+      textLayers.filter((l) => l.groupId === targetLayer.groupId).forEach((l) => affectedIds.add(l.id));
+    } else if (selectedLayerIds.includes(layerId) && selectedLayerIds.length > 1) {
+      selectedLayerIds.forEach((id) => affectedIds.add(id));
+    } else {
+      affectedIds.add(layerId);
+    }
+
     const updatedLayers = textLayers.map((l) => {
       if (l.id === layerId) {
         const next = { ...l, ...updates };
@@ -516,6 +611,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
           next.style = { ...l.style, ...updates.style };
         }
         return next;
+      } else if (isMoving && affectedIds.has(l.id)) {
+        return {
+          ...l,
+          x: Math.round(l.x + dx),
+          y: Math.round(l.y + dy),
+        };
       }
       return l;
     });
@@ -1068,10 +1169,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       <LayerManagerPanel
         layers={textLayers}
         activeLayerId={activeLayerId}
-        onSelectLayer={(id) => {
-          handleSelectLayer(id);
-          setShowLayersPanel(false);
+        selectedLayerIds={selectedLayerIds}
+        onSelectLayer={(id, isMulti) => {
+          handleSelectLayer(id, isMulti);
         }}
+        onToggleSelectLayer={handleToggleSelectLayer}
+        onGroupLayers={handleGroupLayers}
+        onUngroupLayers={handleUngroupLayers}
         onAddTextLayer={handleAddTextLayer}
         onUpdateLayer={handleUpdateLayer}
         onDuplicateLayer={handleDuplicateLayer}
@@ -1360,25 +1464,32 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
                 {/* Rendered Text Layers */}
                 <div className="relative w-full h-full flex-1 z-10 overflow-hidden">
-                  {textLayers.map((layer) => (
-                    <CanvasTextLayerObject
-                      key={layer.id}
-                      layer={layer}
-                      isSelected={layer.id === activeLayerId}
-                      onSelect={handleSelectLayer}
-                      onUpdateLayer={handleUpdateLayer}
-                      onEditInNativeInput={handleEditInNativeInput}
-                      onDuplicateLayer={handleDuplicateLayer}
-                      onDeleteLayer={handleDeleteLayer}
-                      onBringToFront={handleBringToFront}
-                      onSendToBack={handleSendToBack}
-                      onMoveUp={handleMoveLayerUp}
-                      onMoveDown={handleMoveLayerDown}
-                      canvasScale={totalScale}
-                      onDragStateChange={handleLayerDragStateChange}
-                      onSnapPosition={handleSnapPosition}
-                    />
-                  ))}
+                  {textLayers.map((layer) => {
+                    const isSelected = selectedLayerIds.includes(layer.id) || layer.id === activeLayerId;
+                    const canGroup = selectedLayerIds.length >= 2 && selectedLayerIds.includes(layer.id);
+                    return (
+                      <CanvasTextLayerObject
+                        key={layer.id}
+                        layer={layer}
+                        isSelected={isSelected}
+                        onSelect={handleSelectLayer}
+                        onUpdateLayer={handleUpdateLayer}
+                        onEditInNativeInput={handleEditInNativeInput}
+                        onDuplicateLayer={handleDuplicateLayer}
+                        onDeleteLayer={handleDeleteLayer}
+                        onBringToFront={handleBringToFront}
+                        onSendToBack={handleSendToBack}
+                        onMoveUp={handleMoveLayerUp}
+                        onMoveDown={handleMoveLayerDown}
+                        canvasScale={totalScale}
+                        canGroup={canGroup}
+                        onGroupSelected={() => handleGroupLayers(selectedLayerIds)}
+                        onUngroupSelected={() => layer.groupId && handleUngroupLayers(layer.groupId)}
+                        onDragStateChange={handleLayerDragStateChange}
+                        onSnapPosition={handleSnapPosition}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Minimal Brand Attribution */}

@@ -644,15 +644,36 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               <input
                 type="color"
                 value={currentStyle.strokeColor || '#000000'}
-                onChange={(e) => onUpdateStyle({ strokeColor: e.target.value, strokeWidth: 1 })}
+                onChange={(e) => onUpdateStyle({
+                  strokeColor: e.target.value,
+                  strokeWidth: currentStyle.strokeWidth || 1.5,
+                })}
                 className="w-6 h-6 rounded border border-stone-300 cursor-pointer shrink-0"
                 title="Outline Color"
+              />
+              <span className="text-[10px] font-mono font-bold text-stone-700 shrink-0">
+                {currentStyle.strokeWidth || 0}px
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="8"
+                step="0.5"
+                value={currentStyle.strokeWidth || 0}
+                onChange={(e) => {
+                  const width = parseFloat(e.target.value);
+                  onUpdateStyle({
+                    strokeWidth: width,
+                    strokeColor: width > 0 ? (currentStyle.strokeColor || '#000000') : undefined,
+                  });
+                }}
+                className="w-20 accent-emerald-700 cursor-pointer h-1.5 bg-stone-300 rounded-lg shrink-0"
               />
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => onUpdateStyle({ strokeColor: undefined, strokeWidth: undefined })}
-                className="text-[10px] text-rose-700 hover:underline font-nastaliq cursor-pointer"
+                onClick={() => onUpdateStyle({ strokeColor: undefined, strokeWidth: 0 })}
+                className="text-[10px] text-rose-700 hover:underline font-nastaliq cursor-pointer shrink-0"
               >
                 حذِف خٔط (Remove Outline)
               </button>

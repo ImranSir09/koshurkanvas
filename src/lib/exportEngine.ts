@@ -370,9 +370,11 @@ function applySliceStyleToElement(
     el.style.textShadow = `${sx}px ${sy}px ${sb}px ${style.shadowColor}`;
   }
 
-  if (style.strokeColor && style.strokeWidth) {
+  if (style.strokeColor && style.strokeWidth && style.strokeWidth > 0) {
     const sw = Math.max(1, Math.round(style.strokeWidth * scale));
     (el.style as any).webkitTextStroke = `${sw}px ${style.strokeColor}`;
+    (el.style as any).paintOrder = 'stroke fill';
+    (el.style as any).webkitPaintOrder = 'stroke fill';
   }
 
   // Preset effects
