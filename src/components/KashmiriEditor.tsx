@@ -20,6 +20,13 @@ import {
   normalizeSelection,
   getEffectiveStyleAtRange,
 } from '../lib/textEngine';
+import {
+  groupSelectedLayers,
+  ungroupSelectedLayers,
+  updateLayersCollection,
+  applyStyleToLayers,
+  duplicateTextLayer,
+} from '../lib/layerUtils';
 import { DEFAULT_TEXT_STYLE } from '../lib/kashmiriData';
 import { getFontFamilyCSS } from '../lib/fontUtils';
 import {
@@ -496,15 +503,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const newActiveStyle = { ...activeFormatting, ...styleUpdates };
       setActiveFormatting(newActiveStyle);
 
-      const updatedLayers = textLayers.map((layer) => {
-        if (layer.id === activeLayerId) {
-          return {
-            ...layer,
-            style: { ...layer.style, ...styleUpdates },
-          };
-        }
-        return layer;
-      });
+      const targetIds = selectedLayerIds.length > 0 ? selectedLayerIds : (activeLayerId ? [activeLayerId] : []);
+      const updatedLayers = applyStyleToLayers(textLayers, targetIds, styleUpdates);
 
       onUpdateDocument({
         textLayers: updatedLayers,
@@ -512,7 +512,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       });
       pushHistory(doc.content, updatedLayers, doc.spans || []);
     },
-    [activeFormatting, textLayers, activeLayerId, doc.content, doc.spans, onUpdateDocument, pushHistory]
+    [activeFormatting, textLayers, activeLayerId, selectedLayerIds, doc.content, doc.spans, onUpdateDocument, pushHistory]
   );
 
   // Layer Management Callbacks
@@ -545,68 +545,20 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
   const handleGroupLayers = (idsToGroup: string[]) => {
     if (idsToGroup.length < 2) return;
-    const newGroupId = `group-${Date.now()}`;
-    const updatedLayers = textLayers.map((l) => {
-      if (idsToGroup.includes(l.id)) {
-        return { ...l, groupId: newGroupId };
-      }
-      return l;
-    });
+    const updatedLayers = groupSelectedLayers(textLayers, idsToGroup);
     setSelectedLayerIds(idsToGroup);
     onUpdateDocument({ textLayers: updatedLayers });
     pushHistory(doc.content, updatedLayers, doc.spans || []);
   };
 
   const handleUngroupLayers = (targetGroupId: string) => {
-    const updatedLayers = textLayers.map((l) => {
-      if (l.groupId === targetGroupId) {
-        const copy = { ...l };
-        delete copy.groupId;
-        return copy;
-      }
-      return l;
-    });
+    const updatedLayers = ungroupSelectedLayers(textLayers, targetGroupId);
     onUpdateDocument({ textLayers: updatedLayers });
     pushHistory(doc.content, updatedLayers, doc.spans || []);
   };
 
   const handleUpdateLayer = (layerId: string, updates: Partial<TextLayer>) => {
-    const targetLayer = textLayers.find((l) => l.id === layerId);
-    let dx = 0;
-    let dy = 0;
-    const isMoving = updates.x !== undefined || updates.y !== undefined;
-
-    if (targetLayer && isMoving) {
-      dx = updates.x !== undefined ? updates.x - targetLayer.x : 0;
-      dy = updates.y !== undefined ? updates.y - targetLayer.y : 0;
-    }
-
-    const affectedIds = new Set<string>();
-    if (targetLayer?.groupId) {
-      textLayers.filter((l) => l.groupId === targetLayer.groupId).forEach((l) => affectedIds.add(l.id));
-    } else if (selectedLayerIds.includes(layerId) && selectedLayerIds.length > 1) {
-      selectedLayerIds.forEach((id) => affectedIds.add(id));
-    } else {
-      affectedIds.add(layerId);
-    }
-
-    const updatedLayers = textLayers.map((l) => {
-      if (l.id === layerId) {
-        const next = { ...l, ...updates };
-        if (updates.style) {
-          next.style = { ...l.style, ...updates.style };
-        }
-        return next;
-      } else if (isMoving && affectedIds.has(l.id)) {
-        return {
-          ...l,
-          x: Math.round(l.x + dx),
-          y: Math.round(l.y + dy),
-        };
-      }
-      return l;
-    });
-
+    const updatedLayers = updateLayersCollection(textLayers, layerId, updates, selectedLayerIds);
     const isCurrentActive = layerId === activeLayerId;
     onUpdateDocument({
       textLayers: updatedLayers,
@@ -677,14 +629,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
     const newLayerId = `layer-${Date.now()}`;
     const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
-    const cloned: TextLayer = {
-      ...source,
-      id: newLayerId,
-      name: `${source.name} (نقل)`,
-      x: source.x + 24,
-      y: source.y + 24,
-      zIndex: maxZ + 1,
-    };
+    const cloned = duplicateTextLayer(source, newLayerId, maxZ);
 
     const updatedLayers = [...textLayers, cloned];
     setActiveLayerId(newLayerId);
@@ -704,6 +649,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const updatedLayers = textLayers.filter((l) => l.id !== layerId);
     const nextActive = updatedLayers[0]?.id || '';
     setActiveLayerId(nextActive);
+    setSelectedLayerIds((prev) => prev.filter((id) => id !== layerId));
     const nextLayer = updatedLayers[0];
     onUpdateDocument({
       textLayers: updatedLayers,
