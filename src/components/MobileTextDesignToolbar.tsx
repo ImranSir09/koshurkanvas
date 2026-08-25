@@ -40,7 +40,6 @@ import {
   Minus,
   MoveHorizontal,
   MoveVertical,
-  Wand2,
   Upload,
   Pilcrow,
   ArrowRightToLine,
@@ -77,7 +76,6 @@ interface MobileTextDesignToolbarProps {
 
 type ActiveSheet =
   | 'none'
-  | 'presets'
   | 'font'
   | 'size'
   | 'paragraph'
@@ -94,109 +92,6 @@ const FONTS: { id: FontChoice; label: string; preview: string }[] = [
   { id: 'Gulzar', label: 'گُلزار (Gulzar)', preview: 'کٲشُر لیٚکھُن' },
   { id: 'Amiri', label: 'امیری نسخ (Amiri Naskh)', preview: 'کٲشُر لیٚکھُن' },
   { id: 'Noto Sans Arabic', label: 'نوٹو سنز (Sans Arabic)', preview: 'کٲشُر لیٚکھُن' },
-];
-
-const PRESETS: {
-  id: string;
-  name: string;
-  preview: string;
-  style: Partial<TextStyleProperties>;
-}[] = [
-  {
-    id: 'royal-gold',
-    name: 'Royal Gold',
-    preview: 'شاہی سون',
-    style: {
-      color: '#d97706',
-      highlightColor: '#1c1917',
-      borderRadius: 12,
-      padding: 10,
-      borderWidth: 2,
-      borderColor: '#eab308',
-      shadowBlur: 8,
-      shadowColor: 'rgba(234, 179, 8, 0.4)',
-      bold: true,
-    },
-  },
-  {
-    id: 'emerald-seal',
-    name: 'Emerald Seal',
-    preview: 'زمرّد مہر',
-    style: {
-      color: '#ffffff',
-      highlightColor: '#047857',
-      borderRadius: 14,
-      padding: 8,
-      borderWidth: 1.5,
-      borderColor: '#10b981',
-      shadowBlur: 6,
-      shadowColor: 'rgba(4, 120, 87, 0.5)',
-      bold: true,
-    },
-  },
-  {
-    id: 'poetry-sher',
-    name: 'Poetry / Sher',
-    preview: 'شعر و ادب',
-    style: {
-      fontFamily: 'Noto Nastaliq Urdu',
-      color: '#1c1917',
-      highlightColor: '#fef3c7',
-      borderRadius: 8,
-      padding: 8,
-      borderWidth: 1,
-      borderColor: '#d97706',
-      italic: false,
-      align: 'center',
-      lineHeight: 2.6,
-    },
-  },
-  {
-    id: 'neon-glow',
-    name: 'Neon Glow',
-    preview: 'روشن متن',
-    style: {
-      color: '#38bdf8',
-      highlightColor: '#0f172a',
-      borderRadius: 10,
-      padding: 8,
-      borderWidth: 1,
-      borderColor: '#0284c7',
-      shadowBlur: 14,
-      shadowColor: '#38bdf8',
-      bold: true,
-    },
-  },
-  {
-    id: 'crimson-badge',
-    name: 'Crimson Badge',
-    preview: 'لال گلاب',
-    style: {
-      color: '#ffffff',
-      highlightColor: '#b91c1c',
-      borderRadius: 24,
-      padding: 10,
-      borderWidth: 2,
-      borderColor: '#fca5a5',
-      bold: true,
-    },
-  },
-  {
-    id: 'clean-minimal',
-    name: 'Clean Minimal',
-    preview: 'سادہ صفا',
-    style: {
-      color: '#1c1917',
-      highlightColor: undefined,
-      borderRadius: 0,
-      padding: 4,
-      borderWidth: 0,
-      shadowBlur: 0,
-      bold: false,
-      italic: false,
-      underline: false,
-    },
-  },
 ];
 
 const COLOR_PRESETS = [
@@ -313,7 +208,6 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
         <div className="w-full bg-stone-50 border-b-2 border-stone-300 p-3 sm:p-4 max-h-[320px] overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-2 duration-150">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-300">
             <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
-              {activeSheet === 'presets' && <Wand2 size={16} className="text-emerald-800" />}
               {activeSheet === 'font' && <Type size={16} className="text-emerald-800" />}
               {activeSheet === 'size' && <Maximize2 size={16} className="text-emerald-800" />}
               {activeSheet === 'style' && <Sliders size={16} className="text-emerald-800" />}
@@ -325,7 +219,6 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               {activeSheet === 'align' && <AlignLeft size={16} className="text-emerald-800" />}
               {activeSheet === 'snap' && <Magnet size={16} className="text-emerald-800" />}
               <span className="capitalize font-sans font-bold">
-                {activeSheet === 'presets' && 'Style Presets'}
                 {activeSheet === 'font' && 'Font Family'}
                 {activeSheet === 'size' && 'Size & Spacing'}
                 {activeSheet === 'style' && 'Text Style & Decoration'}
@@ -347,27 +240,6 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <X size={16} />
             </button>
           </div>
-
-          {/* PRESETS SHEET */}
-          {activeSheet === 'presets' && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => onUpdateStyle(p.style)}
-                  className="p-3 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95 shadow-xs"
-                >
-                  <span className="font-nastaliq text-base font-bold text-stone-950 truncate max-w-full">
-                    {p.preview}
-                  </span>
-                  <span className="text-[10px] font-sans font-bold text-stone-600">
-                    {p.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* FONT SHEET */}
           {activeSheet === 'font' && (
@@ -1498,22 +1370,6 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               aria-label="Edit Text"
             >
               <Edit3 size={16} />
-            </button>
-
-            {/* Presets Trigger */}
-            <button
-              id="btn-bottom-presets"
-              type="button"
-              onClick={() => toggleSheet('presets')}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 ${
-                activeSheet === 'presets'
-                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                  : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
-              }`}
-              title="Style Presets"
-              aria-label="Style Presets"
-            >
-              <Wand2 size={16} />
             </button>
 
             {/* Font Picker Trigger */}

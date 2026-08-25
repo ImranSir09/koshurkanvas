@@ -376,18 +376,6 @@ function applySliceStyleToElement(
     (el.style as any).paintOrder = 'stroke fill';
     (el.style as any).webkitPaintOrder = 'stroke fill';
   }
-
-  // Preset effects
-  if (style.presetEffect === 'gold') {
-    el.style.color = '#b45309';
-    el.style.textShadow = `0px ${Math.round(2 * scale)}px ${Math.round(4 * scale)}px rgba(180, 83, 9, 0.4), 0px ${Math.round(4 * scale)}px ${Math.round(8 * scale)}px rgba(217, 119, 6, 0.2)`;
-  } else if (style.presetEffect === 'neon') {
-    el.style.color = '#065f46';
-    el.style.textShadow = `0 0 ${Math.round(4 * scale)}px #10b981, 0 0 ${Math.round(8 * scale)}px #10b981, 0 0 ${Math.round(16 * scale)}px #059669`;
-  } else if (style.presetEffect === 'vintage') {
-    el.style.color = '#451a03';
-    el.style.textShadow = `${Math.round(1 * scale)}px ${Math.round(1 * scale)}px 0px #fde68a`;
-  }
 }
 
 /**

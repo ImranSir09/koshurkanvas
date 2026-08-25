@@ -29,7 +29,6 @@ export interface TextStyleProperties {
   borderColor?: string;
   flipX?: boolean;
   flipY?: boolean;
-  presetEffect?: 'none' | 'gold' | 'neon' | 'calligraphy' | 'vintage' | 'minimal' | 'glass';
 }
 
 export interface TextStyleSpan {
