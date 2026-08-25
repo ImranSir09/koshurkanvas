@@ -1078,218 +1078,145 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
             </div>
           )}
 
-          {/* TRANSFORM, FLIP, ALIGN & LAYER ORDER SHEET */}
+          {/* TRANSFORM, FLIP & ROTATION SHEET */}
           {activeSheet === 'transform' && (
             <div className="flex flex-col gap-3">
-              {/* Align to Selection Bounds / Canvas */}
+              {/* Rotation Slider */}
               <div>
-                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                  <span>Align to Bounds & Canvas</span>
-                  {selectedLayerIds && selectedLayerIds.length > 1 && (
-                    <span className="text-[10px] font-sans font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
-                      {selectedLayerIds.length} Selected
+                <div className="flex items-center justify-between text-xs text-stone-900 font-bold mb-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <RotateCw size={14} className="text-emerald-800" />
+                    <span>Rotation Angle</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-stone-950 text-xs">
+                      {Math.round(currentStyle.rotation || 0)}°
                     </span>
-                  )}
+                    {(currentStyle.rotation || 0) !== 0 && (
+                      <button
+                        type="button"
+                        onClick={() => onUpdateStyle({ rotation: 0 })}
+                        className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
+                        title="Reset Rotation to 0°"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="grid grid-cols-6 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'left'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Left Edges"
-                  >
-                    <AlignLeft size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'center'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Horizontal Centers"
-                  >
-                    <AlignCenter size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'right'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Right Edges"
-                  >
-                    <AlignRight size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'top'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Top Edges"
-                  >
-                    <ArrowUp size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'middle'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Vertical Centers"
-                  >
-                    <MoveVertical size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onAlignLayers && activeLayer) {
-                        onAlignLayers(
-                          selectedLayerIds && selectedLayerIds.length > 0
-                            ? selectedLayerIds
-                            : [activeLayer.id],
-                          'bottom'
-                        );
-                      }
-                    }}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
-                    title="Align Bottom Edges"
-                  >
-                    <ArrowDown size={16} />
-                  </button>
-                </div>
+                <input
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  value={currentStyle.rotation || 0}
+                  onChange={(e) => onUpdateStyle({ rotation: parseInt(e.target.value, 10) })}
+                  className="w-full accent-emerald-700 cursor-pointer h-2 bg-stone-300 rounded-lg"
+                />
               </div>
 
               {/* Quick Flip & Center Tools */}
-              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-stone-300">
-                <button
-                  type="button"
-                  onClick={() => onUpdateStyle({ flipX: !currentStyle.flipX })}
-                  className={`h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 ${
-                    currentStyle.flipX
-                      ? 'bg-emerald-700 text-white border-emerald-800'
-                      : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Flip Horizontal"
-                >
-                  <FlipHorizontal size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onUpdateStyle({ flipY: !currentStyle.flipY })}
-                  className={`h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 ${
-                    currentStyle.flipY
-                      ? 'bg-emerald-700 text-white border-emerald-800'
-                      : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Flip Vertical"
-                >
-                  <FlipVertical size={16} />
-                </button>
-
-                {onCenterHorizontally && (
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1.5">
+                  Flip & Center on Stage
+                </div>
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
-                    onClick={() => onCenterHorizontally(activeLayer.id)}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                    title="Center Horizontally on Canvas"
+                    onClick={() => onUpdateStyle({ flipX: !currentStyle.flipX })}
+                    className={`h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 ${
+                      currentStyle.flipX
+                        ? 'bg-emerald-700 text-white border-emerald-800'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Flip Horizontal"
                   >
-                    <MoveHorizontal size={16} />
+                    <FlipHorizontal size={16} />
                   </button>
-                )}
 
-                {onCenterVertically && (
                   <button
                     type="button"
-                    onClick={() => onCenterVertically(activeLayer.id)}
-                    className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                    title="Center Vertically on Canvas"
+                    onClick={() => onUpdateStyle({ flipY: !currentStyle.flipY })}
+                    className={`h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 ${
+                      currentStyle.flipY
+                        ? 'bg-emerald-700 text-white border-emerald-800'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Flip Vertical"
                   >
-                    <MoveVertical size={16} />
+                    <FlipVertical size={16} />
                   </button>
-                )}
+
+                  {onCenterHorizontally && (
+                    <button
+                      type="button"
+                      onClick={() => onCenterHorizontally(activeLayer.id)}
+                      className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
+                      title="Center Horizontally on Canvas"
+                    >
+                      <MoveHorizontal size={16} />
+                    </button>
+                  )}
+
+                  {onCenterVertically && (
+                    <button
+                      type="button"
+                      onClick={() => onCenterVertically(activeLayer.id)}
+                      className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
+                      title="Center Vertically on Canvas"
+                    >
+                      <MoveVertical size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Layer Actions */}
-              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-stone-300">
-                <button
-                  type="button"
-                  onClick={() => onBringToFront(activeLayer.id)}
-                  className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                  title="Bring to Front"
-                >
-                  <ArrowUp size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSendToBack(activeLayer.id)}
-                  className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                  title="Send to Back"
-                >
-                  <ArrowDown size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDuplicateLayer(activeLayer.id)}
-                  className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                  title="Duplicate Layer"
-                >
-                  <Copy size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDeleteLayer(activeLayer.id);
-                    setActiveSheet('none');
-                  }}
-                  className="h-9 rounded-xl bg-rose-100 border-2 border-rose-400 text-rose-900 hover:bg-rose-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                  title="Delete Layer"
-                >
-                  <Trash2 size={16} />
-                </button>
+              {/* Layer Stacking Order & Quick Actions */}
+              <div className="pt-2 border-t border-stone-300">
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1.5">
+                  Layer Order & Actions
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onBringToFront(activeLayer.id)}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Bring to Front"
+                  >
+                    <ArrowUp size={15} />
+                    <span className="text-[10px] font-sans font-bold">Front</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSendToBack(activeLayer.id)}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Send to Back"
+                  >
+                    <ArrowDown size={15} />
+                    <span className="text-[10px] font-sans font-bold">Back</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDuplicateLayer(activeLayer.id)}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Duplicate Layer"
+                  >
+                    <Copy size={15} />
+                    <span className="text-[10px] font-sans font-bold">Copy</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDeleteLayer(activeLayer.id);
+                      setActiveSheet('none');
+                    }}
+                    className="h-9 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-800 hover:bg-rose-100 flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Delete Layer"
+                  >
+                    <Trash2 size={15} />
+                    <span className="text-[10px] font-sans font-bold">Delete</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -1736,88 +1663,50 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <AlignLeft size={16} />
             </button>
 
-            {/* Smart Snapping & Guides Trigger */}
+            {/* Quick Duplicate Active Layer */}
             <button
-              id="btn-bottom-snap"
+              id="btn-bottom-duplicate"
               type="button"
-              onClick={() => toggleSheet('snap')}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 relative ${
-                activeSheet === 'snap'
-                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                  : snapEnabled
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-white text-stone-400 border-stone-300 hover:bg-stone-200'
-              }`}
-              title={`Smart Snapping & Dynamic Guides (${snapEnabled ? 'Enabled' : 'Disabled'})`}
-              aria-label="Smart Snapping & Dynamic Guides"
+              onClick={() => onDuplicateLayer(activeLayer.id)}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 bg-white text-stone-900 border-stone-300 hover:bg-stone-200"
+              title="Duplicate Layer"
+              aria-label="Duplicate Layer"
             >
-              <Magnet size={16} />
-              {snapEnabled && (
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-2xs" />
-              )}
+              <Copy size={16} />
+            </button>
+
+            {/* Quick Delete Active Layer */}
+            <button
+              id="btn-bottom-delete"
+              type="button"
+              onClick={() => {
+                onDeleteLayer(activeLayer.id);
+                setActiveSheet('none');
+              }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
+              title="Delete Layer"
+              aria-label="Delete Layer"
+            >
+              <Trash2 size={16} />
             </button>
           </div>
         ) : (
-          /* When no layer is selected: Canvas Level Actions */
-          <div className="w-full flex items-center justify-between gap-1.5">
+          /* When no layer is selected: Clean, uncluttered action bar */
+          <div className="w-full flex items-center justify-between gap-3 py-0.5">
             <button
               id="btn-bottom-add-layer"
               type="button"
               onClick={onAddNewText}
-              className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800"
+              className="flex-1 py-2 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800"
               title="Add Text Layer"
               aria-label="Add Text Layer"
             >
               <Plus size={16} />
-              <span className="font-sans text-xs font-bold">Add Text</span>
+              <span className="font-sans text-xs font-bold">Add Text Layer</span>
             </button>
-
-            {/* Snapping Toggle / Sheet Button */}
-            <button
-              id="btn-bottom-empty-snap"
-              type="button"
-              onClick={() => toggleSheet('snap')}
-              className={`h-9 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer border-2 ${
-                activeSheet === 'snap'
-                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                  : snapEnabled
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-white text-stone-600 border-stone-300 hover:bg-stone-200'
-              }`}
-              title="Smart Snapping & Dynamic Guides"
-              aria-label="Smart Snapping & Dynamic Guides"
-            >
-              <Magnet size={15} />
-              <span className="text-[11px] font-sans font-bold">
-                {snapEnabled ? 'Snap: ON' : 'Snap: OFF'}
-              </span>
-            </button>
-
-            {onOpenLayersPanel && (
-              <button
-                id="btn-bottom-empty-layers"
-                type="button"
-                onClick={onOpenLayersPanel}
-                className="w-9 h-9 rounded-lg bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs transition-all shrink-0"
-                title="Layers Manager"
-                aria-label="Layers Manager"
-              >
-                <Layers size={16} />
-              </button>
-            )}
-
-            {onOpenCanvasSettings && (
-              <button
-                id="btn-bottom-empty-settings"
-                type="button"
-                onClick={onOpenCanvasSettings}
-                className="w-9 h-9 rounded-lg bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs transition-all shrink-0"
-                title="Canvas Settings"
-                aria-label="Canvas Settings"
-              >
-                <Settings size={16} />
-              </button>
-            )}
+            <span className="text-[11px] text-stone-700 font-sans hidden sm:inline select-none">
+              Tap any text on canvas to customize typography & layout
+            </span>
           </div>
         )}
       </div>

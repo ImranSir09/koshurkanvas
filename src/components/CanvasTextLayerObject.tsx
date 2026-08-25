@@ -2,17 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { TextLayer } from '../types';
 import { getFontFamilyCSS } from '../lib/fontUtils';
 import {
-  Edit3,
-  Copy,
-  Trash2,
   Lock,
   Unlock,
-  EyeOff,
-  ArrowUp,
-  ArrowDown,
   RotateCw,
-  FolderPlus,
-  FolderMinus,
 } from 'lucide-react';
 
 interface CanvasTextLayerObjectProps {
@@ -23,12 +15,12 @@ interface CanvasTextLayerObjectProps {
   onSelect: (layerId: string, isMultiSelect?: boolean) => void;
   onUpdateLayer: (layerId: string, updates: Partial<TextLayer>) => void;
   onEditInNativeInput: (layer: TextLayer) => void;
-  onDuplicateLayer: (layerId: string) => void;
-  onDeleteLayer: (layerId: string) => void;
-  onBringToFront: (layerId: string) => void;
-  onSendToBack: (layerId: string) => void;
-  onMoveUp: (layerId: string) => void;
-  onMoveDown: (layerId: string) => void;
+  onDuplicateLayer?: (layerId: string) => void;
+  onDeleteLayer?: (layerId: string) => void;
+  onBringToFront?: (layerId: string) => void;
+  onSendToBack?: (layerId: string) => void;
+  onMoveUp?: (layerId: string) => void;
+  onMoveDown?: (layerId: string) => void;
   canvasScale?: number;
   canGroup?: boolean;
   onGroupSelected?: () => void;
@@ -447,156 +439,6 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
             aria-label="Resize Right"
             data-export-exclude="true"
           />
-
-          {/* Floating Action Controls Bar (Icon Only - Only shown on primary active layer to prevent clutter) */}
-          {isPrimaryActive && (
-            <div
-              className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-stone-950 text-white rounded-xl px-2 py-1 flex items-center gap-1 shadow-2xl border border-stone-700 z-50 pointer-events-auto whitespace-nowrap animate-in fade-in-50 zoom-in-95 export-exclude"
-              dir="ltr"
-              data-export-exclude="true"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-            {/* Edit in Native Input Icon Button */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditInNativeInput(layer);
-              }}
-              className="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center cursor-pointer transition-colors shadow-2xs export-exclude"
-              title="Edit Text"
-              aria-label="Edit Text"
-              data-export-exclude="true"
-            >
-              <Edit3 size={15} />
-            </button>
-
-            <div className="w-px h-5 bg-stone-800 export-exclude" data-export-exclude="true" />
-
-            {/* Duplicate */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicateLayer(layer.id);
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Duplicate"
-              aria-label="Duplicate"
-              data-export-exclude="true"
-            >
-              <Copy size={15} />
-            </button>
-
-            {/* Bring to Front */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onBringToFront(layer.id);
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Bring to Front"
-              aria-label="Bring to Front"
-              data-export-exclude="true"
-            >
-              <ArrowUp size={15} />
-            </button>
-
-            {/* Send to Back */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSendToBack(layer.id);
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Send to Back"
-              aria-label="Send to Back"
-              data-export-exclude="true"
-            >
-              <ArrowDown size={15} />
-            </button>
-
-            {/* Lock */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUpdateLayer(layer.id, { isLocked: true });
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Lock Layer"
-              aria-label="Lock Layer"
-              data-export-exclude="true"
-            >
-              <Lock size={15} />
-            </button>
-
-            {/* Group or Ungroup Buttons */}
-            {canGroup && onGroupSelected && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onGroupSelected();
-                }}
-                className="w-8 h-8 rounded-lg bg-indigo-700 hover:bg-indigo-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-                title="Group Selected Layers"
-                aria-label="Group Selected Layers"
-                data-export-exclude="true"
-              >
-                <FolderPlus size={15} />
-              </button>
-            )}
-
-            {layer.groupId && onUngroupSelected && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUngroupSelected();
-                }}
-                className="w-8 h-8 rounded-lg bg-amber-700 hover:bg-amber-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-                title="Ungroup Layers"
-                aria-label="Ungroup Layers"
-                data-export-exclude="true"
-              >
-                <FolderMinus size={15} />
-              </button>
-            )}
-
-            {/* Hide */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUpdateLayer(layer.id, { isHidden: true });
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Hide Layer"
-              aria-label="Hide Layer"
-              data-export-exclude="true"
-            >
-              <EyeOff size={15} />
-            </button>
-
-            {/* Delete */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteLayer(layer.id);
-              }}
-              className="w-8 h-8 rounded-lg hover:bg-rose-950 text-rose-400 hover:text-rose-200 flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Delete Layer"
-              aria-label="Delete Layer"
-              data-export-exclude="true"
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-          )}
         </div>
       )}
 
