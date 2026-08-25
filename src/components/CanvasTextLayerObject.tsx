@@ -26,6 +26,7 @@ interface CanvasTextLayerObjectProps {
   onGroupSelected?: () => void;
   onUngroupSelected?: () => void;
   onDragStateChange?: (isDragging: boolean, layerX: number, layerY: number, layerWidth: number, layerHeight: number) => void;
+  onTransformEnd?: (layerId: string, actionType: 'move' | 'rotate' | 'resize') => void;
   onSnapPosition?: (
     layerId: string,
     rawX: number,
@@ -52,6 +53,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   onGroupSelected,
   onUngroupSelected,
   onDragStateChange,
+  onTransformEnd,
   onSnapPosition,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -279,12 +281,23 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
     };
 
     const handlePointerUp = () => {
+      const wasDragging = isDragging;
+      const wasRotating = isRotating;
+      const wasResizing = isResizing;
+
       setIsDragging(false);
       setIsRotating(false);
       setIsResizing(false);
       setResizeCorner(null);
+
       if (onDragStateChange) {
         onDragStateChange(false, layer.x, layer.y, layer.width || 200, layer.height || 60);
+      }
+
+      if (onTransformEnd) {
+        if (wasDragging) onTransformEnd(layer.id, 'move');
+        else if (wasRotating) onTransformEnd(layer.id, 'rotate');
+        else if (wasResizing) onTransformEnd(layer.id, 'resize');
       }
     };
 

@@ -15,7 +15,6 @@ import { CharacterPickerModal } from './components/CharacterPickerModal';
 import { ExportModal } from './components/ExportModal';
 import { ProjectsDrawer } from './components/ProjectsDrawer';
 import { TransliterationModal } from './components/TransliterationModal';
-import { AndroidAppModal } from './components/AndroidAppModal';
 import { loadSavedCustomFonts } from './lib/customFonts';
 
 export default function App() {
@@ -28,7 +27,6 @@ export default function App() {
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isProjectsOpen, setIsProjectsOpen] = useState<boolean>(false);
   const [isTransliterationOpen, setIsTransliterationOpen] = useState<boolean>(false);
-  const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
 
   // Settings
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -109,7 +107,7 @@ export default function App() {
     const duplicated: KashurDocument = {
       ...target,
       id: `doc-${Date.now()}`,
-      title: `${target.title || 'مسودہ'} (نقل)`,
+      title: `${target.title || 'Untitled Document'} (Copy)`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -122,7 +120,7 @@ export default function App() {
   const handleNewDocument = () => {
     const newDoc: KashurDocument = {
       id: `doc-${Date.now()}`,
-      title: 'نواں کٲشُر مسودہ',
+      title: 'New Document',
       content: '',
       spans: [],
       defaultStyle: DEFAULT_TEXT_STYLE,
@@ -158,7 +156,6 @@ export default function App() {
         onRenameDocument={(newTitle) => handleRenameDocument(currentDoc.id, newTitle)}
         onOpenProjects={() => setIsProjectsOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
-        onOpenAndroidApp={() => setIsAndroidModalOpen(true)}
         onNewDocument={handleNewDocument}
         onOpenCharacterPicker={() => setIsCharPickerOpen(true)}
         onOpenTransliteration={() => setIsTransliterationOpen(true)}
@@ -197,7 +194,7 @@ export default function App() {
           isOpen={isExportOpen}
           onClose={() => setIsExportOpen(false)}
           targetElementId="kashmiri-canvas-document-sheet"
-          projectTitle={currentDoc.title || 'کٲشُر مسودہ'}
+          projectTitle={currentDoc.title || 'Untitled Document'}
           rawUnicodeText={currentDoc.content}
           aspectRatio={currentDoc.canvasConfig?.aspectRatio || 'a4'}
           currentOrientation={currentDoc.canvasConfig?.orientation || 'portrait'}
@@ -220,11 +217,6 @@ export default function App() {
             setIsProjectsOpen(false);
             setIsExportOpen(true);
           }}
-        />
-        {/* Android App & APK Setup Modal */}
-        <AndroidAppModal
-          isOpen={isAndroidModalOpen}
-          onClose={() => setIsAndroidModalOpen(false)}
         />
     </div>
   );

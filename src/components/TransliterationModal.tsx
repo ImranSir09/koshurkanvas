@@ -50,8 +50,8 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
               <Languages size={16} />
             </div>
             <div>
-              <h3 className="font-nastaliq text-base sm:text-lg font-bold text-stone-900 leading-tight">
-                رومن / انگریزی رَسمُ الخَط (Latin Transliteration)
+              <h3 className="font-sans text-base sm:text-lg font-bold text-stone-900 leading-tight">
+                Latin / Roman Transliteration
               </h3>
               <p className="text-[11px] text-stone-500 font-sans leading-none mt-0.5">
                 Convert Kashmiri Nastaliq script to phonetic Latin/English script
@@ -63,7 +63,7 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 transition-colors cursor-pointer"
-            title="بَنٛد کٔرِو (Close)"
+            title="Close"
           >
             <X size={18} />
           </button>
@@ -73,11 +73,11 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
         <div className="p-4 sm:p-5 flex flex-col gap-3.5 flex-1">
           {/* Source Kashmiri */}
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-nastaliq font-bold text-stone-700">
-              اصل کٲشُر مسودہ (Original Kashmiri):
+            <span className="text-xs font-sans font-bold text-stone-700">
+              Original Kashmiri Text:
             </span>
-            <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl font-nastaliq text-base text-stone-900 max-h-32 overflow-y-auto leading-relaxed">
-              {kashmiriText || 'مسودس مَنٛز کانہہ تحریر چَھنہٕ۔'}
+            <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl font-nastaliq text-base text-stone-900 max-h-32 overflow-y-auto leading-relaxed" dir="rtl">
+              {kashmiriText || 'No text available.'}
             </div>
           </div>
 
@@ -86,7 +86,7 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
             <span className="text-xs font-sans font-bold text-stone-700">
               Phonetic English Transliteration (Roman Kaeshur):
             </span>
-            <div className="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl font-sans text-sm text-stone-900 max-h-36 overflow-y-auto leading-relaxed select-all">
+            <div className="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl font-sans text-sm text-stone-900 max-h-36 overflow-y-auto leading-relaxed select-all" dir="ltr">
               {latinText || 'No text to transliterate.'}
             </div>
           </div>
@@ -97,9 +97,9 @@ export const TransliterationModal: React.FC<TransliterationModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-3.5 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-100 text-xs font-nastaliq cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-100 text-xs font-sans font-medium cursor-pointer"
           >
-            بَنٛد کٔرِو (Close)
+            Close
           </button>
 
           <button

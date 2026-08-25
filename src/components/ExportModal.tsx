@@ -40,30 +40,30 @@ interface ExportModalProps {
 
 const PAPER_SIZES: {
   id: DocumentPaperSize;
-  labelKashmiri: string;
+  label: string;
   shortCode: string;
   dimensions: string;
 }[] = [
-  { id: 'a4', labelKashmiri: 'اے فور (A4)', shortCode: 'A4', dimensions: '210 × 297 mm' },
-  { id: 'a3', labelKashmiri: 'اے تھری (A3)', shortCode: 'A3', dimensions: '297 × 420 mm' },
-  { id: 'a5', labelKashmiri: 'اے فائیو (A5)', shortCode: 'A5', dimensions: '148 × 210 mm' },
-  { id: 'letter', labelKashmiri: 'لیٹر (Letter)', shortCode: 'Letter', dimensions: '215.9 × 279.4 mm' },
-  { id: 'legal', labelKashmiri: 'قانونی (Legal)', shortCode: 'Legal', dimensions: '215.9 × 355.6 mm' },
-  { id: 'b5', labelKashmiri: 'بی فائیو (B5)', shortCode: 'B5', dimensions: '176 × 250 mm' },
+  { id: 'a4', label: 'A4 Document', shortCode: 'A4', dimensions: '210 × 297 mm' },
+  { id: 'a3', label: 'A3 Poster', shortCode: 'A3', dimensions: '297 × 420 mm' },
+  { id: 'a5', label: 'A5 Booklet', shortCode: 'A5', dimensions: '148 × 210 mm' },
+  { id: 'letter', label: 'Letter Size', shortCode: 'Letter', dimensions: '215.9 × 279.4 mm' },
+  { id: 'legal', label: 'Legal Size', shortCode: 'Legal', dimensions: '215.9 × 355.6 mm' },
+  { id: 'b5', label: 'B5 Book', shortCode: 'B5', dimensions: '176 × 250 mm' },
 ];
 
 const SOCIAL_SIZES: {
   id: SocialCardSize;
-  labelKashmiri: string;
+  label: string;
   shortCode: string;
   dimensions: string;
 }[] = [
-  { id: '1:1', labelKashmiri: 'مورَبَع (1:1)', shortCode: '1:1', dimensions: '1080 × 1080 px' },
-  { id: '9:16', labelKashmiri: 'سٹوری (9:16)', shortCode: '9:16', dimensions: '1080 × 1920 px' },
-  { id: '16:9', labelKashmiri: 'بینر (16:9)', shortCode: '16:9', dimensions: '1920 × 1080 px' },
-  { id: '4:5', labelKashmiri: 'پورٹریٹ (4:5)', shortCode: '4:5', dimensions: '1080 × 1350 px' },
-  { id: '3:4', labelKashmiri: 'کلاسک (3:4)', shortCode: '3:4', dimensions: '1200 × 1600 px' },
-  { id: 'auto', labelKashmiri: 'آزاد (Auto)', shortCode: 'Auto', dimensions: 'Adaptive Canvas' },
+  { id: '1:1', label: 'Square (1:1)', shortCode: '1:1', dimensions: '1080 × 1080 px' },
+  { id: '9:16', label: 'Story / Reel (9:16)', shortCode: '9:16', dimensions: '1080 × 1920 px' },
+  { id: '16:9', label: 'Landscape (16:9)', shortCode: '16:9', dimensions: '1920 × 1080 px' },
+  { id: '4:5', label: 'Portrait (4:5)', shortCode: '4:5', dimensions: '1080 × 1350 px' },
+  { id: '3:4', label: 'Classic (3:4)', shortCode: '3:4', dimensions: '1200 × 1600 px' },
+  { id: 'auto', label: 'Adaptive Canvas', shortCode: 'Auto', dimensions: 'Adaptive Canvas' },
 ];
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -106,10 +106,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setExportingFormat(format);
     setStatusMessage(
       format === 'pdf'
-        ? 'پی ڈی ایف دستاویز تیار گژھان چھِ...'
+        ? 'Preparing PDF document...'
         : format === 'svg'
-        ? 'ایس وی جی ویکٹر فائل تیار گژھان چھِ...'
-        : 'ہائی ریزولوشن تصویر تیار گژھان چھِ...'
+        ? 'Preparing SVG vector file...'
+        : 'Preparing high-resolution image...'
     );
 
     try {
@@ -134,7 +134,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       } else {
         const el = document.getElementById(targetElementId);
         if (!el) {
-          setStatusMessage('مسودہ کینوس نیبر لٔبِم نہ (Canvas element not found)');
+          setStatusMessage('Canvas element not found');
           setIsExporting(false);
           setExportingFormat(null);
           return;
@@ -149,7 +149,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         });
       }
 
-      setStatusMessage('مَحفوظ سپُد (Export Successful)');
+      setStatusMessage('Export Successful');
       setTimeout(() => {
         setIsExporting(false);
         setExportingFormat(null);
@@ -158,7 +158,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       }, 900);
     } catch (err) {
       console.error(err);
-      setStatusMessage('ایکسپورٹ مَنٛز رکاوٹ (Export Failed)');
+      setStatusMessage('Export Failed');
       setIsExporting(false);
       setExportingFormat(null);
     }
@@ -175,7 +175,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         (sizeCategory === 'paper' ? selectedSize : 'a4') as DocumentPaperSize,
         orientation
       );
-      setStatusMessage('ورڈ دستاویز ڈاؤنلوڈ سپُد (Word DOC downloaded)');
+      setStatusMessage('Word DOC downloaded');
       setTimeout(() => {
         setIsExporting(false);
         setExportingFormat(null);
@@ -192,7 +192,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setExportingFormat('txt');
     try {
       downloadTextFile(rawUnicodeText, fileName);
-      setStatusMessage('ٹیکسٹ فائل ڈاؤنلوڈ سپٕژ (TXT downloaded)');
+      setStatusMessage('TXT file downloaded');
       setTimeout(() => {
         setIsExporting(false);
         setExportingFormat(null);
@@ -207,7 +207,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleShare = async () => {
     setIsExporting(true);
     setExportingFormat('share');
-    setStatusMessage('شیئرنگ خٲطرٕ تصویر تیار گژھان چھِ...');
+    setStatusMessage('Preparing image for sharing...');
     try {
       if (docProp) {
         const exportDoc: KashurDocument = {
@@ -258,7 +258,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           paddingLeft: 'max(env(safe-area-inset-left, 0px), 0rem)',
           paddingRight: 'max(env(safe-area-inset-right, 0px), 0rem)',
         }}
-        dir="rtl"
+        dir="ltr"
       >
         {/* Modal Header */}
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-stone-300 flex items-center justify-between bg-stone-100 shrink-0">
@@ -268,7 +268,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             </div>
             <div>
               <h3 className="font-sans text-base sm:text-lg font-bold text-stone-950 leading-tight">
-                {projectTitle || 'Kashmiri Canvas'}
+                {projectTitle || 'Export Document'}
               </h3>
             </div>
           </div>
@@ -288,7 +288,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1">
           {/* Status Message Overlay */}
           {statusMessage && (
-            <div className="p-2.5 bg-emerald-100 border border-emerald-300 rounded-xl text-center text-xs font-nastaliq text-emerald-950 flex items-center justify-center gap-2 animate-in fade-in font-bold">
+            <div className="p-2.5 bg-emerald-100 border border-emerald-300 rounded-xl text-center text-xs font-sans text-emerald-950 flex items-center justify-center gap-2 animate-in fade-in font-bold">
               {isExporting && <Loader2 size={16} className="animate-spin text-emerald-800" />}
               <span>{statusMessage}</span>
             </div>
@@ -310,7 +310,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
                       : 'text-stone-700 hover:text-black hover:bg-stone-300'
                   }`}
-                  title="Document Paper Size (کاغذ سائز)"
+                  title="Document Paper Size"
                   aria-label="Document Paper Size"
                 >
                   <Printer size={16} />
@@ -327,7 +327,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
                       : 'text-stone-700 hover:text-black hover:bg-stone-300'
                   }`}
-                  title="Social Media Aspect Ratios (سوشل میڈیا سائز)"
+                  title="Social Media Aspect Ratios"
                   aria-label="Social Media Aspect Ratios"
                 >
                   <Smartphone size={16} />
@@ -398,14 +398,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {/* SECTION 2: ONE-CLICK EXPORT FORMATS */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-nastaliq font-bold text-stone-800 flex items-center gap-1.5">
+              <span className="text-xs font-sans font-bold text-stone-800 flex items-center gap-1.5">
                 <FileType size={14} className="text-emerald-700" />
-                <span>دستیاب فارمیٹس (Available Formats — One-Click Export)</span>
+                <span>Available Formats</span>
               </span>
 
               {/* Quality Selector */}
               <div className="flex items-center gap-1.5 text-[11px] font-sans text-stone-500">
-                <span className="hidden sm:inline text-xs font-nastaliq">کوالٹی:</span>
+                <span className="hidden sm:inline text-xs font-sans">Quality:</span>
                 <div className="inline-flex items-center p-0.5 bg-stone-100 border border-stone-200 rounded-md text-[10px]">
                   <button
                     type="button"
@@ -681,8 +681,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>Noto Nastaliq Urdu v4 Engine</span>
           </div>
-          <div className="font-nastaliq text-stone-600">
-            عمران مغلو سٹوڈیو
+          <div className="font-sans text-stone-600">
+            Imran Magloo Studio
           </div>
         </div>
       </div>

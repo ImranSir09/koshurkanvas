@@ -43,7 +43,7 @@ function openDB(): Promise<IDBDatabase> {
 // Initial sample document
 export const INITIAL_DOCUMENT: KashurDocument = {
   id: 'doc-welcome-kashmiri',
-  title: 'کٲشُر لیٚکھُن سٹوڈیو — خوٗش آمَدِید',
+  title: 'Welcome Draft',
   content: `آمِ پَنہٕ سوَدَرَس ناڤ چَھم لَگان
 کاتیہ رازی دَے مےٚ تی تاری ہا
 

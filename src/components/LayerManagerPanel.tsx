@@ -505,7 +505,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
           aria-label="Add text layer"
         >
           <Plus size={15} className="text-emerald-700" />
-          <span>(Add text layer)</span>
+          <span>Add Text Layer</span>
         </button>
       )}
     </div>

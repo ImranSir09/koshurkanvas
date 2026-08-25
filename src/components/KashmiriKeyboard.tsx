@@ -155,17 +155,18 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
           </button>
         </div>
 
-        {/* Tools: Kashida, Sound, Minimize (Icons Only) */}
+        {/* Tools: Kasheeda, Sound, Minimize */}
         <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
-          {/* Kashida Tatweel Quick Key */}
+          {/* Kasheeda Tatweel Quick Key */}
           <button
             type="button"
             onClick={() => handleKeyPress('ـ')}
             onMouseDown={(e) => e.preventDefault()}
-            className="h-6.5 w-7 rounded-md bg-white text-stone-800 hover:bg-emerald-50 border border-stone-300 font-nastaliq text-xs flex items-center justify-center cursor-pointer shadow-2xs transition-all active:scale-95"
-            title="Insert Kashida (ـ)"
+            className="h-6.5 px-2 rounded-md bg-white text-stone-800 hover:bg-emerald-50 border border-stone-300 font-sans text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+            title="Insert Kasheeda (ـ Tatweel)"
           >
-            <span className="font-bold text-emerald-700 text-xs leading-none">ـ</span>
+            <span className="font-sans text-[11px] font-bold text-stone-700">Kasheeda</span>
+            <span className="font-bold text-emerald-700 text-base font-nastaliq leading-none select-none">ـ</span>
           </button>
 
           {/* Sound Toggle */}
@@ -190,7 +191,7 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
               onClick={onCloseKeyboard}
               onMouseDown={(e) => e.preventDefault()}
               className="w-6.5 h-6.5 rounded-md bg-stone-300 hover:bg-stone-400 active:bg-stone-500 text-stone-700 hover:text-stone-900 flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-2xs"
-              title="Hide Dedicated Keyboard"
+              title="Hide Keyboard"
             >
               <ChevronDown size={15} />
             </button>
@@ -245,40 +246,40 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
             type="button"
             onClick={() => setActiveLayer((prev) => (prev === 'vowels' ? 'main' : 'vowels'))}
             onMouseDown={(e) => e.preventDefault()}
-            className={`w-11 sm:w-13 h-10 sm:h-11 rounded-md flex items-center justify-center font-nastaliq text-[11px] transition-all cursor-pointer shadow-xs border ${
+            className={`w-11 sm:w-13 h-10 sm:h-11 rounded-md flex items-center justify-center font-sans font-bold text-[11px] transition-all cursor-pointer shadow-xs border ${
               activeLayer === 'vowels'
-                ? 'bg-emerald-600 text-white border-emerald-700 font-bold'
+                ? 'bg-emerald-600 text-white border-emerald-700'
                 : 'bg-[#cfccc4] text-stone-800 border-stone-300 hover:bg-[#c5c2ba]'
             }`}
-            title="Vowels / Aerab Layer (اِعراب)"
+            title="Vowels & Diacritics"
           >
-            <span>{activeLayer === 'vowels' ? 'حُرُوف' : 'اِعراب'}</span>
+            <span>{activeLayer === 'vowels' ? 'Letters' : 'Aerab'}</span>
           </button>
 
-          {/* Full Stop / Kashmiri Poornaviram */}
+          {/* Full Stop */}
           <button
             type="button"
             onClick={() => handleKeyPress('۔')}
             onMouseDown={(e) => e.preventDefault()}
             className="w-9 sm:w-11 h-10 sm:h-11 rounded-md bg-white border border-stone-300 font-nastaliq text-sm text-stone-900 flex items-center justify-center hover:bg-stone-50 active:scale-95 shadow-xs cursor-pointer"
-            title="Kashmiri Full Stop (۔)"
+            title="Full Stop (۔)"
           >
             ۔
           </button>
 
-          {/* Symbol / Numbers Quick Switch (Replaces Comma) */}
+          {/* Symbol / Numbers Quick Switch */}
           <button
             type="button"
             onClick={() => setActiveLayer((prev) => (prev === 'numbers' ? 'main' : 'numbers'))}
             onMouseDown={(e) => e.preventDefault()}
-            className={`w-9 sm:w-11 h-10 sm:h-11 rounded-md flex items-center justify-center font-nastaliq text-[11px] transition-all cursor-pointer shadow-xs border ${
+            className={`w-9 sm:w-11 h-10 sm:h-11 rounded-md flex items-center justify-center font-sans font-bold text-[11px] transition-all cursor-pointer shadow-xs border ${
               activeLayer === 'numbers'
-                ? 'bg-emerald-600 text-white border-emerald-700 font-bold'
+                ? 'bg-emerald-600 text-white border-emerald-700'
                 : 'bg-[#cfccc4] text-stone-800 border-stone-300 hover:bg-[#c5c2ba]'
             }`}
-            title="Symbols & Numbers (۱۲۳)"
+            title="Numbers & Symbols (123)"
           >
-            <span>{activeLayer === 'numbers' ? 'حُرُوف' : '۱۲۳'}</span>
+            <span>{activeLayer === 'numbers' ? 'Letters' : '123'}</span>
           </button>
 
           {/* Space Bar */}
@@ -304,7 +305,7 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
             }}
             onMouseDown={(e) => e.preventDefault()}
             className="w-11 sm:w-13 h-10 sm:h-11 rounded-md bg-[#cfccc4] hover:bg-[#c5c2ba] active:bg-rose-100 text-stone-800 border border-stone-300 flex items-center justify-center transition-all active:scale-95 shadow-xs cursor-pointer"
-            title="Backspace (حذف)"
+            title="Backspace"
           >
             <Delete size={16} />
           </button>
@@ -318,7 +319,7 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
             }}
             onMouseDown={(e) => e.preventDefault()}
             className="w-11 sm:w-13 h-10 sm:h-11 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white border border-emerald-700 flex items-center justify-center transition-all active:scale-95 shadow-xs cursor-pointer"
-            title="Enter (اگلی سطر)"
+            title="Enter / Next Line"
           >
             <CornerDownLeft size={16} />
           </button>

@@ -4,8 +4,8 @@ import {
   Download,
   RotateCcw,
   RotateCw,
+  History,
   Edit2,
-  Smartphone,
   CloudCheck,
 } from 'lucide-react';
 
@@ -14,7 +14,6 @@ interface HeaderProps {
   onRenameDocument?: (newTitle: string) => void;
   onOpenProjects: () => void;
   onOpenExport: () => void;
-  onOpenAndroidApp?: () => void;
   onNewDocument?: () => void;
   onOpenCharacterPicker?: () => void;
   onOpenTransliteration?: () => void;
@@ -24,18 +23,23 @@ interface HeaderProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  onOpenHistory?: () => void;
+  historyTotalCount?: number;
+  historyCurrentStep?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  currentDocTitle = 'کٲشُر مسودہ',
+  currentDocTitle = 'Untitled Document',
   onRenameDocument,
   onOpenProjects,
   onOpenExport,
-  onOpenAndroidApp,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
+  onOpenHistory,
+  historyTotalCount,
+  historyCurrentStep,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(currentDocTitle);
@@ -73,15 +77,25 @@ export const Header: React.FC<HeaderProps> = ({
       }}
       dir="rtl"
     >
-      {/* Right / Start (in RTL): Projects Drawer Button & Title */}
+      {/* Right / Start (in RTL): Brand, Projects Drawer Button & Title */}
       <div className="flex items-center gap-2 shrink-0 min-w-0 flex-1">
+        {/* Brand Logo & Name */}
+        <div className="flex items-center gap-1.5 pl-1.5 border-l border-stone-200 shrink-0 select-none">
+          <div className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-sans font-black text-xs shadow-2xs">
+            KK
+          </div>
+          <span className="font-sans font-bold text-xs tracking-tight text-stone-900 hidden md:inline whitespace-nowrap">
+            Kashur Kanvas
+          </span>
+        </div>
+
         {/* Projects / Drawer Icon Button */}
         <button
           id="header-projects-btn"
           type="button"
           onClick={onOpenProjects}
           className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-stone-900 hover:text-emerald-950 bg-stone-100 hover:bg-emerald-100 border border-stone-300 hover:border-emerald-500 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
-          title="محفوظ مسودات (Projects & Files)"
+          title="Projects & Saved Files"
           aria-label="Projects"
         >
           <FolderOpen size={16} className="text-emerald-800" />
@@ -141,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onUndo}
             disabled={!canUndo}
             className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-stone-900 hover:text-black bg-stone-100 hover:bg-stone-200 border border-stone-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
-            title="Undo"
+            title="Undo (Ctrl+Z)"
             aria-label="Undo"
           >
             <RotateCcw size={15} />
@@ -155,24 +169,29 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onRedo}
             disabled={!canRedo}
             className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-stone-900 hover:text-black bg-stone-100 hover:bg-stone-200 border border-stone-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
-            title="Redo"
+            title="Redo (Ctrl+Shift+Z)"
             aria-label="Redo"
           >
             <RotateCw size={15} />
           </button>
         )}
 
-        {/* Android App APK Button */}
-        {onOpenAndroidApp && (
+        {/* Batch History Manager Button */}
+        {onOpenHistory && (
           <button
-            id="header-android-app-btn"
             type="button"
-            onClick={onOpenAndroidApp}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs font-sans text-xs font-bold"
-            title="Android App & APK Setup"
-            aria-label="Android App"
+            id="header-history-btn"
+            onClick={onOpenHistory}
+            className="h-8.5 sm:h-9 px-2 sm:px-2.5 rounded-lg text-stone-800 hover:text-emerald-950 bg-stone-100 hover:bg-emerald-100 border border-stone-300 hover:border-emerald-400 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs font-sans text-xs font-semibold"
+            title="History & Batch Actions (Ctrl+H)"
+            aria-label="History and Batch Revert"
           >
-            <Smartphone size={16} className="text-emerald-800" />
+            <History size={15} className="text-emerald-800" />
+            {historyTotalCount !== undefined && historyTotalCount > 1 && (
+              <span className="text-[10px] font-mono font-bold bg-stone-200/90 group-hover:bg-white text-stone-800 px-1 py-0.2 rounded-sm hidden sm:inline">
+                {historyCurrentStep !== undefined ? `${historyCurrentStep}/${historyTotalCount}` : historyTotalCount}
+              </span>
+            )}
           </button>
         )}
 

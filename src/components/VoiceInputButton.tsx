@@ -84,22 +84,22 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
         type="button"
         disabled={disabled}
         onClick={toggleListening}
-        className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-nastaliq border transition-all cursor-pointer ${
+        className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-sans font-medium border transition-all cursor-pointer ${
           isListening
             ? 'bg-rose-600 text-white border-rose-600 shadow-md animate-pulse'
             : 'bg-white text-stone-700 border-stone-200 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300'
         }`}
-        title={isListening ? 'آواز کی ریکارڈنگ بند کریں' : 'آواز سے لکھیں (Voice Typing)'}
+        title={isListening ? 'Stop voice recording' : 'Voice Typing'}
       >
         {isListening ? (
           <>
             <MicOff size={14} className="text-white animate-spin" />
-            <span className="font-bold">بولیں...</span>
+            <span className="font-bold">Listening...</span>
           </>
         ) : (
           <>
             <Mic size={14} className="text-emerald-700" />
-            <span>آواز</span>
+            <span>Voice</span>
           </>
         )}
       </button>
@@ -117,8 +117,8 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
 
       {showLangMenu && (
         <div
-          className="absolute top-9 left-0 bg-white rounded-lg shadow-lg border border-stone-200 py-1 w-32 z-50 animate-in slide-in-from-top-1"
-          dir="rtl"
+          className="absolute top-9 left-0 bg-white rounded-lg shadow-lg border border-stone-200 py-1 w-36 z-50 animate-in slide-in-from-top-1 text-left"
+          dir="ltr"
         >
           <button
             type="button"
@@ -126,11 +126,11 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
               setSelectedLang('ur-PK');
               setShowLangMenu(false);
             }}
-            className={`w-full px-3 py-1.5 text-right text-xs font-nastaliq hover:bg-emerald-50 transition-colors ${
+            className={`w-full px-3 py-1.5 text-left text-xs font-sans hover:bg-emerald-50 transition-colors ${
               selectedLang === 'ur-PK' ? 'text-emerald-700 font-bold bg-emerald-50/50' : 'text-stone-700'
             }`}
           >
-            اردو / کٲشُر (Urdu)
+            Urdu / Kashmiri
           </button>
           <button
             type="button"
@@ -138,11 +138,11 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
               setSelectedLang('hi-IN');
               setShowLangMenu(false);
             }}
-            className={`w-full px-3 py-1.5 text-right text-xs font-sans hover:bg-emerald-50 transition-colors ${
+            className={`w-full px-3 py-1.5 text-left text-xs font-sans hover:bg-emerald-50 transition-colors ${
               selectedLang === 'hi-IN' ? 'text-emerald-700 font-bold bg-emerald-50/50' : 'text-stone-700'
             }`}
           >
-            हिंदी (Hindi)
+            Hindi
           </button>
           <button
             type="button"
@@ -150,11 +150,11 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
               setSelectedLang('ar-SA');
               setShowLangMenu(false);
             }}
-            className={`w-full px-3 py-1.5 text-right text-xs font-nastaliq hover:bg-emerald-50 transition-colors ${
+            className={`w-full px-3 py-1.5 text-left text-xs font-sans hover:bg-emerald-50 transition-colors ${
               selectedLang === 'ar-SA' ? 'text-emerald-700 font-bold bg-emerald-50/50' : 'text-stone-700'
             }`}
           >
-            عربي (Arabic)
+            Arabic
           </button>
           <button
             type="button"
@@ -162,7 +162,7 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
               setSelectedLang('en-US');
               setShowLangMenu(false);
             }}
-            className={`w-full px-3 py-1.5 text-right text-xs font-sans hover:bg-emerald-50 transition-colors ${
+            className={`w-full px-3 py-1.5 text-left text-xs font-sans hover:bg-emerald-50 transition-colors ${
               selectedLang === 'en-US' ? 'text-emerald-700 font-bold bg-emerald-50/50' : 'text-stone-700'
             }`}
           >

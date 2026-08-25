@@ -2,7 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 
-// Self-hosted fonts for 100% offline & APK support
+// Self-hosted fonts for 100% offline & fast rendering
 import '@fontsource/noto-nastaliq-urdu/400.css';
 import '@fontsource/noto-nastaliq-urdu/500.css';
 import '@fontsource/noto-nastaliq-urdu/600.css';

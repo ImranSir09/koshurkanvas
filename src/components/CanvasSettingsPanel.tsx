@@ -46,7 +46,7 @@ interface CanvasSettingsPanelProps {
 
 export const DOCUMENT_SIZE_OPTIONS: {
   id: DocumentPaperSize;
-  labelKashmiri: string;
+  label: string;
   labelEnglish: string;
   dimensionsMm: string;
   icon: React.ReactNode;
@@ -54,7 +54,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
 }[] = [
   {
     id: 'a4',
-    labelKashmiri: 'اے فور (A4)',
+    label: 'A4 Document',
     labelEnglish: 'Standard Document',
     dimensionsMm: '210 × 297 mm',
     icon: <FileText size={15} />,
@@ -62,7 +62,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'a3',
-    labelKashmiri: 'اے تھری (A3)',
+    label: 'A3 Poster',
     labelEnglish: 'Poster & Broadside',
     dimensionsMm: '297 × 420 mm',
     icon: <Maximize2 size={15} />,
@@ -70,7 +70,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'a5',
-    labelKashmiri: 'اے فائیو (A5)',
+    label: 'A5 Booklet',
     labelEnglish: 'Booklet / Diary',
     dimensionsMm: '148 × 210 mm',
     icon: <BookOpen size={15} />,
@@ -78,23 +78,23 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'letter',
-    labelKashmiri: 'لیٹر (Letter)',
-    labelEnglish: 'US Letter',
+    label: 'US Letter',
+    labelEnglish: 'Standard Office Letter',
     dimensionsMm: '215.9 × 279.4 mm',
     icon: <FileText size={15} />,
     tag: 'Office Doc',
   },
   {
     id: 'legal',
-    labelKashmiri: 'قانونی (Legal)',
-    labelEnglish: 'US Legal',
+    label: 'US Legal',
+    labelEnglish: 'Official Legal Document',
     dimensionsMm: '215.9 × 355.6 mm',
     icon: <FileSpreadsheet size={15} />,
     tag: 'Official',
   },
   {
     id: 'tabloid',
-    labelKashmiri: 'ٹیبلوئڈ (Tabloid)',
+    label: 'Tabloid',
     labelEnglish: 'Newspaper Page',
     dimensionsMm: '279.4 × 431.8 mm',
     icon: <Newspaper size={15} />,
@@ -102,7 +102,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'b5',
-    labelKashmiri: 'بی فائیو (B5)',
+    label: 'B5 Book',
     labelEnglish: 'Literary Book',
     dimensionsMm: '176 × 250 mm',
     icon: <Book size={15} />,
@@ -110,7 +110,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'b4',
-    labelKashmiri: 'بی فور (B4)',
+    label: 'B4 Journal',
     labelEnglish: 'Academic Journal',
     dimensionsMm: '250 × 353 mm',
     icon: <BookOpen size={15} />,
@@ -118,7 +118,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
   },
   {
     id: 'a6',
-    labelKashmiri: 'اے سکس (A6)',
+    label: 'A6 Postcard',
     labelEnglish: 'Pocket Postcard',
     dimensionsMm: '105 × 148 mm',
     icon: <CreditCard size={15} />,
@@ -128,7 +128,7 @@ export const DOCUMENT_SIZE_OPTIONS: {
 
 export const SOCIAL_SIZE_OPTIONS: {
   id: SocialCardSize;
-  labelKashmiri: string;
+  label: string;
   labelEnglish: string;
   dimensionsPx: string;
   icon: React.ReactNode;
@@ -136,15 +136,15 @@ export const SOCIAL_SIZE_OPTIONS: {
 }[] = [
   {
     id: '1:1',
-    labelKashmiri: 'مورَبَع (1:1)',
-    labelEnglish: 'Square Card',
+    label: 'Square (1:1)',
+    labelEnglish: 'Instagram & DP Card',
     dimensionsPx: '1080 × 1080 px',
     icon: <Square size={15} />,
     tag: 'Square / DP',
   },
   {
     id: '9:16',
-    labelKashmiri: 'سٹوری (9:16)',
+    label: 'Story (9:16)',
     labelEnglish: 'Story & Reels',
     dimensionsPx: '1080 × 1920 px',
     icon: <Smartphone size={15} />,
@@ -152,89 +152,89 @@ export const SOCIAL_SIZE_OPTIONS: {
   },
   {
     id: '16:9',
-    labelKashmiri: 'بینر (16:9)',
-    labelEnglish: 'Landscape Banner',
+    label: 'Banner (16:9)',
+    labelEnglish: 'Landscape & Video',
     dimensionsPx: '1920 × 1080 px',
     icon: <RectangleHorizontal size={15} />,
     tag: 'Banner / Video',
   },
   {
     id: '4:5',
-    labelKashmiri: 'عمودی (4:5)',
-    labelEnglish: 'Portrait Feed',
+    label: 'Portrait (4:5)',
+    labelEnglish: 'Portrait Feed Post',
     dimensionsPx: '1080 × 1350 px',
     icon: <RectangleVertical size={15} />,
     tag: 'Feed Post',
   },
   {
     id: '3:4',
-    labelKashmiri: 'فریم (3:4)',
-    labelEnglish: 'Classic Frame',
+    label: 'Classic Frame (3:4)',
+    labelEnglish: 'Classic Photo Frame',
     dimensionsPx: '1200 × 1600 px',
     icon: <RectangleVertical size={15} />,
     tag: 'Frame',
   },
   {
     id: '2:3',
-    labelKashmiri: 'پرنٹ (2:3)',
-    labelEnglish: 'Standard Photo',
+    label: 'Standard Photo (2:3)',
+    labelEnglish: 'Standard Photo Print',
     dimensionsPx: '1200 × 1800 px',
     icon: <Image size={15} />,
     tag: 'Photo',
   },
   {
     id: 'auto',
-    labelKashmiri: 'آزاد (Auto)',
+    label: 'Adaptive Canvas',
     labelEnglish: 'Continuous Flow',
-    dimensionsPx: 'Auto Canvas',
+    dimensionsPx: 'Auto Fit',
     icon: <Maximize2 size={15} />,
     tag: 'Adaptive',
   },
 ];
 
 export const CANVAS_COLOR_SWATCHES = [
-  { color: '#ffffff', name: 'سفید (Pure White)' },
-  { color: '#fbf8ee', name: 'قدیم کاغذ (Parchment Ivory)' },
-  { color: '#f5f5f4', name: 'نرم پتھر (Stone Gray)' },
-  { color: '#fef3c7', name: 'زعفران (Saffron Warm)' },
-  { color: '#f0fdf4', name: 'چنار سبز (Sage Mist)' },
-  { color: '#f0f9ff', name: 'ہمالیہ نیلا (Glacier Sky)' },
-  { color: '#fdf2f8', name: 'گلابِ کشمیر (Kashmir Rose)' },
-  { color: '#1c1917', name: 'مشکی سیاہ (Obsidian Charcoal)' },
-  { color: '#0f172a', name: 'ڈل رات (Twilight Navy)' },
-  { color: '#064e3b', name: 'شاہی زمرد (Imperial Emerald)' },
-  { color: '#450a0a', name: 'کشمیری روبی (Deep Maroon)' },
+  { color: '#ffffff', name: 'Pure White' },
+  { color: '#fbf8ee', name: 'Parchment Ivory' },
+  { color: '#f5f5f4', name: 'Stone Gray' },
+  { color: '#fef3c7', name: 'Saffron Warm' },
+  { color: '#f0fdf4', name: 'Sage Mist' },
+  { color: '#f0f9ff', name: 'Glacier Sky' },
+  { color: '#fdf2f8', name: 'Kashmir Rose' },
+  { color: '#1c1917', name: 'Obsidian Charcoal' },
+  { color: '#0f172a', name: 'Twilight Navy' },
+  { color: '#064e3b', name: 'Imperial Emerald' },
+  { color: '#450a0a', name: 'Deep Maroon' },
 ];
 
 export const CANVAS_TEXTURE_PRESETS = [
   {
     id: 'gradient-parchment',
-    name: 'شاہی مکتوب (Parchment)',
+    name: 'Parchment Texture',
     value: 'linear-gradient(135deg, #fdfbf7 0%, #f7f3e8 50%, #ede5d0 100%)',
   },
   {
     id: 'gradient-saffron',
-    name: 'زعفرانی شفق (Saffron)',
+    name: 'Saffron Sunset',
     value: 'linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fecaca 100%)',
   },
   {
     id: 'gradient-chinar',
-    name: 'چنار خزاں (Chinar)',
+    name: 'Chinar Autumn',
     value: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #d97706 100%)',
   },
   {
     id: 'gradient-emerald',
-    name: 'دیودار سبز (Emerald)',
+    name: 'Emerald Cedar',
     value: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
   },
   {
     id: 'gradient-twilight',
-    name: 'ڈل جھیل رات (Twilight)',
+    name: 'Dal Twilight',
     value: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
   },
   {
     id: 'gradient-slate',
-    name: 'پتھر سرمئی (Slate)',
+    name: 'Slate Charcoal',
     value: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #3f3f46 100%)',
   },
 ];
@@ -512,10 +512,10 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
             <div className="flex flex-col gap-3.5 animate-in fade-in duration-150">
               {/* PRIMARY PRESETS (First 6: Instagram Post, Story, WhatsApp Status, YouTube Thumbnail, A4, Custom) */}
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-nastaliq font-bold text-stone-900 flex items-center justify-between">
+                <span className="text-xs font-sans font-bold text-stone-900 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Sparkles size={14} className="text-emerald-700" />
-                    <span>مقبول سائز (Popular Mobile & Design Presets)</span>
+                    <span>Popular Design Presets</span>
                   </span>
                   <span className="text-[10px] font-sans text-stone-400">Tap to select</span>
                 </span>
@@ -536,7 +536,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === '1:1' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <Square size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">انسٹاگرام پوسٹ (1:1)</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">Square Post (1:1)</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -560,7 +560,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === '9:16' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <Smartphone size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">انسٹاگرام سٹوری (9:16)</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">Story / Reel (9:16)</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -584,7 +584,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === '9:16' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <Smartphone size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">واٹس ایپ سٹیٹس</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">Status (9:16)</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -608,7 +608,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === '16:9' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <RectangleHorizontal size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">یوٹیوب تھمب نیل (16:9)</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">Landscape (16:9)</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -632,7 +632,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === 'a4' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <FileText size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">اے فور دستاویزی (A4)</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">A4 Document</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -662,7 +662,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         <span className={`p-1 rounded-md ${currentRatio === 'custom' ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                           <Maximize2 size={15} />
                         </span>
-                        <span className="font-nastaliq text-xs sm:text-sm font-bold">کسٹم پیمائش (Custom)</span>
+                        <span className="font-sans text-xs sm:text-sm font-bold">Custom Dimensions</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full text-[9.5px] font-sans opacity-85 pt-0.5 border-t border-black/5">
@@ -678,9 +678,9 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
               {/* CUSTOM DIMENSIONS LARGE CONTROLS (when Custom is selected) */}
               {currentRatio === 'custom' && (
                 <div className="p-3.5 bg-emerald-50/70 border border-emerald-300 rounded-2xl flex flex-col gap-2.5 animate-in fade-in duration-150">
-                  <span className="text-xs font-nastaliq font-bold text-emerald-950 flex items-center gap-1.5">
+                  <span className="text-xs font-sans font-bold text-emerald-950 flex items-center gap-1.5">
                     <Sliders size={14} className="text-emerald-700" />
-                    <span>کسٹم چوڑائی و اونچائی (Custom Width & Height in Pixels)</span>
+                    <span>Custom Width & Height in Pixels</span>
                   </span>
 
                   <div className="grid grid-cols-2 gap-3" dir="ltr">
@@ -732,8 +732,8 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
               {/* MORE PRESETS (Accordion / Switcher for remaining standard sizes) */}
               <div className="border-t border-stone-200/80 pt-3 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs font-nastaliq font-bold text-stone-700">
-                    مزید سائز و دستاویزی فارمیٹ (More Document & Social Formats)
+                  <span className="text-xs font-sans font-bold text-stone-700">
+                    More Document & Social Formats
                   </span>
 
                   {/* Orientation Switcher for Paper */}
@@ -773,7 +773,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         key={opt.id}
                         type="button"
                         onClick={() => onUpdateCanvasConfig({ aspectRatio: opt.id })}
-                        className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                           isActive
                             ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                             : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -784,7 +784,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                             <span className={`p-1 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                               {opt.icon}
                             </span>
-                            <span className="font-nastaliq text-xs font-bold">{opt.labelKashmiri}</span>
+                            <span className="font-sans text-xs font-bold">{opt.label}</span>
                           </div>
                         </div>
 
@@ -803,7 +803,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         key={opt.id}
                         type="button"
                         onClick={() => onUpdateCanvasConfig({ aspectRatio: opt.id })}
-                        className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                           isActive
                             ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                             : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -814,7 +814,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                             <span className={`p-1 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-stone-100 text-emerald-700'}`}>
                               {opt.icon}
                             </span>
-                            <span className="font-nastaliq text-xs font-bold">{opt.labelKashmiri}</span>
+                            <span className="font-sans text-xs font-bold">{opt.label}</span>
                           </div>
                         </div>
 
@@ -835,9 +835,9 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
             <div className="flex flex-col gap-3.5 animate-in fade-in duration-150">
               {/* Paper Color Swatches */}
               <div className="p-3.5 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-2.5">
-                <span className="text-xs font-nastaliq font-bold text-stone-900 flex items-center gap-1.5">
+                <span className="text-xs font-sans font-bold text-stone-900 flex items-center gap-1.5">
                   <Palette size={14} className="text-emerald-700" />
-                  <span>کاغذ رنگ (Curated Paper Palettes)</span>
+                  <span>Paper Background Palettes</span>
                 </span>
 
                 <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar py-1">
@@ -898,9 +898,9 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
 
               {/* Royal Texture Gradients */}
               <div className="p-3.5 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-2.5">
-                <span className="text-xs font-nastaliq font-bold text-stone-900 flex items-center gap-1.5">
+                <span className="text-xs font-sans font-bold text-stone-900 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-emerald-700" />
-                  <span>شاہی پس منظر بناوٹ (Royal Background Textures)</span>
+                  <span>Curated Texture Gradients</span>
                 </span>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -917,7 +917,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                             overlayOpacity: 0,
                           })
                         }
-                        className={`p-2 rounded-xl border text-xs font-nastaliq flex items-center gap-2 cursor-pointer transition-all active:scale-95 text-right ${
+                        className={`p-2 rounded-xl border text-xs font-sans flex items-center gap-2 cursor-pointer transition-all active:scale-95 text-right ${
                           isActive
                             ? 'border-emerald-600 ring-1 ring-emerald-600 font-bold bg-emerald-50 text-emerald-900 shadow-xs'
                             : 'border-stone-200 bg-white hover:bg-stone-50 hover:border-emerald-200 text-stone-800'
@@ -927,7 +927,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                           className="w-5 h-5 rounded-lg border border-stone-300 shrink-0 shadow-2xs"
                           style={{ background: tex.value }}
                         />
-                        <span className="truncate">{tex.name.split(' ')[0]}</span>
+                        <span className="truncate">{tex.name.split('(')[0].trim()}</span>
                       </button>
                     );
                   })}
@@ -941,19 +941,19 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
             <div className="flex flex-col gap-3.5 animate-in fade-in duration-150">
               <div className="p-3.5 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-nastaliq font-bold text-stone-900 flex items-center gap-1.5">
+                  <span className="text-xs font-sans font-bold text-stone-900 flex items-center gap-1.5">
                     <ImageIcon size={14} className="text-emerald-700" />
-                    <span>کسٹم پس منظر تصویر (Custom Background Image)</span>
+                    <span>Custom Background Image</span>
                   </span>
 
                   {currentImage && (
                     <button
                       type="button"
                       onClick={() => onUpdateCanvasConfig({ image: undefined })}
-                      className="px-2 py-1 text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg text-xs font-nastaliq flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-2 py-1 text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg text-xs font-sans flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Trash2 size={12} />
-                      <span>ہٹاوِو</span>
+                      <span>Remove</span>
                     </button>
                   )}
                 </div>
@@ -964,8 +964,8 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   className="w-full py-4 border-2 border-dashed border-stone-300 hover:border-emerald-500 rounded-xl bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <Upload size={18} className="text-emerald-700" />
-                  <span className="text-xs font-nastaliq font-bold text-stone-800">
-                    تصویر اَپلوڈ کٔرِو (Upload Background Image)
+                  <span className="text-xs font-sans font-bold text-stone-800">
+                    Upload Background Image
                   </span>
                   <span className="text-[10px] text-stone-400 font-sans">
                     PNG, JPG, WEBP • Auto Centered & Scaled
@@ -983,8 +983,8 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                 {currentImage && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1 p-3 bg-white rounded-xl border border-stone-200">
                     <div className="flex flex-col gap-1.5">
-                      <div className="flex justify-between text-[11px] font-nastaliq text-stone-700">
-                        <span>تصویرٕچ شفافیت (Image Opacity)</span>
+                      <div className="flex justify-between text-[11px] font-sans text-stone-700">
+                        <span>Image Opacity</span>
                         <span className="font-sans font-bold">{Math.round(currentOpacity * 100)}%</span>
                       </div>
                       <input
@@ -999,8 +999,8 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <div className="flex justify-between text-[11px] font-nastaliq text-stone-700">
-                        <span>متن خٲطرٕ سیاہی (Dark Overlay)</span>
+                      <div className="flex justify-between text-[11px] font-sans text-stone-700">
+                        <span>Dark Overlay</span>
                         <span className="font-sans font-bold">{Math.round(currentOverlayOpacity * 100)}%</span>
                       </div>
                       <input
@@ -1035,7 +1035,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                     </div>
                     <div>
                       <h4 className="text-xs font-sans font-bold text-stone-900 leading-tight">
-                        Magnet Alignment Lines (سِنیپ گائڈس)
+                        Magnet Alignment Guides
                       </h4>
                       <p className="text-[10px] font-sans text-stone-500 leading-tight mt-0.5">
                         Magnetically lock text to canvas center & other layers
@@ -1092,7 +1092,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Canvas Center (کینوس مرکز)</span>
+                      <span className="text-stone-800 font-medium">Canvas Center</span>
                     </div>
                     <span className="text-[10px] text-emerald-800 font-mono font-semibold">Green Line</span>
                   </div>
@@ -1100,7 +1100,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50/60 border border-amber-100">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Margin Safety Lines (مارجن)</span>
+                      <span className="text-stone-800 font-medium">Margin Safety Lines</span>
                     </div>
                     <span className="text-[10px] text-amber-800 font-mono font-semibold">Amber Line</span>
                   </div>
@@ -1108,7 +1108,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-100">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Inter-Layer Alignment (لئیر سِنیپ)</span>
+                      <span className="text-stone-800 font-medium">Inter-Layer Alignment</span>
                     </div>
                     <span className="text-[10px] text-indigo-800 font-mono font-semibold">Indigo Line</span>
                   </div>
@@ -1120,17 +1120,17 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
 
         {/* Footer Done Action */}
         <div className="px-4 py-2.5 bg-stone-50 border-t border-stone-200 flex items-center justify-between shrink-0">
-          <div className="text-[11px] text-stone-500 font-nastaliq">
-            تبدیلیاں خودکار محفوظ چھِ
+          <div className="text-[11px] text-stone-500 font-sans">
+            Changes saved automatically
           </div>
 
           <button
             type="button"
             onClick={handleSmoothClose}
-            className="py-1.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-nastaliq text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+            className="py-1.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
             <Check size={13} />
-            <span>مُکمل (Done)</span>
+            <span>Done</span>
           </button>
         </div>
       </div>

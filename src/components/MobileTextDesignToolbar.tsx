@@ -88,10 +88,10 @@ type ActiveSheet =
   | 'snap';
 
 const FONTS: { id: FontChoice; label: string; preview: string }[] = [
-  { id: 'Noto Nastaliq Urdu', label: 'نوٹو نستعلیق (Nastaliq)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Gulzar', label: 'گُلزار (Gulzar)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Amiri', label: 'امیری نسخ (Amiri Naskh)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Noto Sans Arabic', label: 'نوٹو سنز (Sans Arabic)', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Noto Nastaliq Urdu', label: 'Noto Nastaliq Urdu', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Gulzar', label: 'Gulzar Nastaliq', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Amiri', label: 'Amiri Naskh', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Noto Sans Arabic', label: 'Noto Sans Arabic', preview: 'کٲشُر لیٚکھُن' },
 ];
 
 const COLOR_PRESETS = [
@@ -259,7 +259,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                 className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-emerald-600 bg-emerald-50/60 hover:bg-emerald-100/80 text-emerald-950 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs"
               >
                 <Upload size={16} className="text-emerald-700 shrink-0" />
-                <span className="font-nastaliq text-xs">کسٹم فونٹ اپلوڈ کٔرِو (.TTF, .OTF, .WOFF)</span>
+                <span className="font-sans text-xs">Upload Custom Font (.TTF, .OTF, .WOFF)</span>
               </button>
 
               <div className="grid grid-cols-2 gap-2">
@@ -432,7 +432,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                     title="Right to Left (RTL)"
                   >
                     <ArrowRightToLine size={15} />
-                    <span>RTL (کٲشُر)</span>
+                    <span>RTL (Right-to-Left)</span>
                   </button>
 
                   <button

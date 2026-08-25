@@ -248,3 +248,5 @@ export interface KeyboardKey {
   longPress?: string[];
   isKashmiriSpecial?: boolean;
 }
+
+export * from './history';

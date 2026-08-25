@@ -64,11 +64,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     }
   };
 
-  const fonts: { id: FontChoice; name: string; nameKashmiri: string }[] = [
-    { id: 'Noto Nastaliq Urdu', name: 'Noto Nastaliq Urdu (Default)', nameKashmiri: 'نوٹو نستعلیق (Primary)' },
-    { id: 'Gulzar', name: 'Gulzar Nastaliq', nameKashmiri: 'گُلزار نستعلیق' },
-    { id: 'Amiri', name: 'Amiri Naskh', nameKashmiri: 'امیری نسخ' },
-    { id: 'Noto Sans Arabic', name: 'Noto Sans Arabic', nameKashmiri: 'نوٹو سنز عربک' },
+  const fonts: { id: FontChoice; name: string }[] = [
+    { id: 'Noto Nastaliq Urdu', name: 'Noto Nastaliq Urdu (Primary)' },
+    { id: 'Gulzar', name: 'Gulzar Nastaliq' },
+    { id: 'Amiri', name: 'Amiri Naskh' },
+    { id: 'Noto Sans Arabic', name: 'Noto Sans Arabic' },
   ];
 
   const quickColors = [
@@ -104,7 +104,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-md shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
             <span className="text-xs font-semibold text-emerald-900 font-sans">
-              {selectionCount} حرف • {currentStyle.fontSize}px • {currentStyle.fontFamily.split(' ')[0]}
+              {selectionCount} chars • {currentStyle.fontSize}px • {currentStyle.fontFamily.split(' ')[0]}
             </span>
           </div>
         )}
@@ -121,7 +121,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                 : 'bg-white text-stone-800 border-stone-200 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200'
             }`}
-            title="Font Family (فونٹ)"
+            title="Font Family"
           >
             <span className="w-5 h-5 rounded flex items-center justify-center bg-stone-100 text-stone-800 font-serif font-bold text-xs border border-stone-300 shadow-2xs">F</span>
             <ChevronDown size={12} />
@@ -407,11 +407,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => fontFileInputRef.current?.click()}
-            className="px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5 border-2 border-dashed border-emerald-600 bg-emerald-50 text-emerald-950 font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5 border-2 border-dashed border-emerald-600 bg-emerald-50 text-emerald-950 font-bold hover:bg-emerald-100 transition-colors cursor-pointer font-sans"
             title="Upload Custom Font (.TTF, .OTF, .WOFF)"
           >
             <Upload size={13} className="text-emerald-700 shrink-0" />
-            <span className="font-nastaliq">کسٹم فونٹ اپلوڈ کٔرِو</span>
+            <span>Upload Custom Font</span>
           </button>
 
           {/* Uploaded custom fonts */}
@@ -455,13 +455,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 onUpdateStyle({ fontFamily: f.id });
                 setOpenPicker('none');
               }}
-              className={`px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5 border transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5 border transition-colors cursor-pointer font-sans ${
                 currentStyle.fontFamily === f.id
                   ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                   : 'bg-white border-stone-200 text-stone-900 hover:bg-emerald-50 hover:border-emerald-200'
               }`}
             >
-              <span className="font-nastaliq">{f.nameKashmiri}</span>
+              <span>{f.name}</span>
               {currentStyle.fontFamily === f.id && <Check size={12} className="text-white shrink-0" />}
             </button>
           ))}
@@ -470,7 +470,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
       {openPicker === 'color' && (
         <div className="pt-2 pb-1 border-t border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar animate-in slide-in-from-top-2">
-          <span className="text-xs font-nastaliq text-stone-900 shrink-0">رنگ لَفظ:</span>
+          <span className="text-xs font-sans font-medium text-stone-900 shrink-0">Text Color:</span>
           {quickColors.map((col, idx) => (
             <button
               key={idx}
@@ -501,7 +501,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
       {openPicker === 'highlight' && (
         <div className="pt-2 pb-1 border-t border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar animate-in slide-in-from-top-2">
-          <span className="text-xs font-nastaliq text-stone-900 shrink-0">ہائِلائٹ رنگ:</span>
+          <span className="text-xs font-sans font-medium text-stone-900 shrink-0">Highlight Color:</span>
           {quickHighlights.map((hl, idx) => (
             <button
               key={idx}
@@ -525,11 +525,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       )}
 
       {openPicker === 'fx' && (
-        <div className="pt-2 pb-2 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in slide-in-from-top-2 text-right" dir="rtl">
+        <div className="pt-2 pb-2 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in slide-in-from-top-2 text-left" dir="ltr">
           {/* Line Spacing Presets & Slider */}
           <div className="flex flex-col gap-1.5 bg-stone-50 p-2 rounded-lg border border-stone-200">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold font-nastaliq text-stone-900">لٲنَن مَنٛز فاصِلہ (Line Height)</span>
+              <span className="text-xs font-semibold font-sans text-stone-900">Line Height</span>
               <span className="text-xs font-mono font-bold text-emerald-700">{currentStyle.lineHeight.toFixed(1)}x</span>
             </div>
             <div className="flex items-center gap-1">
@@ -564,7 +564,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <div className="flex flex-col gap-2 bg-stone-50 p-2 rounded-lg border border-stone-200">
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold font-nastaliq text-stone-900">حُروفَن مَنٛز فاصِلہ (Letter Spacing)</span>
+                <span className="text-xs font-semibold font-sans text-stone-900">Letter Spacing</span>
                 <span className="text-xs font-mono font-bold text-emerald-700">{currentStyle.letterSpacing}px</span>
               </div>
               <input
@@ -579,7 +579,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </div>
             <div className="flex flex-col gap-1 mt-0.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold font-nastaliq text-stone-900">شفافیت (Opacity)</span>
+                <span className="text-xs font-semibold font-sans text-stone-900">Opacity</span>
                 <span className="text-xs font-mono font-bold text-emerald-700">{Math.round(currentStyle.opacity * 100)}%</span>
               </div>
               <input
@@ -596,7 +596,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
           {/* Text Shadow & Outline Effects */}
           <div className="flex flex-col gap-2 bg-stone-50 p-2 rounded-lg border border-stone-200">
-            <span className="text-xs font-semibold font-nastaliq text-stone-900">سایہٕ تہٕ خٔط (Shadow & Outline)</span>
+            <span className="text-xs font-semibold font-sans text-stone-900">Shadow & Outline</span>
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
@@ -609,13 +609,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     shadowOffsetY: 2,
                   })
                 }
-                className={`h-7 px-2 text-xs rounded border font-nastaliq transition-colors cursor-pointer ${
+                className={`h-7 px-2 text-xs rounded border font-sans transition-colors cursor-pointer ${
                   !!currentStyle.shadowColor
                     ? 'bg-emerald-600 text-white border-emerald-600 font-bold'
                     : 'bg-white text-stone-800 border-stone-200 hover:bg-emerald-50'
                 }`}
               >
-                سایہ دار (Shadow)
+                Shadow
               </button>
               <button
                 type="button"
@@ -628,13 +628,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     shadowOffsetY: 0,
                   })
                 }
-                className="h-7 px-2 text-xs rounded border bg-white text-stone-800 border-stone-200 hover:bg-stone-100 font-nastaliq cursor-pointer"
+                className="h-7 px-2 text-xs rounded border bg-white text-stone-800 border-stone-200 hover:bg-stone-100 font-sans cursor-pointer"
               >
-                بغیر سایہ (None)
+                None
               </button>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[11px] font-nastaliq text-stone-700 shrink-0">خٔط (Outline):</span>
+              <span className="text-[11px] font-sans text-stone-700 shrink-0">Outline:</span>
               <input
                 type="color"
                 value={currentStyle.strokeColor || '#000000'}
@@ -667,9 +667,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onUpdateStyle({ strokeColor: undefined, strokeWidth: 0 })}
-                className="text-[10px] text-rose-700 hover:underline font-nastaliq cursor-pointer shrink-0"
+                className="text-[10px] text-rose-700 hover:underline font-sans cursor-pointer shrink-0"
               >
-                حذِف خٔط (Remove Outline)
+                Remove
               </button>
             </div>
           </div>

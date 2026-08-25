@@ -101,8 +101,8 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
               <FolderOpen size={18} />
             </div>
             <div>
-              <h3 className="font-nastaliq text-base sm:text-lg font-bold text-stone-900 leading-tight">
-                محفوظ مسودات
+              <h3 className="font-sans text-base sm:text-lg font-bold text-stone-900 leading-tight">
+                Saved Projects
               </h3>
               <p className="text-[11px] text-stone-500 font-sans leading-none mt-0.5">
                 Saved Documents & Drafts
@@ -114,7 +114,7 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
-            title="بَنٛد کٔرِو (Close)"
+            title="Close"
           >
             <X size={18} />
           </button>
@@ -122,8 +122,8 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
 
         {/* Action / Count Bar */}
         <div className="px-4 py-2.5 sm:px-5 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-2 shrink-0">
-          <span className="text-xs font-nastaliq font-bold text-stone-600">
-            کُل مسودات: {documents.length}
+          <span className="text-xs font-sans font-bold text-stone-600">
+            Total Projects: {documents.length}
           </span>
 
           <button
@@ -132,10 +132,10 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
               onNewDocument();
               onClose();
             }}
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-nastaliq font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer min-h-[38px]"
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer min-h-[38px]"
           >
             <Plus size={15} />
-            <span>نواں مسودہ (New)</span>
+            <span>New Document</span>
           </button>
         </div>
 
@@ -144,7 +144,7 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
           {documents.length === 0 ? (
             <div className="py-12 text-center text-stone-400 flex flex-col items-center justify-center gap-2">
               <FileText size={32} className="opacity-40" />
-              <p className="font-nastaliq text-sm">کانٛہہ تہِ مسودہ مَحفوظ چھُنہٕ</p>
+              <p className="font-sans text-sm">No saved documents yet</p>
             </div>
           ) : (
             documents.map((doc) => {
@@ -200,13 +200,13 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                             <CheckCircle2 size={15} className="text-emerald-700 shrink-0" />
                           )}
                           <h4 className="font-nastaliq text-base sm:text-lg font-bold text-stone-900 truncate leading-snug">
-                            {doc.title || 'بلا عنوان مسودہ'}
+                            {doc.title || 'Untitled Document'}
                           </h4>
                         </div>
                       )}
 
                       <p className="font-nastaliq text-xs text-stone-600 truncate mt-1 leading-relaxed">
-                        {doc.content.trim() || <span className="italic text-stone-400">خٲلی مسودہ (Empty Draft)</span>}
+                        {doc.content.trim() || <span className="italic text-stone-400 font-sans">Empty Draft</span>}
                       </p>
 
                       <div className="flex items-center gap-2.5 mt-2 text-[10px] font-sans text-stone-400">
@@ -215,7 +215,7 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                           {new Date(doc.updatedAt).toLocaleDateString()}
                         </span>
                         <span>•</span>
-                        <span>{doc.content.length} حروف</span>
+                        <span>{doc.content.length} characters</span>
                       </div>
                     </div>
 
@@ -233,16 +233,16 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                       {/* Dropdown Menu for Rename, Duplicate, Export, Delete */}
                       {isMenuOpen && (
                         <div
-                          className="absolute left-0 top-9 w-40 bg-white border border-stone-200 rounded-xl shadow-xl py-1 z-30 animate-in fade-in zoom-in-95 duration-100 text-right"
-                          dir="rtl"
+                          className="absolute left-0 top-9 w-40 bg-white border border-stone-200 rounded-xl shadow-xl py-1 z-30 animate-in fade-in zoom-in-95 duration-100 text-left"
+                          dir="ltr"
                         >
                           <button
                             type="button"
                             onClick={() => handleStartRename(doc)}
-                            className="w-full px-3 py-2 flex items-center gap-2 text-xs font-nastaliq font-bold text-stone-700 hover:bg-emerald-50 hover:text-emerald-900"
+                            className="w-full px-3 py-2 flex items-center gap-2 text-xs font-sans font-medium text-stone-700 hover:bg-emerald-50 hover:text-emerald-900"
                           >
                             <Edit2 size={13} className="text-emerald-700" />
-                            <span>نام تبدیل کٔرِو (Rename)</span>
+                            <span>Rename</span>
                           </button>
 
                           {onDuplicateDocument && (
@@ -252,10 +252,10 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                                 onDuplicateDocument(doc.id);
                                 setActiveMenuDocId(null);
                               }}
-                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-nastaliq font-bold text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 border-t border-stone-100"
+                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-sans font-medium text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 border-t border-stone-100"
                             >
                               <Copy size={13} className="text-emerald-700" />
-                              <span>نقل کٔرِو (Duplicate)</span>
+                              <span>Duplicate</span>
                             </button>
                           )}
 
@@ -266,10 +266,10 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                                 onExportDocument(doc);
                                 setActiveMenuDocId(null);
                               }}
-                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-nastaliq font-bold text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 border-t border-stone-100"
+                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-sans font-medium text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 border-t border-stone-100"
                             >
                               <Download size={13} className="text-emerald-700" />
-                              <span>ایکسپورٹ (Export)</span>
+                              <span>Export</span>
                             </button>
                           )}
 
@@ -280,10 +280,10 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                                 onDeleteDocument(doc.id);
                                 setActiveMenuDocId(null);
                               }}
-                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-nastaliq font-bold text-rose-600 hover:bg-rose-50 border-t border-stone-100"
+                              className="w-full px-3 py-2 flex items-center gap-2 text-xs font-sans font-medium text-rose-600 hover:bg-rose-50 border-t border-stone-100"
                             >
                               <Trash2 size={13} />
-                              <span>مٹاوِو (Delete)</span>
+                              <span>Delete</span>
                             </button>
                           )}
                         </div>

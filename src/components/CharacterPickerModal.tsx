@@ -60,11 +60,11 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
               ٲ
             </div>
             <div>
-              <h2 className="font-nastaliq text-base sm:text-lg font-bold text-stone-900 leading-tight">
-                کٲشُر حُروف دان و لَفْظ رہنُما
+              <h2 className="font-sans text-base sm:text-lg font-bold text-stone-900 leading-tight">
+                Kashmiri Character Guide
               </h2>
               <p className="text-[11px] text-stone-500 font-sans leading-none mt-0.5">
-                Kashmiri Characters & Glyphs
+                Kashmiri Characters, Vowels & Diacritics
               </p>
             </div>
           </div>
@@ -73,7 +73,7 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
-            title="بَنٛد کٔرِو (Close)"
+            title="Close"
           >
             <X size={18} />
           </button>
@@ -86,10 +86,10 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
             <Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               type="text"
-              placeholder="حرف، نام یا لفظ ژھارِو..."
+              placeholder="Search character, name or example..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-stone-200 rounded-lg pr-9 pl-3 py-1.5 text-xs font-nastaliq text-stone-900 focus:outline-hidden focus:border-emerald-500"
+              className="w-full bg-white border border-stone-200 rounded-lg pr-9 pl-3 py-1.5 text-xs font-sans text-stone-900 focus:outline-hidden focus:border-emerald-500"
             />
           </div>
 
@@ -98,46 +98,46 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
             <button
               type="button"
               onClick={() => setSelectedFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-nastaliq shrink-0 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-sans shrink-0 transition-all cursor-pointer ${
                 selectedFilter === 'all'
                   ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'bg-white text-stone-700 border border-stone-200 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
-              ساری (All)
+              All
             </button>
             <button
               type="button"
               onClick={() => setSelectedFilter('specific')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-nastaliq shrink-0 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-sans shrink-0 transition-all cursor-pointer ${
                 selectedFilter === 'specific'
                   ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'bg-white text-stone-700 border border-stone-200 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
-              کٲشِرؠ خاص حُروف
+              Kashmiri Specific
             </button>
             <button
               type="button"
               onClick={() => setSelectedFilter('vowels')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-nastaliq shrink-0 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-sans shrink-0 transition-all cursor-pointer ${
                 selectedFilter === 'vowels'
                   ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'bg-white text-stone-700 border border-stone-200 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
-              واول (Vowels)
+              Vowels
             </button>
             <button
               type="button"
               onClick={() => setSelectedFilter('diacritics')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-nastaliq shrink-0 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-sans shrink-0 transition-all cursor-pointer ${
                 selectedFilter === 'diacritics'
                   ? 'bg-emerald-600 text-white font-bold shadow-xs'
                   : 'bg-white text-stone-700 border border-stone-200 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
-              اِعراب (Diacritics)
+              Diacritics
             </button>
           </div>
         </div>
@@ -157,8 +157,8 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
               {/* Character Details */}
               <div className="flex-1 text-right min-w-0">
                 <div className="flex items-center gap-1.5 justify-start flex-wrap">
-                  <h4 className="font-nastaliq text-sm sm:text-base font-bold text-stone-900 truncate">
-                    {item.nameKashmiri}
+                  <h4 className="font-sans text-sm sm:text-base font-bold text-stone-900 truncate">
+                    {item.name}
                   </h4>
                   {item.isKashmiriSpecific && (
                     <span className="text-[9px] font-sans font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded border border-emerald-200 shrink-0">
@@ -168,11 +168,11 @@ export const CharacterPickerModal: React.FC<CharacterPickerModalProps> = ({
                 </div>
 
                 <p className="text-[11px] text-stone-500 font-sans mt-0.5 truncate">
-                  {item.name} • <span className="font-mono text-stone-600">{item.unicodeHex}</span>
+                  {item.nameKashmiri} • <span className="font-mono text-stone-600">{item.unicodeHex}</span>
                 </p>
 
                 <div className="mt-1 text-xs text-stone-700 font-nastaliq">
-                  <span className="text-stone-400 font-sans text-[10px]">مِثال: </span>
+                  <span className="text-stone-400 font-sans text-[10px]">Example: </span>
                   <span className="font-bold text-stone-900">{item.exampleWord}</span>
                   <span className="text-stone-500 font-sans text-[10px] mr-1">({item.exampleMeaning})</span>
                 </div>

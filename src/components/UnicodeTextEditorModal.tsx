@@ -14,6 +14,8 @@ import {
   AlignRight,
   AlignCenter,
   AlignLeft,
+  Minus,
+  Plus,
   Sparkles,
   Keyboard,
 } from 'lucide-react';
@@ -28,10 +30,10 @@ interface UnicodeTextEditorModalProps {
 }
 
 const FONTS: { id: FontChoice; label: string; preview: string }[] = [
-  { id: 'Noto Nastaliq Urdu', label: 'نوٹو نستعلیق (Nastaliq)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Gulzar', label: 'گُلزار نستعلیق (Gulzar)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Amiri', label: 'امیری نسخ (Amiri Naskh)', preview: 'کٲشُر لیٚکھُن' },
-  { id: 'Noto Sans Arabic', label: 'نوٹو سنز عربک (Sans Arabic)', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Noto Nastaliq Urdu', label: 'Noto Nastaliq Urdu', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Gulzar', label: 'Gulzar Nastaliq', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Amiri', label: 'Amiri Naskh', preview: 'کٲشُر لیٚکھُن' },
+  { id: 'Noto Sans Arabic', label: 'Noto Sans Arabic', preview: 'کٲشُر لیٚکھُن' },
 ];
 
 export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
@@ -47,6 +49,7 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
   const [selectedFont, setSelectedFont] = useState<FontChoice>(
     initialStyle.fontFamily || 'Noto Nastaliq Urdu'
   );
+  const [fontSize, setFontSize] = useState<number>(initialStyle.fontSize || 32);
   const [direction, setDirection] = useState<'rtl' | 'ltr'>(initialStyle.direction || 'rtl');
   const [copiedToast, setCopiedToast] = useState<boolean>(false);
   const [showFontPicker, setShowFontPicker] = useState<boolean>(false);
@@ -58,6 +61,7 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
     if (isOpen) {
       setText(initialText);
       setSelectedFont(initialStyle.fontFamily || 'Noto Nastaliq Urdu');
+      setFontSize(initialStyle.fontSize || 32);
       setDirection(initialStyle.direction || 'rtl');
       setShowFontPicker(false);
 
@@ -79,9 +83,11 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
     onSave(text, {
       fontFamily: selectedFont,
       direction,
+      fontSize,
+      align: direction === 'rtl' ? (initialStyle.align || 'right') : (initialStyle.align || 'left'),
     });
     onClose();
-  }, [text, selectedFont, direction, onSave, onClose]);
+  }, [text, selectedFont, direction, fontSize, initialStyle.align, onSave, onClose]);
 
   const handleCopyText = useCallback(async () => {
     if (!text) return;
@@ -194,13 +200,13 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
               type="button"
               onClick={onClose}
               className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-800 hover:text-black bg-white hover:bg-stone-200 border border-stone-300 transition-colors cursor-pointer"
-              title="Cancel (بند کٔرِو)"
+              title="Cancel"
               aria-label="Cancel"
             >
               <X size={18} />
             </button>
-            <span className="font-nastaliq text-base font-bold text-stone-950">
-              {layerName ? layerName : 'متن لؠکھِو'}
+            <span className="font-sans text-base font-bold text-stone-950">
+              {layerName ? layerName : 'Edit Text'}
             </span>
           </div>
 
@@ -224,7 +230,7 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-200'
               }`}
-              title="Toggle Kashmiri Keyboard (کٲشُر کیبورڈ)"
+              title="Toggle Kashmiri Keyboard"
               aria-label="Toggle Kashmiri Keyboard"
             >
               <Keyboard size={18} />
@@ -236,7 +242,7 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
               type="button"
               onClick={handleDone}
               className="w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer border border-emerald-800"
-              title="Done (ہۆو)"
+              title="Done"
               aria-label="Done"
             >
               <Check size={18} />
@@ -245,8 +251,9 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
         </div>
 
         {/* Action Toolbar above textarea */}
-        <div className="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-300 text-xs shrink-0">
-          <div className="flex items-center gap-1.5" dir="ltr">
+        <div className="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-300 text-xs shrink-0 gap-2" dir="ltr">
+          {/* Left: Font Picker, Size Stepper & LTR/RTL Control */}
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* Font Picker Trigger */}
             <button
               type="button"
@@ -262,23 +269,69 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
               <Type size={16} />
             </button>
 
-            {/* Direction Toggle */}
-            <button
-              type="button"
-              onClick={() => setDirection((prev) => (prev === 'rtl' ? 'ltr' : 'rtl'))}
-              className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
-                direction === 'rtl'
-                  ? 'bg-emerald-100 text-emerald-950 border-emerald-500'
-                  : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-200'
-              }`}
-              title={direction === 'rtl' ? 'Right-to-Left (RTL)' : 'Left-to-Right (LTR)'}
-              aria-label="Text Direction"
-            >
-              <MoveHorizontal size={16} />
-            </button>
+            {/* Size Control Stepper */}
+            <div className="flex items-center bg-white border border-stone-300 rounded-xl p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setFontSize((s) => Math.max(12, s - 2))}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-700 hover:text-black hover:bg-stone-100 active:scale-95 transition-all cursor-pointer"
+                title="Decrease Font Size"
+                aria-label="Decrease Font Size"
+              >
+                <Minus size={13} />
+              </button>
+
+              <span className="px-1.5 font-sans font-bold text-[11px] text-stone-800 tabular-nums select-none min-w-[34px] text-center">
+                {fontSize}px
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setFontSize((s) => Math.min(96, s + 2))}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-700 hover:text-black hover:bg-stone-100 active:scale-95 transition-all cursor-pointer"
+                title="Increase Font Size"
+                aria-label="Increase Font Size"
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+
+            {/* Direction Toggle (RTL / LTR Segmented) */}
+            <div className="flex items-center bg-white border border-stone-300 rounded-xl p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setDirection('rtl')}
+                className={`px-2 h-7 rounded-lg flex items-center gap-1 font-sans text-[11px] font-bold transition-all cursor-pointer ${
+                  direction === 'rtl'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'text-stone-700 hover:text-black hover:bg-stone-100'
+                }`}
+                title="Right to Left (RTL)"
+                aria-label="Right to Left"
+              >
+                <AlignRight size={12} />
+                <span>RTL</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDirection('ltr')}
+                className={`px-2 h-7 rounded-lg flex items-center gap-1 font-sans text-[11px] font-bold transition-all cursor-pointer ${
+                  direction === 'ltr'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'text-stone-700 hover:text-black hover:bg-stone-100'
+                }`}
+                title="Left to Right (LTR)"
+                aria-label="Left to Right"
+              >
+                <span>LTR</span>
+                <AlignLeft size={12} />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5" dir="ltr">
+          {/* Right: Copy / Paste / Clear Actions */}
+          <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
             {/* Copy Button */}
             <button
               type="button"
@@ -351,21 +404,28 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
         {/* Live Preview Card */}
         <div className="px-4 py-2.5 bg-stone-50/80 border-b border-stone-200/90 text-right shrink-0">
           <div className="text-[10px] text-stone-400 font-sans uppercase tracking-wider mb-1 flex items-center justify-between">
-            <span className="font-nastaliq text-stone-600">کینوس پیش نظارہ (Live Nastaliq Preview)</span>
-            <span className="font-sans text-stone-500">{selectedFont}</span>
+            <span className="font-sans text-stone-600 font-medium">Live Nastaliq Preview</span>
+            <div className="flex items-center gap-2 font-sans text-stone-500">
+              <span>{selectedFont}</span>
+              <span>•</span>
+              <span className="font-semibold text-emerald-800">{fontSize}px</span>
+              <span>•</span>
+              <span className="uppercase text-stone-600 font-semibold">{direction}</span>
+            </div>
           </div>
           <div
             className="text-xl sm:text-2xl text-stone-900 min-h-[36px] overflow-hidden whitespace-pre-wrap break-words leading-relaxed"
             dir={direction}
             style={{
               fontFamily: fontFamCSS,
-              textAlign: initialStyle.align || 'center',
+              fontSize: `${fontSize}px`,
+              textAlign: direction === 'rtl' ? (initialStyle.align || 'right') : (initialStyle.align || 'left'),
               fontWeight: initialStyle.bold ? 'bold' : 'normal',
               fontStyle: initialStyle.italic ? 'italic' : 'normal',
               color: initialStyle.color || '#1c1917',
             }}
           >
-            {text || <span className="text-stone-400 italic">متن درج کٔرِو... (Live preview)</span>}
+            {text || <span className="text-stone-400 italic font-sans text-sm">Enter text to preview...</span>}
           </div>
         </div>
 
@@ -378,10 +438,12 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
             onChange={(e) => setText(e.target.value)}
             dir={direction}
             inputMode={showKashmiriKeyboard ? 'none' : 'text'}
-            placeholder="ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو... (Type Kashmiri Unicode using keyboard)"
-            className="w-full h-full min-h-[120px] p-2 bg-transparent text-stone-900 caret-emerald-600 text-lg sm:text-xl font-nastaliq resize-none border-none outline-hidden cursor-text selection:bg-emerald-100 whitespace-pre-wrap break-words leading-[2.4]"
+            placeholder="Type Kashmiri text here or use the keyboard..."
+            className="w-full h-full min-h-[120px] p-2 bg-transparent text-stone-900 caret-emerald-600 font-nastaliq resize-none border-none outline-hidden cursor-text selection:bg-emerald-100 whitespace-pre-wrap break-words leading-[2.4]"
             style={{
               fontFamily: fontFamCSS,
+              fontSize: `${Math.max(16, Math.min(48, fontSize))}px`,
+              textAlign: direction === 'rtl' ? 'right' : 'left',
             }}
           />
         </div>
@@ -412,16 +474,16 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
         <div className="flex items-center justify-between px-4 py-2 bg-stone-50 border-t border-stone-200 text-xs text-stone-500 font-sans shrink-0">
           <div className="flex items-center gap-3">
             <span>
-              الفاظ: <strong className="text-stone-800 font-nastaliq">{toKashmiriNumerals(wordCount)}</strong>
+              Words: <strong className="text-stone-800 font-sans font-semibold">{wordCount}</strong>
             </span>
             <span className="text-stone-300">•</span>
             <span>
-              حُرُوف: <strong className="text-stone-800 font-nastaliq">{toKashmiriNumerals(charCount)}</strong>
+              Characters: <strong className="text-stone-800 font-sans font-semibold">{charCount}</strong>
             </span>
           </div>
 
-          <span className="text-[11px] text-stone-400 font-nastaliq">
-            تۄہۍ ہؠکِو اینڈرائڈ کیبورڈ یا کٲشُر کیبورڈ دۄشوے اِستعمال کٔرِتھ
+          <span className="text-[11px] text-stone-400 font-sans">
+            Type with system keyboard or dedicated Kashmiri keyboard
           </span>
         </div>
       </div>
