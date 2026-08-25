@@ -168,12 +168,11 @@ export const Header: React.FC<HeaderProps> = ({
             id="header-android-app-btn"
             type="button"
             onClick={onOpenAndroidApp}
-            className="h-8.5 sm:h-9 px-2 sm:px-2.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs font-sans text-xs font-bold"
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs font-sans text-xs font-bold"
             title="Android App & APK Setup"
             aria-label="Android App"
           >
-            <Smartphone size={15} className="text-emerald-800" />
-            <span className="hidden md:inline">Android App</span>
+            <Smartphone size={16} className="text-emerald-800" />
           </button>
         )}
 

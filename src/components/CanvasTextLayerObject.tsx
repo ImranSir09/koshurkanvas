@@ -367,7 +367,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
           fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
         }}
       >
-        {layer.text || <span className="text-stone-400 italic">متن درج کٔرِو (Enter text)...</span>}
+        {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
       </div>
 
       {/* Interactive Selection Bounding Box & Transformation Handles */}
@@ -379,7 +379,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
               type="button"
               onPointerDown={handleRotatePointerDown}
               className="w-6 h-6 rounded-full bg-white border-2 border-emerald-700 shadow-md flex items-center justify-center cursor-grab active:cursor-grabbing hover:scale-110 transition-transform export-exclude"
-              title="Drag to Rotate (گھماؤ)"
+              title="Drag to Rotate"
               aria-label="Rotate"
               data-export-exclude="true"
             >
@@ -464,7 +464,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onEditInNativeInput(layer);
               }}
               className="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center cursor-pointer transition-colors shadow-2xs export-exclude"
-              title="Edit Text (متن تبدیل کٔرِو)"
+              title="Edit Text"
               aria-label="Edit Text"
               data-export-exclude="true"
             >
@@ -481,7 +481,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onDuplicateLayer(layer.id);
               }}
               className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Duplicate (نقل)"
+              title="Duplicate"
               aria-label="Duplicate"
               data-export-exclude="true"
             >
@@ -496,7 +496,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onBringToFront(layer.id);
               }}
               className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Bring to Front (سب سے اوپر)"
+              title="Bring to Front"
               aria-label="Bring to Front"
               data-export-exclude="true"
             >
@@ -511,7 +511,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onSendToBack(layer.id);
               }}
               className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Send to Back (سب سے نیچے)"
+              title="Send to Back"
               aria-label="Send to Back"
               data-export-exclude="true"
             >
@@ -526,7 +526,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onUpdateLayer(layer.id, { isLocked: true });
               }}
               className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Lock Layer (لاک کٔرِو)"
+              title="Lock Layer"
               aria-label="Lock Layer"
               data-export-exclude="true"
             >
@@ -542,7 +542,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                   onGroupSelected();
                 }}
                 className="w-8 h-8 rounded-lg bg-indigo-700 hover:bg-indigo-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-                title="Group Selected Layers (گروپ بَنائِو)"
+                title="Group Selected Layers"
                 aria-label="Group Selected Layers"
                 data-export-exclude="true"
               >
@@ -558,7 +558,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                   onUngroupSelected();
                 }}
                 className="w-8 h-8 rounded-lg bg-amber-700 hover:bg-amber-600 text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-                title="Ungroup Layers (گروپ الگ کٔرِو)"
+                title="Ungroup Layers"
                 aria-label="Ungroup Layers"
                 data-export-exclude="true"
               >
@@ -574,7 +574,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onUpdateLayer(layer.id, { isHidden: true });
               }}
               className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Hide Layer (چھپاؤ)"
+              title="Hide Layer"
               aria-label="Hide Layer"
               data-export-exclude="true"
             >
@@ -589,7 +589,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
                 onDeleteLayer(layer.id);
               }}
               className="w-8 h-8 rounded-lg hover:bg-rose-950 text-rose-400 hover:text-rose-200 flex items-center justify-center transition-colors cursor-pointer export-exclude"
-              title="Delete Layer (حذف)"
+              title="Delete Layer"
               aria-label="Delete Layer"
               data-export-exclude="true"
             >

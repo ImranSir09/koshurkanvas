@@ -138,36 +138,34 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
     >
       {/* 1. TOP TAB RIBBON & QUICK ACTIONS */}
       <div className="flex items-center justify-between px-3 py-1 bg-[#dedbd2] border-b border-stone-300/80 text-xs">
-        {/* Remaining Top Option: Phrases (کلمات) Layer Toggle */}
+        {/* Remaining Top Option: Phrases Layer Toggle */}
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setActiveLayer((prev) => (prev === 'phrases' ? 'main' : 'phrases'))}
             onMouseDown={(e) => e.preventDefault()}
-            className={`h-6.5 px-2.5 rounded-md font-nastaliq text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-2xs border ${
+            className={`h-6.5 px-2 rounded-md font-sans text-xs flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs border ${
               activeLayer === 'phrases'
                 ? 'bg-emerald-700 text-white border-emerald-800 font-bold'
                 : 'bg-stone-200/90 text-stone-800 border-stone-300/90 hover:bg-stone-300/80'
             }`}
-            title="Phrases & Calligraphy (کلمات)"
+            title="Phrases & Calligraphy"
           >
-            <Sparkles size={12} className={activeLayer === 'phrases' ? 'text-amber-300' : 'text-emerald-700'} />
-            <span>کلمات (Phrases)</span>
+            <Sparkles size={13} className={activeLayer === 'phrases' ? 'text-amber-300' : 'text-emerald-700'} />
           </button>
         </div>
 
-        {/* Tools: Kashida, Sound, Minimize */}
+        {/* Tools: Kashida, Sound, Minimize (Icons Only) */}
         <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
           {/* Kashida Tatweel Quick Key */}
           <button
             type="button"
             onClick={() => handleKeyPress('ـ')}
             onMouseDown={(e) => e.preventDefault()}
-            className="h-6.5 px-2 rounded-md bg-white text-stone-800 hover:bg-emerald-50 border border-stone-300 font-nastaliq text-xs flex items-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
-            title="Insert Kashida (کشیدہ ـ)"
+            className="h-6.5 w-7 rounded-md bg-white text-stone-800 hover:bg-emerald-50 border border-stone-300 font-nastaliq text-xs flex items-center justify-center cursor-pointer shadow-2xs transition-all active:scale-95"
+            title="Insert Kashida (ـ)"
           >
-            <span className="font-bold text-emerald-700 text-xs">ـ</span>
-            <span className="text-[10px] font-bold">کشیدہ</span>
+            <span className="font-bold text-emerald-700 text-xs leading-none">ـ</span>
           </button>
 
           {/* Sound Toggle */}
@@ -291,11 +289,10 @@ export const KashmiriKeyboard: React.FC<KashmiriKeyboardProps> = ({
               onSpace();
             }}
             onMouseDown={(e) => e.preventDefault()}
-            className="flex-1 h-10 sm:h-11 rounded-md bg-white hover:bg-stone-50 active:bg-emerald-50 border border-stone-300 text-stone-600 font-nastaliq text-xs flex items-center justify-center gap-1 shadow-xs transition-all active:scale-98 cursor-pointer"
-            title="Space (فاصلہ)"
+            className="flex-1 h-10 sm:h-11 rounded-md bg-white hover:bg-stone-50 active:bg-emerald-50 border border-stone-300 text-stone-600 flex items-center justify-center gap-1 shadow-xs transition-all active:scale-98 cursor-pointer"
+            title="Space"
           >
-            <Space size={14} />
-            <span className="font-nastaliq text-[11px] text-stone-500">کٲشُر فاصلہ</span>
+            <Space size={18} />
           </button>
 
           {/* Backspace */}

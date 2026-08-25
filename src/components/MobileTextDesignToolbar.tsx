@@ -41,6 +41,13 @@ import {
   MoveVertical,
   Wand2,
   Upload,
+  Pilcrow,
+  ArrowRightToLine,
+  ArrowLeftToLine,
+  Heading1,
+  Heading2,
+  BookOpen,
+  Quote,
 } from 'lucide-react';
 
 interface MobileTextDesignToolbarProps {
@@ -59,7 +66,7 @@ interface MobileTextDesignToolbarProps {
   onCenterVertically?: (layerId: string) => void;
 }
 
-type ActiveSheet = 'none' | 'presets' | 'font' | 'size' | 'style' | 'color' | 'effects' | 'border' | 'transform';
+type ActiveSheet = 'none' | 'presets' | 'font' | 'size' | 'paragraph' | 'style' | 'color' | 'effects' | 'border' | 'transform';
 
 const FONTS: { id: FontChoice; label: string; preview: string }[] = [
   { id: 'Noto Nastaliq Urdu', label: 'نوٹو نستعلیق (Nastaliq)', preview: 'کٲشُر لیٚکھُن' },
@@ -415,29 +422,29 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                     <Maximize2 size={14} className="text-emerald-800" />
                   </span>
                   <span className="font-mono font-bold text-stone-950 bg-white px-2 py-0.5 rounded-lg border border-stone-300 text-xs">
-                    {currentStyle.fontSize || 28}px
+                    {currentStyle.fontSize || 24}px
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => onUpdateStyle({ fontSize: Math.max(10, (currentStyle.fontSize || 28) - 2) })}
+                    onClick={() => onUpdateStyle({ fontSize: Math.max(8, (currentStyle.fontSize || 24) - 2) })}
                     className="w-9 h-9 rounded-xl bg-white border-2 border-stone-300 font-bold text-stone-900 hover:bg-stone-200 flex items-center justify-center text-sm cursor-pointer shadow-xs active:scale-95"
                   >
                     -
                   </button>
                   <input
                     type="range"
-                    min="10"
-                    max="140"
+                    min="8"
+                    max="100"
                     step="1"
-                    value={currentStyle.fontSize || 28}
+                    value={Math.max(8, Math.min(100, currentStyle.fontSize || 24))}
                     onChange={(e) => onUpdateStyle({ fontSize: parseInt(e.target.value, 10) })}
                     className="flex-1 accent-emerald-700 cursor-pointer h-2 bg-stone-300 rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => onUpdateStyle({ fontSize: Math.min(160, (currentStyle.fontSize || 28) + 2) })}
+                    onClick={() => onUpdateStyle({ fontSize: Math.min(100, (currentStyle.fontSize || 24) + 2) })}
                     className="w-9 h-9 rounded-xl bg-white border-2 border-stone-300 font-bold text-stone-900 hover:bg-stone-200 flex items-center justify-center text-sm cursor-pointer shadow-xs active:scale-95"
                   >
                     +
@@ -490,10 +497,180 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
             </div>
           )}
 
+          {/* PARAGRAPH & DIRECTION SHEET */}
+          {activeSheet === 'paragraph' && (
+            <div className="flex flex-col gap-3">
+              {/* LTR / RTL Direction Selection */}
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1">
+                  Text Direction (LTR / RTL)
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ direction: 'rtl' })}
+                    className={`h-9 rounded-xl border-2 flex items-center justify-center gap-1.5 font-sans text-xs font-bold transition-all cursor-pointer ${
+                      currentStyle.direction === 'rtl' || !currentStyle.direction
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Right to Left (RTL)"
+                  >
+                    <ArrowRightToLine size={15} />
+                    <span>RTL (کٲشُر)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ direction: 'ltr' })}
+                    className={`h-9 rounded-xl border-2 flex items-center justify-center gap-1.5 font-sans text-xs font-bold transition-all cursor-pointer ${
+                      currentStyle.direction === 'ltr'
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Left to Right (LTR)"
+                  >
+                    <ArrowLeftToLine size={15} />
+                    <span>LTR (English)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Alignments */}
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1">
+                  Alignment
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ align: 'right' })}
+                    className={`flex-1 h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      currentStyle.align === 'right' || !currentStyle.align
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Align Right"
+                  >
+                    <AlignRight size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ align: 'center' })}
+                    className={`flex-1 h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      currentStyle.align === 'center'
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Align Center"
+                  >
+                    <AlignCenter size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ align: 'left' })}
+                    className={`flex-1 h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      currentStyle.align === 'left'
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Align Left"
+                  >
+                    <AlignLeft size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStyle({ align: 'justify' })}
+                    className={`flex-1 h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      currentStyle.align === 'justify'
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                        : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+                    }`}
+                    title="Justify"
+                  >
+                    <AlignJustify size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Paragraph Presets */}
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1">
+                  Paragraph Type
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateStyle({
+                        fontSize: 36,
+                        bold: true,
+                        lineHeight: 2.3,
+                      })
+                    }
+                    className="py-1.5 px-2 rounded-xl bg-white border border-stone-300 hover:bg-emerald-50 text-stone-900 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 shadow-2xs"
+                  >
+                    <Heading1 size={14} className="text-emerald-700" />
+                    <span className="text-[10px] font-bold">Title</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateStyle({
+                        fontSize: 28,
+                        bold: true,
+                        lineHeight: 2.1,
+                      })
+                    }
+                    className="py-1.5 px-2 rounded-xl bg-white border border-stone-300 hover:bg-emerald-50 text-stone-900 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 shadow-2xs"
+                  >
+                    <Heading2 size={14} className="text-emerald-700" />
+                    <span className="text-[10px] font-bold">Heading</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateStyle({
+                        fontSize: 22,
+                        bold: false,
+                        lineHeight: 2.6,
+                      })
+                    }
+                    className="py-1.5 px-2 rounded-xl bg-white border border-stone-300 hover:bg-emerald-50 text-stone-900 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 shadow-2xs"
+                  >
+                    <BookOpen size={14} className="text-emerald-700" />
+                    <span className="text-[10px] font-bold">Body</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateStyle({
+                        fontSize: 26,
+                        bold: false,
+                        lineHeight: 2.8,
+                        align: 'center',
+                      })
+                    }
+                    className="py-1.5 px-2 rounded-xl bg-white border border-stone-300 hover:bg-emerald-50 text-stone-900 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 shadow-2xs"
+                  >
+                    <Sparkles size={14} className="text-amber-600" />
+                    <span className="text-[10px] font-bold">Poetry</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* STYLE & ALIGNMENT SHEET */}
           {activeSheet === 'style' && (
             <div className="flex flex-col gap-3">
-              {/* Bold, Italic, Underline, Direction */}
+              {/* Bold, Italic, Underline */}
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
@@ -532,19 +709,6 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                   title="Underline"
                 >
                   <Underline size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onUpdateStyle({ direction: currentStyle.direction === 'rtl' ? 'ltr' : 'rtl' })}
-                  className={`flex-1 h-9 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
-                    currentStyle.direction === 'ltr'
-                      ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                      : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Text Direction (RTL / LTR)"
-                >
-                  <MoveHorizontal size={16} />
                 </button>
               </div>
 
@@ -1049,6 +1213,22 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <Sliders size={16} />
             </button>
 
+            {/* Paragraph & Direction Trigger */}
+            <button
+              id="btn-bottom-paragraph"
+              type="button"
+              onClick={() => toggleSheet('paragraph')}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 ${
+                activeSheet === 'paragraph'
+                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                  : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+              }`}
+              title="Paragraph & Direction (LTR/RTL)"
+              aria-label="Paragraph & Direction"
+            >
+              <Pilcrow size={16} />
+            </button>
+
             {/* Color Palette Trigger */}
             <button
               id="btn-bottom-color"
@@ -1127,7 +1307,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               aria-label="Add Text Layer"
             >
               <Plus size={16} />
-              <span className="font-nastaliq text-xs font-bold">متن اِضافہ کٔرِو (Add Text Layer)</span>
+              <span className="font-sans text-xs font-bold">(Add text layer)</span>
             </button>
           </div>
         )}

@@ -250,7 +250,7 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
         const nextY = Math.round(newBoxY + relY * scaleY);
         const nextW = Math.max(30, Math.round(init.width * scaleX));
         const nextH = Math.max(20, Math.round(init.height * scaleY));
-        const nextFontSize = Math.max(10, Math.round(init.fontSize * minScale));
+        const nextFontSize = Math.max(8, Math.min(180, Math.round(init.fontSize * minScale)));
 
         return {
           ...layer,
@@ -400,17 +400,16 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
       {/* Top Header Badge showing multi-selection count */}
       <div
         className="absolute -top-7 left-0 bg-emerald-800 text-white rounded-md px-2 py-0.5 text-[10px] font-sans font-bold flex items-center gap-1 shadow-md border border-emerald-700 pointer-events-none select-none"
-        dir="rtl"
       >
         <Layers size={12} className="text-emerald-200" />
-        <span>{selectedLayers.length} لئیر منتخب سُدہ</span>
+        <span>{selectedLayers.length} Layers Selected</span>
       </div>
 
       {/* Rotation Handle (Top Center) */}
       <div
         className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-grab active:cursor-grabbing group z-40"
         onPointerDown={handleRotateStart}
-        title="Rotate Selection (گھمائیں)"
+        title="Rotate Selection"
         aria-label="Rotate Selection"
       >
         <div className="w-5 h-5 rounded-full bg-white border-2 border-emerald-700 shadow-md flex items-center justify-center text-emerald-800 group-hover:scale-110 group-hover:bg-emerald-50 transition-all">

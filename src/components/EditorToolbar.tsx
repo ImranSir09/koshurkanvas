@@ -253,7 +253,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Right Align (سیدھ)"
+            title="Right Align"
           >
             <AlignRight size={14} />
           </button>
@@ -267,7 +267,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Center Align (مرکز)"
+            title="Center Align"
           >
             <AlignCenter size={14} />
           </button>
@@ -281,7 +281,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Left Align (کشادہ)"
+            title="Left Align"
           >
             <AlignLeft size={14} />
           </button>
@@ -295,7 +295,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Justify Align (برابر)"
+            title="Justify Align"
           >
             <AlignJustify size={14} />
           </button>
@@ -309,7 +309,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Top Align (بیٹھک بالایٔی)"
+            title="Top Align"
           >
             <ArrowUpToLine size={14} />
           </button>
@@ -323,13 +323,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 ? 'bg-emerald-600 text-white'
                 : 'text-stone-700 hover:bg-emerald-50 hover:text-emerald-800'
             }`}
-            title="Bottom Align (بیٹھک ترٛیٚی)"
+            title="Bottom Align"
           >
             <ArrowDownToLine size={14} />
           </button>
         </div>
-
-
 
         {/* Kashida (ـ Tatweel) Quick Insert */}
         <button
@@ -343,11 +341,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               onUpdateStyle({ kashida: !currentStyle.kashida });
             }
           }}
-          className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-emerald-50 hover:text-emerald-800 border border-stone-200 hover:border-emerald-200 transition-colors shrink-0 font-nastaliq cursor-pointer"
-          title="Kashida / Tatweel Extension (کشیدہ ـ)"
+          className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-emerald-50 hover:text-emerald-800 border border-stone-200 hover:border-emerald-200 transition-colors shrink-0 cursor-pointer"
+          title="Insert Kashida (ـ)"
         >
           <span className="font-bold text-sm text-emerald-700">ـ</span>
-          <span className="hidden sm:inline font-nastaliq">کشیدہ</span>
         </button>
 
         {/* Line Break (New Line) Quick Action */}
@@ -357,11 +354,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={onInsertLineBreak}
-            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-emerald-50 hover:text-emerald-800 border border-stone-200 hover:border-emerald-200 transition-colors shrink-0 font-nastaliq cursor-pointer"
-            title="Line Break (نٔو لٲن / Enter)"
+            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-emerald-50 hover:text-emerald-800 border border-stone-200 hover:border-emerald-200 transition-colors shrink-0 cursor-pointer"
+            title="Line Break"
           >
             <WrapText size={13} className="shrink-0" />
-            <span className="hidden sm:inline">نٔو لٲن</span>
           </button>
         )}
 
@@ -379,7 +375,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           title="Line Height, Letter Spacing & Shadows"
         >
           <Sliders size={14} />
-          <span className="font-nastaliq">اثرات</span>
         </button>
 
         {/* Clear Formatting Button */}
@@ -388,11 +383,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClearFormatting}
-          className="h-8 px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-rose-50 hover:text-rose-700 border border-stone-200 hover:border-rose-200 transition-colors shrink-0 font-nastaliq cursor-pointer"
+          className="h-8 px-2.5 rounded-lg flex items-center gap-1 text-xs text-stone-800 bg-white hover:bg-rose-50 hover:text-rose-700 border border-stone-200 hover:border-rose-200 transition-colors shrink-0 cursor-pointer"
           title="Clear Formatting"
         >
           <RotateCcw size={12} />
-          <span>صاف</span>
         </button>
       </div>
 
@@ -576,7 +570,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               <input
                 type="range"
                 min="-2"
-                max="8"
+                max="12"
                 step="0.5"
                 value={currentStyle.letterSpacing}
                 onChange={(e) => onUpdateStyle({ letterSpacing: parseFloat(e.target.value) })}
@@ -590,7 +584,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </div>
               <input
                 type="range"
-                min="0.2"
+                min="0.1"
                 max="1"
                 step="0.05"
                 value={currentStyle.opacity}

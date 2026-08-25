@@ -195,7 +195,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     return [
       {
         id: 'layer-primary',
-        name: 'متن ۱',
+        name: 'Layer 1',
         type: 'text',
         text: doc.content || 'ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو',
         x: 40,
@@ -647,7 +647,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
     const newLayer: TextLayer = {
       id: newLayerId,
-      name: `متن ${toKashmiriNumerals(textLayers.length + 1)}`,
+      name: `Layer ${textLayers.length + 1}`,
       type: 'text',
       text: 'نواں کٲشُر متن',
       x: 60 + (textLayers.length % 4) * 20,
@@ -1003,7 +1003,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       <div className="w-full bg-white border-b border-stone-300 shadow-2xs z-30 flex flex-col shrink-0">
         <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 gap-2 overflow-x-auto custom-scrollbar">
           {/* Main Two-Tab Switcher: [Input Text] | [Canvas] */}
-          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg shrink-0 border border-stone-300" dir="rtl">
+          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg shrink-0 border border-stone-300">
             <button
               id="tab-input-text"
               type="button"
@@ -1016,7 +1016,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                   ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
                   : 'text-stone-700 hover:text-black hover:bg-stone-200'
               }`}
-              title="Input Text (متن لؠکھُن)"
+              title="Input Text"
               aria-label="Input Text"
             >
               <Type size={16} />
@@ -1031,7 +1031,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                   ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
                   : 'text-stone-700 hover:text-black hover:bg-stone-200'
               }`}
-              title="Canvas Stage (کینوس ڈِزائن)"
+              title="Canvas Stage"
               aria-label="Canvas Stage"
             >
               <Layout size={16} />
@@ -1046,8 +1046,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
               type="button"
               onClick={handleAddTextLayer}
               className="w-9 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer border border-emerald-800"
-              title="Add New Text (نواں متن)"
-              aria-label="Add Text"
+              title="Add Text Layer"
+              aria-label="Add Text Layer"
             >
               <Plus size={16} />
             </button>
@@ -1064,7 +1064,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                       ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
                       : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
                   }`}
-                  title="Layers Manager (لئیر منیجر)"
+                  title="Layers Manager"
                   aria-label="Layers"
                 >
                   <Layers size={16} className={showLayersPanel ? 'text-emerald-900' : 'text-stone-800'} />
@@ -1084,7 +1084,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                       ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
                       : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
                   }`}
-                  title="Canvas Settings (کینوس سیٹنگس)"
+                  title="Canvas Settings"
                   aria-label="Canvas Settings"
                 >
                   <Settings size={16} className={showCanvasPanel ? 'text-emerald-900' : 'text-stone-800'} />
@@ -1099,7 +1099,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                       ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs'
                       : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
                   }`}
-                  title={snapEnabled ? 'Magnet Snap: ON (نیٚمبرٕ سِنیپ چَالو)' : 'Magnet Snap: OFF (نیٚمبرٕ سِنیپ بَنٛد)'}
+                  title={snapEnabled ? 'Magnet Snap: ON' : 'Magnet Snap: OFF'}
                   aria-label="Toggle Magnet Snap"
                 >
                   <Magnet size={16} />
@@ -1112,17 +1112,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
             {/* Input Text-only tools: Layer Switcher Dropdown if multi-layer */}
             {activeTab === 'input_text' && textLayers.length > 1 && (
-              <div className="flex items-center gap-1 bg-stone-100 border border-stone-300 px-2 py-0.5 rounded-lg text-xs" dir="rtl">
+              <div className="flex items-center gap-1 bg-stone-100 border border-stone-300 px-2 py-0.5 rounded-lg text-xs" dir="ltr">
                 <Layers size={13} className="text-stone-600" />
                 <select
                   value={activeLayerId || ''}
                   onChange={(e) => handleSelectLayer(e.target.value)}
-                  className="bg-transparent font-nastaliq text-emerald-900 font-bold outline-none cursor-pointer text-xs"
+                  className="bg-transparent font-sans text-emerald-900 font-bold outline-none cursor-pointer text-xs"
                   title="Select Layer"
                 >
-                  {textLayers.map((l) => (
+                  {textLayers.map((l, idx) => (
                     <option key={l.id} value={l.id}>
-                      {l.name}
+                      {l.name && !l.name.includes('متن') ? l.name : `Layer ${idx + 1}`}
                     </option>
                   ))}
                 </select>
@@ -1203,39 +1203,31 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 onKeyUp={updateSelectionFromDOM}
                 dir={editorDirection}
                 inputMode={activeKeyboard === 'android' ? 'text' : 'none'}
-                placeholder="ٲسۍ ہٚچھِو تہٕ کٲشُر لؠکھِو... (Type Kashmiri Unicode text here)"
-                className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6] touch-pan-y overscroll-contain"
+                placeholder="کٲشُر لیٚکھِو"
+                className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq font-normal cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6] touch-pan-y overscroll-contain"
                 style={{
                   fontFamily: getFontFamilyCSS(activeFormatting.fontFamily || 'Noto Nastaliq Urdu'),
-                  fontSize: `${Math.max(20, activeFormatting.fontSize)}px`,
-                  lineHeight: activeFormatting.lineHeight || 2.6,
+                  fontSize: `${Math.max(8, Math.min(100, activeFormatting.fontSize || 22))}px`,
+                  lineHeight: activeFormatting.lineHeight || 2.4,
                   letterSpacing: `${activeFormatting.letterSpacing || 0}px`,
                   textAlign: activeFormatting.align || 'right',
+                  fontWeight: activeFormatting.bold ? 600 : 400,
+                  fontStyle: activeFormatting.italic ? 'italic' : 'normal',
+                  textDecoration: activeFormatting.underline ? 'underline' : 'none',
                 }}
                 autoFocus={activeKeyboard === 'android'}
               />
             </div>
           </div>
 
-          {/* 2. Keyboard Options Bar (Input Text Tab ONLY) */}
+          {/* 2. Keyboard Options Bar (Input Text Tab ONLY) - Clean Icon-Only Selector */}
           <div
             id="keyboard-selector-bar"
-            className="w-full bg-[#f0ede6] border-t border-stone-300 px-3.5 py-2 flex items-center justify-between gap-2 shrink-0 select-none"
-            dir="rtl"
+            className="w-full bg-[#f0ede6] border-t border-stone-300 px-3 py-1.5 flex items-center justify-end gap-2 shrink-0 select-none"
+            dir="ltr"
           >
-            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-700">
-              <Keyboard size={16} className="text-emerald-800" />
-              <span>
-                {activeKeyboard === 'kashmiri'
-                  ? 'کٲشُر کیبورڈ (Kashmiri)'
-                  : activeKeyboard === 'android'
-                  ? 'اینڈرائیڈ کیبورڈ (Android)'
-                  : 'کیبورڈ بنٛد (Keyboard Hidden)'}
-              </span>
-            </div>
-
-            {/* Segment Selector for Android vs Kashmiri Keyboard */}
-            <div className="flex items-center gap-1.5 bg-stone-200/90 p-1 rounded-xl border border-stone-300" dir="ltr">
+            {/* Segment Selector for Android vs Kashmiri Keyboard (Icons Only) */}
+            <div className="flex items-center gap-1 bg-stone-200/90 p-0.5 rounded-xl border border-stone-300" dir="ltr">
               <button
                 type="button"
                 id="btn-select-android-keyboard"
@@ -1247,16 +1239,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                     }
                   }, 50);
                 }}
-                className={`px-2.5 h-8 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                   activeKeyboard === 'android'
                     ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
-                    : 'text-stone-800 hover:text-black hover:bg-stone-300'
+                    : 'text-stone-700 hover:text-black hover:bg-stone-300'
                 }`}
                 title="Android System Keyboard"
                 aria-label="Android System Keyboard"
               >
-                <Smartphone size={15} />
-                <span className="hidden sm:inline">Android</span>
+                <Smartphone size={16} />
               </button>
 
               <button
@@ -1270,16 +1261,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                     }
                   }, 50);
                 }}
-                className={`px-2.5 h-8 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                   activeKeyboard === 'kashmiri'
                     ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
-                    : 'text-stone-800 hover:text-black hover:bg-stone-300'
+                    : 'text-stone-700 hover:text-black hover:bg-stone-300'
                 }`}
-                title="Kashmiri Custom Keyboard (کٲشُر کیبورڈ)"
-                aria-label="Kashmiri Keyboard"
+                title="Kashmiri Custom Keyboard"
+                aria-label="Kashmiri Custom Keyboard"
               >
-                <Keyboard size={15} />
-                <span className="font-nastaliq text-xs">کٲشُر</span>
+                <Keyboard size={16} />
               </button>
             </div>
           </div>

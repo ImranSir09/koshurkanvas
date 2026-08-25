@@ -23,8 +23,6 @@ import {
   AlignLeft,
   AlignRight,
   MoveVertical,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 
 interface LayerManagerPanelProps {
@@ -76,7 +74,6 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
   onClose,
 }) => {
   const [showAlignMenu, setShowAlignMenu] = useState<boolean>(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<{ [groupId: string]: boolean }>({});
 
   if (!isOpen) return null;
 
@@ -85,14 +82,12 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
 
   // Multi-selection state: active ONLY when 2 or more layer checkboxes are selected
   const isMultiSelectionActive = selectedLayerIds.length >= 2;
-  const selectedCount = selectedLayerIds.length;
 
-  const toggleGroupCollapse = (groupId: string) => {
-    setCollapsedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }));
-  };
+  // Check if any selected layer is in a group
+  const hasGroupedSelection = selectedLayerIds.some((id) => {
+    const l = layers.find((layer) => layer.id === id);
+    return !!l?.groupId;
+  });
 
   const handleMergeAction = () => {
     if (onMergeLayers && selectedLayerIds.length >= 2) {
@@ -104,6 +99,20 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
   const handleGroupAction = () => {
     if (onGroupLayers && selectedLayerIds.length >= 2) {
       onGroupLayers(selectedLayerIds);
+      setShowAlignMenu(false);
+    }
+  };
+
+  const handleUngroupSelectedAction = () => {
+    if (onUngroupLayers) {
+      const groupIds = new Set<string>();
+      selectedLayerIds.forEach((id) => {
+        const l = layers.find((layer) => layer.id === id);
+        if (l?.groupId) {
+          groupIds.add(l.groupId);
+        }
+      });
+      groupIds.forEach((groupId) => onUngroupLayers(groupId));
       setShowAlignMenu(false);
     }
   };
@@ -124,21 +133,17 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
     }
   };
 
-  // Grouped structure rendering helper
-  // Collect group IDs
-  const groupIds = Array.from(new Set(layers.filter((l) => l.groupId).map((l) => l.groupId!)));
-
   return (
     <div
-      id="kashmiri-layers-manager-panel"
-      className="absolute top-12 left-3 sm:left-4 z-40 w-84 max-h-[calc(100dvh-5.5rem)] bg-white rounded-2xl shadow-2xl border-2 border-stone-300 p-3 flex flex-col gap-2.5 animate-in slide-in-from-top-2 overflow-hidden select-none"
-      dir="rtl"
+      id="layers-manager-panel"
+      className="absolute top-12 left-3 sm:left-4 z-40 w-80 max-h-[calc(100dvh-5.5rem)] bg-white rounded-2xl shadow-2xl border-2 border-stone-300 p-3 flex flex-col gap-2.5 animate-in slide-in-from-top-2 overflow-hidden select-none"
+      dir="ltr"
     >
       {/* 1. Header */}
       <div className="flex items-center justify-between pb-2 border-b border-stone-300 shrink-0">
-        <div className="flex items-center gap-2 text-stone-950 font-bold text-sm">
+        <div className="flex items-center gap-2 text-stone-900 font-bold text-sm">
           <Layers size={18} className="text-emerald-700" />
-          <span className="font-nastaliq text-stone-900 text-sm">لئیر منیجر</span>
+          <span className="font-sans text-stone-900 text-sm font-semibold">Layers</span>
           <span className="text-[11px] font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
             {layers.length}
           </span>
@@ -150,20 +155,20 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
             <button
               type="button"
               onClick={onClearSelection}
-              className="px-2 py-1 rounded-lg text-xs font-sans text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
-              title="Clear Selection (خارج کٔرِو)"
+              className="px-2 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
+              title="Clear Selection"
             >
-              خارج کٔرِو
+              Clear
             </button>
           ) : (
             onSelectAllLayers && layers.length > 1 && (
               <button
                 type="button"
                 onClick={onSelectAllLayers}
-                className="px-2 py-1 rounded-lg text-xs font-sans text-stone-600 hover:text-emerald-800 hover:bg-stone-100 transition-colors cursor-pointer"
-                title="Select All (تمام منتخب کٔرِو)"
+                className="px-2 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-emerald-800 hover:bg-stone-100 transition-colors cursor-pointer"
+                title="Select All"
               >
-                تمام
+                All
               </button>
             )
           )}
@@ -185,7 +190,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
         {sortedLayers.map((layer, index) => {
           const isSelected = selectedLayerIds.includes(layer.id) || layer.id === activeLayerId;
           const isChecked = selectedLayerIds.includes(layer.id);
-          const snippet = layer.text.slice(0, 24) || 'خالی متن';
+          const snippet = layer.text.slice(0, 24) || 'Empty Text Layer';
           const isGrouped = !!layer.groupId;
 
           return (
@@ -203,7 +208,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   : 'bg-stone-50 hover:bg-stone-100 border-stone-200'
               }`}
             >
-              {/* Checkbox for Multi-Select (Large 36x36 touch target) */}
+              {/* Checkbox for Multi-Select */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -214,57 +219,41 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                     onSelectLayer(layer.id, true);
                   }
                 }}
-                className="w-9 h-9 -my-1 -mx-0.5 rounded-lg flex items-center justify-center text-stone-500 hover:text-emerald-700 shrink-0 cursor-pointer active:scale-95 transition-all"
+                className="w-8 h-8 -my-1 -mx-0.5 rounded-lg flex items-center justify-center text-stone-500 hover:text-emerald-700 shrink-0 cursor-pointer active:scale-95 transition-all"
                 title={isChecked ? 'Deselect Layer' : 'Select Layer'}
                 aria-label={isChecked ? 'Deselect Layer' : 'Select Layer'}
               >
                 {isChecked ? (
-                  <CheckSquare size={18} className="text-emerald-700" />
+                  <CheckSquare size={17} className="text-emerald-700" />
                 ) : (
-                  <Square size={18} className="text-stone-400 hover:text-stone-600" />
+                  <Square size={17} className="text-stone-400 hover:text-stone-600" />
                 )}
               </button>
 
               {/* Layer Info */}
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 {isGrouped ? (
-                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-bold shrink-0">
-                    <Folder size={11} className="text-amber-700" />
-                    <span>گروپ</span>
-                  </span>
+                  <Folder size={14} className="text-amber-700 shrink-0" title="Grouped Layer" />
                 ) : (
                   <Type
                     size={14}
                     className={isChecked ? 'text-emerald-800 shrink-0 font-bold' : 'text-stone-600 shrink-0'}
                   />
                 )}
-                <span className="text-xs font-nastaliq text-stone-900 font-bold truncate block">
+                <span className="text-xs text-stone-900 font-medium truncate block font-sans">
                   {snippet}
                 </span>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons: Icons Only */}
               <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                {/* Ungroup button if layer is in a group */}
-                {isGrouped && onUngroupLayers && (
-                  <button
-                    type="button"
-                    onClick={() => onUngroupLayers(layer.groupId!)}
-                    className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-300 hover:bg-amber-100 flex items-center justify-center text-amber-800 transition-colors cursor-pointer"
-                    title="Ungroup Layer (گروپ الگ کٔرِو)"
-                    aria-label="Ungroup Layer"
-                  >
-                    <FolderMinus size={13} />
-                  </button>
-                )}
-
                 {/* Move Up */}
                 <button
                   type="button"
                   disabled={index === 0}
                   onClick={() => onMoveLayerUp(layer.id)}
                   className="w-6 h-6 rounded-lg bg-white border border-stone-300 flex items-center justify-center text-stone-800 hover:text-black hover:bg-stone-200 disabled:opacity-20 transition-colors cursor-pointer"
-                  title="Move Up (اوپر)"
+                  title="Move Up"
                   aria-label="Move Up"
                 >
                   <ArrowUp size={13} />
@@ -276,7 +265,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   disabled={index === sortedLayers.length - 1}
                   onClick={() => onMoveLayerDown(layer.id)}
                   className="w-6 h-6 rounded-lg bg-white border border-stone-300 flex items-center justify-center text-stone-800 hover:text-black hover:bg-stone-200 disabled:opacity-20 transition-colors cursor-pointer"
-                  title="Move Down (نیچے)"
+                  title="Move Down"
                   aria-label="Move Down"
                 >
                   <ArrowDown size={13} />
@@ -287,7 +276,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => onDuplicateLayer(layer.id)}
                   className="w-6 h-6 rounded-lg bg-white border border-stone-300 flex items-center justify-center text-stone-800 hover:text-black hover:bg-stone-200 transition-colors cursor-pointer"
-                  title="Duplicate (نقل)"
+                  title="Duplicate"
                   aria-label="Duplicate"
                 >
                   <Copy size={13} />
@@ -302,7 +291,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                       ? 'bg-amber-100 border-amber-400 text-amber-900'
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-200'
                   }`}
-                  title={layer.isLocked ? 'Unlock Layer (لاک کھولیں)' : 'Lock Layer (لاک کٔرِو)'}
+                  title={layer.isLocked ? 'Unlock Layer' : 'Lock Layer'}
                   aria-label="Lock/Unlock"
                 >
                   {layer.isLocked ? <Lock size={13} /> : <Unlock size={13} />}
@@ -317,22 +306,26 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                       ? 'bg-rose-100 border-rose-400 text-rose-900'
                       : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-200'
                   }`}
-                  title={layer.isHidden ? 'Show Layer (دکھائیں)' : 'Hide Layer (چھپاؤ)'}
+                  title={layer.isHidden ? 'Show Layer' : 'Hide Layer'}
                   aria-label="Show/Hide"
                 >
                   {layer.isHidden ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
 
-                {/* Delete */}
+                {/* Ungroup (on layer instead of delete option) */}
                 <button
                   type="button"
-                  disabled={layers.length <= 1}
-                  onClick={() => onDeleteLayer(layer.id)}
-                  className="w-6 h-6 rounded-lg bg-white border border-stone-300 hover:border-rose-400 flex items-center justify-center text-stone-700 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-20 transition-colors cursor-pointer"
-                  title="Delete Layer (حذف)"
-                  aria-label="Delete Layer"
+                  disabled={!isGrouped}
+                  onClick={() => isGrouped && onUngroupLayers && onUngroupLayers(layer.groupId!)}
+                  className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors cursor-pointer ${
+                    isGrouped
+                      ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 hover:border-amber-400 shadow-2xs'
+                      : 'bg-stone-50 border-stone-200 text-stone-300 opacity-40 cursor-not-allowed'
+                  }`}
+                  title={isGrouped ? 'Ungroup Layer' : 'Ungroup (Not in group)'}
+                  aria-label="Ungroup Layer"
                 >
-                  <Trash2 size={13} />
+                  <FolderMinus size={13} />
                 </button>
               </div>
             </div>
@@ -341,21 +334,21 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
       </div>
 
       {/* 3. Bottom Control Section */}
-      {/* Case A: In Multi-Selection State (2+ layers checked) -> Compact Canva-style Action Bar */}
+      {/* Case A: In Multi-Selection State (2+ layers checked) -> Compact Action Bar with Icons Only */}
       {isMultiSelectionActive ? (
         <div className="flex flex-col gap-2 pt-1 border-t border-stone-200 shrink-0">
           {/* Alignment Popover (When Align is toggled) */}
           {showAlignMenu && (
             <div className="p-2 bg-stone-100 rounded-xl border border-stone-300 flex items-center justify-between gap-1 animate-in fade-in-50 zoom-in-95">
-              <span className="text-[11px] font-bold font-nastaliq text-stone-700 pl-1 shrink-0">
-                برابر:
+              <span className="text-[11px] font-bold text-stone-700 pl-1 shrink-0 font-sans">
+                Align:
               </span>
-              <div className="flex items-center gap-1 flex-1 justify-around" dir="ltr">
+              <div className="flex items-center gap-1 flex-1 justify-around">
                 <button
                   type="button"
                   onClick={() => handleAlignAction('left')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Left (کھور طرف)"
+                  title="Align Left"
                   aria-label="Align Left"
                 >
                   <AlignLeft size={14} />
@@ -364,7 +357,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => handleAlignAction('center')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Center (درمیان)"
+                  title="Align Center"
                   aria-label="Align Center"
                 >
                   <AlignCenter size={14} />
@@ -373,7 +366,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => handleAlignAction('right')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Right (دچھن طرف)"
+                  title="Align Right"
                   aria-label="Align Right"
                 >
                   <AlignRight size={14} />
@@ -382,7 +375,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => handleAlignAction('top')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Top (اوپر)"
+                  title="Align Top"
                   aria-label="Align Top"
                 >
                   <ArrowUp size={14} />
@@ -391,7 +384,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => handleAlignAction('middle')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Middle (درمیان عمودی)"
+                  title="Align Middle"
                   aria-label="Align Middle"
                 >
                   <MoveVertical size={14} />
@@ -400,7 +393,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   type="button"
                   onClick={() => handleAlignAction('bottom')}
                   className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Align Bottom (نیچے)"
+                  title="Align Bottom"
                   aria-label="Align Bottom"
                 >
                   <ArrowDown size={14} />
@@ -409,81 +402,90 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
             </div>
           )}
 
-          {/* Canva-style Compact Multi-Selection Bottom Action Bar */}
+          {/* Canva-style Compact Multi-Selection Bottom Action Bar - Icons Only */}
           <div
             id="layers-multi-selection-action-bar"
             className="flex items-center justify-between gap-1.5 p-1.5 bg-stone-100/90 border border-stone-300 rounded-xl shadow-xs"
-            dir="rtl"
           >
-            {/* Action 1: Merge (مدغم کٔرِو) */}
+            {/* Action 1: Merge */}
             <button
               type="button"
               id="btn-layer-multi-merge"
               onClick={handleMergeAction}
-              className="flex-1 py-2 px-2 rounded-lg bg-white hover:bg-emerald-50 text-stone-800 hover:text-emerald-900 border border-stone-300 hover:border-emerald-500 flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs font-nastaliq text-xs font-bold active:scale-95"
-              title="Merge selected layers into one editable text layer (مدغم کٔرِو)"
+              className="flex-1 py-2 rounded-lg bg-white hover:bg-emerald-50 text-stone-800 hover:text-emerald-900 border border-stone-300 hover:border-emerald-500 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+              title="Merge Selected Layers"
               aria-label="Merge Selected Layers"
             >
-              <GitMerge size={14} className="text-emerald-700 shrink-0" />
-              <span>مدغم</span>
+              <GitMerge size={17} className="text-emerald-700" />
             </button>
 
-            {/* Action 2: Group (گروپ بَنائِو) */}
+            {/* Action 2: Group */}
             <button
               type="button"
               id="btn-layer-multi-group"
               onClick={handleGroupAction}
-              className="flex-1 py-2 px-2 rounded-lg bg-white hover:bg-indigo-50 text-stone-800 hover:text-indigo-900 border border-stone-300 hover:border-indigo-500 flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs font-nastaliq text-xs font-bold active:scale-95"
-              title="Group selected layers (گروپ بَنائِو)"
+              className="flex-1 py-2 rounded-lg bg-white hover:bg-indigo-50 text-stone-800 hover:text-indigo-900 border border-stone-300 hover:border-indigo-500 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+              title="Group Selected Layers"
               aria-label="Group Selected Layers"
             >
-              <FolderPlus size={14} className="text-indigo-700 shrink-0" />
-              <span>گروپ</span>
+              <FolderPlus size={17} className="text-indigo-700" />
             </button>
 
-            {/* Action 3: Align (برابر کٔرِو) */}
+            {/* Action 3: Ungroup (if any selected layer is in a group) */}
+            {hasGroupedSelection && (
+              <button
+                type="button"
+                id="btn-layer-multi-ungroup"
+                onClick={handleUngroupSelectedAction}
+                className="flex-1 py-2 rounded-lg bg-white hover:bg-amber-50 text-stone-800 hover:text-amber-900 border border-stone-300 hover:border-amber-400 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Ungroup Selected"
+                aria-label="Ungroup Selected"
+              >
+                <FolderMinus size={17} className="text-amber-700" />
+              </button>
+            )}
+
+            {/* Action 4: Align */}
             <button
               type="button"
               id="btn-layer-multi-align"
               onClick={() => setShowAlignMenu(!showAlignMenu)}
-              className={`flex-1 py-2 px-2 rounded-lg border flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs font-nastaliq text-xs font-bold active:scale-95 ${
+              className={`flex-1 py-2 rounded-lg border flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 ${
                 showAlignMenu
                   ? 'bg-emerald-700 text-white border-emerald-800'
                   : 'bg-white hover:bg-stone-50 text-stone-800 border-stone-300'
               }`}
-              title="Align selected layers (برابر کٔرِو)"
+              title="Align Selected Layers"
               aria-label="Align Selected Layers"
             >
-              <AlignCenter size={14} className={showAlignMenu ? 'text-white' : 'text-stone-700'} />
-              <span>برابر</span>
+              <AlignCenter size={17} className={showAlignMenu ? 'text-white' : 'text-stone-700'} />
             </button>
 
-            {/* Action 4: Delete (ختم کٔرِو / حذف) */}
+            {/* Action 5: Delete */}
             <button
               type="button"
               id="btn-layer-multi-delete"
               onClick={handleDeleteMultiAction}
-              className="flex-1 py-2 px-2 rounded-lg bg-white hover:bg-rose-50 text-stone-800 hover:text-rose-900 border border-stone-300 hover:border-rose-400 flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs font-nastaliq text-xs font-bold active:scale-95"
-              title="Delete all selected layers (حذف)"
+              className="flex-1 py-2 rounded-lg bg-white hover:bg-rose-50 text-stone-800 hover:text-rose-900 border border-stone-300 hover:border-rose-400 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+              title="Delete Selected Layers"
               aria-label="Delete Selected Layers"
             >
-              <Trash2 size={14} className="text-rose-600 shrink-0" />
-              <span>حذف</span>
+              <Trash2 size={17} className="text-rose-600" />
             </button>
           </div>
         </div>
       ) : (
-        /* Case B: Default State (< 2 layers checked) -> Normal "Add Layer" Control */
+        /* Case B: Default State (< 2 layers checked) -> Refined "+ (Add text layer)" Control */
         <button
           type="button"
           id="btn-add-layer-bottom"
           onClick={onAddTextLayer}
-          className="w-full py-2 px-3 rounded-xl border-2 border-dashed border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer font-bold font-nastaliq text-xs shrink-0"
-          title="Add New Text Layer (نواں لئیر)"
-          aria-label="Add New Text Layer"
+          className="w-full py-2 px-3 rounded-xl border border-dashed border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer font-semibold font-sans text-xs shrink-0 active:scale-98"
+          title="Add Text Layer"
+          aria-label="Add text layer"
         >
-          <Plus size={16} />
-          <span>نواں لئیر شٲمِل کٔرِو (Add Layer)</span>
+          <Plus size={15} className="text-emerald-700" />
+          <span>(Add text layer)</span>
         </button>
       )}
     </div>
