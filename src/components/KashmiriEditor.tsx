@@ -12,6 +12,7 @@ import { KashmiriKeyboard } from './KashmiriKeyboard';
 import { MobileTextDesignToolbar } from './MobileTextDesignToolbar';
 import { CanvasSettingsPanel } from './CanvasSettingsPanel';
 import { CanvasTextLayerObject } from './CanvasTextLayerObject';
+import { CombinedCanvasSelectionBox } from './CombinedCanvasSelectionBox';
 import { LayerManagerPanel } from './LayerManagerPanel';
 import { VoiceInputButton } from './VoiceInputButton';
 import { useVisualViewport } from '../lib/useVisualViewport';
@@ -26,6 +27,9 @@ import {
   updateLayersCollection,
   applyStyleToLayers,
   duplicateTextLayer,
+  mergeSelectedLayers,
+  alignSelectedLayers,
+  deleteSelectedLayers,
 } from '../lib/layerUtils';
 import { DEFAULT_TEXT_STYLE } from '../lib/kashmiriData';
 import { getFontFamilyCSS } from '../lib/fontUtils';
@@ -555,6 +559,61 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const updatedLayers = ungroupSelectedLayers(textLayers, targetGroupId);
     onUpdateDocument({ textLayers: updatedLayers });
     pushHistory(doc.content, updatedLayers, doc.spans || []);
+  };
+
+  const handleMergeLayers = (idsToMerge: string[]) => {
+    if (idsToMerge.length < 2) return;
+    const { updatedLayers, mergedLayer } = mergeSelectedLayers(textLayers, idsToMerge);
+    setActiveLayerId(mergedLayer.id);
+    setSelectedLayerIds([mergedLayer.id]);
+    setActiveFormatting(mergedLayer.style);
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: mergedLayer.id,
+      content: mergedLayer.text,
+    });
+    pushHistory(mergedLayer.text, updatedLayers, doc.spans || []);
+  };
+
+  const handleAlignLayers = (
+    idsToAlign: string[],
+    alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+  ) => {
+    if (idsToAlign.length < 2) return;
+    const updatedLayers = alignSelectedLayers(textLayers, idsToAlign, alignment);
+    onUpdateDocument({ textLayers: updatedLayers });
+    pushHistory(doc.content, updatedLayers, doc.spans || []);
+  };
+
+  const handleDeleteSelectedLayers = (idsToDelete: string[]) => {
+    const { updatedLayers, nextActiveId } = deleteSelectedLayers(textLayers, idsToDelete);
+    setActiveLayerId(nextActiveId);
+    setSelectedLayerIds(nextActiveId ? [nextActiveId] : []);
+    const activeL = updatedLayers.find((l) => l.id === nextActiveId);
+    if (activeL) {
+      setActiveFormatting(activeL.style);
+    }
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: nextActiveId,
+      content: activeL ? activeL.text : '',
+    });
+    pushHistory(activeL ? activeL.text : '', updatedLayers, doc.spans || []);
+  };
+
+  const handleUpdateMultipleLayers = (updated: TextLayer[]) => {
+    const updatedMap = new Map(updated.map((l) => [l.id, l]));
+    const nextLayers = textLayers.map((l) => updatedMap.get(l.id) || l);
+    onUpdateDocument({ textLayers: nextLayers });
+  };
+
+  const handleSelectAllLayers = () => {
+    const allIds = textLayers.map((l) => l.id);
+    setSelectedLayerIds(allIds);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedLayerIds([]);
   };
 
   const handleUpdateLayer = (layerId: string, updates: Partial<TextLayer>) => {
@@ -1399,6 +1458,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                   {textLayers.map((layer) => {
                     const isSelected = selectedLayerIds.includes(layer.id) || layer.id === activeLayerId;
                     const isPrimaryActive = layer.id === activeLayerId;
+                    const isMultiSelecting = selectedLayerIds.length >= 2;
                     const canGroup = selectedLayerIds.length >= 2 && selectedLayerIds.includes(layer.id);
                     return (
                       <CanvasTextLayerObject
@@ -1406,6 +1466,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                         layer={layer}
                         isSelected={isSelected}
                         isPrimaryActive={isPrimaryActive}
+                        isMultiSelecting={isMultiSelecting}
                         onSelect={handleSelectLayer}
                         onUpdateLayer={handleUpdateLayer}
                         onEditInNativeInput={handleEditInNativeInput}
@@ -1424,6 +1485,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                       />
                     );
                   })}
+
+                  {/* Combined Union Bounding Box for Multi-Layer Selection */}
+                  {selectedLayerIds.length >= 2 && (
+                    <CombinedCanvasSelectionBox
+                      selectedLayers={textLayers.filter((l) => selectedLayerIds.includes(l.id))}
+                      onUpdateMultipleLayers={handleUpdateMultipleLayers}
+                      canvasScale={totalScale}
+                    />
+                  )}
                 </div>
 
                 {/* Minimal Brand Attribution */}
@@ -1498,7 +1568,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         isOpen={showLayersPanel}
         layers={textLayers}
         activeLayerId={activeLayerId}
+        selectedLayerIds={selectedLayerIds}
         onSelectLayer={handleSelectLayer}
+        onToggleSelectLayer={handleToggleSelectLayer}
+        onSelectAllLayers={handleSelectAllLayers}
+        onClearSelection={handleClearSelection}
+        onGroupLayers={handleGroupLayers}
+        onUngroupLayers={handleUngroupLayers}
+        onMergeLayers={handleMergeLayers}
+        onAlignLayers={handleAlignLayers}
+        onDeleteSelectedLayers={handleDeleteSelectedLayers}
+        onAddTextLayer={handleAddTextLayer}
         onUpdateLayer={handleUpdateLayer}
         onDeleteLayer={handleDeleteLayer}
         onDuplicateLayer={handleDuplicateLayer}

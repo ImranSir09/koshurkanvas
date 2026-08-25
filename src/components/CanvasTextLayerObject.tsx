@@ -19,6 +19,7 @@ interface CanvasTextLayerObjectProps {
   layer: TextLayer;
   isSelected: boolean;
   isPrimaryActive?: boolean;
+  isMultiSelecting?: boolean;
   onSelect: (layerId: string, isMultiSelect?: boolean) => void;
   onUpdateLayer: (layerId: string, updates: Partial<TextLayer>) => void;
   onEditInNativeInput: (layer: TextLayer) => void;
@@ -46,6 +47,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
   layer,
   isSelected,
   isPrimaryActive = true,
+  isMultiSelecting = false,
   onSelect,
   onUpdateLayer,
   onEditInNativeInput,
@@ -369,7 +371,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
       </div>
 
       {/* Interactive Selection Bounding Box & Transformation Handles */}
-      {isSelected && !layer.isLocked && (
+      {isSelected && !layer.isLocked && !isMultiSelecting && (
         <div className="export-exclude pointer-events-auto" data-export-exclude="true">
           {/* Top Rotation Handle & Stem */}
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto export-exclude" data-export-exclude="true">

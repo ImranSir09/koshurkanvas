@@ -149,3 +149,209 @@ export function duplicateTextLayer(
   delete cloned.groupId;
   return cloned;
 }
+
+/**
+ * Merges multiple selected text layers into a single editable text layer.
+ * Joins Unicode text with linebreaks, offsets text spans accurately,
+ * and positions the merged layer over the union bounding box.
+ */
+export function mergeSelectedLayers(
+  layers: TextLayer[],
+  idsToMerge: string[]
+): { updatedLayers: TextLayer[]; mergedLayer: TextLayer } {
+  if (!idsToMerge || idsToMerge.length < 2) {
+    const single = layers.find((l) => idsToMerge.includes(l.id)) || layers[0];
+    return { updatedLayers: layers, mergedLayer: single };
+  }
+
+  const targetSet = new Set(idsToMerge);
+  const selected = layers
+    .filter((l) => targetSet.has(l.id))
+    .sort((a, b) => (a.y !== b.y ? a.y - b.y : (a.zIndex ?? 0) - (b.zIndex ?? 0)));
+
+  if (selected.length === 0) {
+    return { updatedLayers: layers, mergedLayer: layers[0] };
+  }
+
+  // Calculate union bounds
+  const minX = Math.min(...selected.map((l) => l.x));
+  const minY = Math.min(...selected.map((l) => l.y));
+  const maxX = Math.max(...selected.map((l) => l.x + (l.width || 240)));
+  const maxY = Math.max(...selected.map((l) => l.y + (l.height || 80)));
+  const unionWidth = Math.max(160, maxX - minX);
+  const unionHeight = Math.max(60, maxY - minY);
+  const maxZ = Math.max(...selected.map((l) => l.zIndex ?? 0));
+
+  // Merge content & spans
+  let combinedText = '';
+  const combinedSpans: TextStyleProperties extends any ? any[] : any[] = [];
+  let currentOffset = 0;
+
+  selected.forEach((layer, idx) => {
+    const textPart = layer.text || '';
+    if (idx > 0) {
+      combinedText += '\n';
+      currentOffset += 1;
+    }
+    const partStart = currentOffset;
+    combinedText += textPart;
+
+    if (layer.spans && layer.spans.length > 0) {
+      layer.spans.forEach((span) => {
+        combinedSpans.push({
+          id: `span-merged-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          start: partStart + span.start,
+          end: partStart + span.end,
+          style: { ...span.style },
+        });
+      });
+    }
+
+    currentOffset += textPart.length;
+  });
+
+  const primaryStyle = selected[0]?.style || layers[0]?.style;
+  const mergedId = `layer-merged-${Date.now()}`;
+
+  const mergedLayer: TextLayer = {
+    id: mergedId,
+    name: `مدغم متن (${selected.length} لئیر)`,
+    type: 'text',
+    text: combinedText,
+    x: minX,
+    y: minY,
+    width: unionWidth,
+    height: unionHeight,
+    rotation: 0,
+    scale: 1,
+    opacity: selected[0]?.opacity ?? 1,
+    zIndex: maxZ,
+    isLocked: false,
+    isHidden: false,
+    style: { ...primaryStyle },
+    spans: combinedSpans.length > 0 ? combinedSpans : undefined,
+  };
+
+  // Replace merged layers in original list while maintaining order
+  let replaced = false;
+  const updatedLayers: TextLayer[] = [];
+
+  for (const layer of layers) {
+    if (targetSet.has(layer.id)) {
+      if (!replaced) {
+        updatedLayers.push(mergedLayer);
+        replaced = true;
+      }
+    } else {
+      updatedLayers.push(layer);
+    }
+  }
+
+  if (!replaced) {
+    updatedLayers.push(mergedLayer);
+  }
+
+  return { updatedLayers, mergedLayer };
+}
+
+/**
+ * Aligns selected layers relative to their combined union bounding box.
+ */
+export function alignSelectedLayers(
+  layers: TextLayer[],
+  idsToAlign: string[],
+  alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+): TextLayer[] {
+  if (!idsToAlign || idsToAlign.length < 2) return layers;
+
+  const targetSet = new Set(idsToAlign);
+  const selected = layers.filter((l) => targetSet.has(l.id));
+  if (selected.length < 2) return layers;
+
+  const minX = Math.min(...selected.map((l) => l.x));
+  const minY = Math.min(...selected.map((l) => l.y));
+  const maxX = Math.max(...selected.map((l) => l.x + (l.width || 240)));
+  const maxY = Math.max(...selected.map((l) => l.y + (l.height || 80)));
+  const unionWidth = maxX - minX;
+  const unionHeight = maxY - minY;
+
+  return layers.map((layer) => {
+    if (!targetSet.has(layer.id) || layer.isLocked) return layer;
+
+    const layerW = layer.width || 240;
+    const layerH = layer.height || 80;
+
+    let nextX = layer.x;
+    let nextY = layer.y;
+
+    switch (alignment) {
+      case 'left':
+        nextX = minX;
+        break;
+      case 'center':
+        nextX = Math.round(minX + (unionWidth - layerW) / 2);
+        break;
+      case 'right':
+        nextX = Math.round(maxX - layerW);
+        break;
+      case 'top':
+        nextY = minY;
+        break;
+      case 'middle':
+        nextY = Math.round(minY + (unionHeight - layerH) / 2);
+        break;
+      case 'bottom':
+        nextY = Math.round(maxY - layerH);
+        break;
+    }
+
+    return deepCloneLayer(layer, { x: nextX, y: nextY });
+  });
+}
+
+/**
+ * Deletes multiple selected layers, ensuring at least one layer exists if desired.
+ */
+export function deleteSelectedLayers(
+  layers: TextLayer[],
+  idsToDelete: string[]
+): { updatedLayers: TextLayer[]; nextActiveId: string | null } {
+  const targetSet = new Set(idsToDelete);
+  const remaining = layers.filter((l) => !targetSet.has(l.id));
+
+  if (remaining.length === 0) {
+    const freshId = `layer-${Date.now()}`;
+    const initialLayer: TextLayer = {
+      id: freshId,
+      name: 'متن ۱',
+      type: 'text',
+      text: '',
+      x: 40,
+      y: 80,
+      width: 480,
+      height: 180,
+      rotation: 0,
+      scale: 1,
+      opacity: 1,
+      zIndex: 10,
+      isLocked: false,
+      isHidden: false,
+      style: layers[0]?.style || {
+        fontFamily: 'Noto Nastaliq Urdu',
+        fontSize: 32,
+        bold: false,
+        italic: false,
+        underline: false,
+        color: '#1c1917',
+        align: 'right',
+        lineHeight: 2.6,
+        letterSpacing: 0,
+        direction: 'rtl',
+        opacity: 1,
+      },
+    };
+    return { updatedLayers: [initialLayer], nextActiveId: freshId };
+  }
+
+  return { updatedLayers: remaining, nextActiveId: remaining[0].id };
+}
