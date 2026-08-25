@@ -254,18 +254,74 @@ export function mergeSelectedLayers(
   return { updatedLayers, mergedLayer };
 }
 
+export type LayerAlignmentType =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'top'
+  | 'middle'
+  | 'bottom'
+  | 'distribute-h'
+  | 'distribute-v';
+
 /**
- * Aligns selected layers relative to their combined union bounding box.
+ * Aligns selected layers relative to their combined union bounding box or canvas bounds.
  */
 export function alignSelectedLayers(
   layers: TextLayer[],
   idsToAlign: string[],
-  alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+  alignment: LayerAlignmentType,
+  canvasWidth?: number,
+  canvasHeight?: number,
+  targetMode: 'selection' | 'canvas' = 'selection'
 ): TextLayer[] {
-  if (!idsToAlign || idsToAlign.length < 2) return layers;
+  if (!idsToAlign || idsToAlign.length === 0) return layers;
 
   const targetSet = new Set(idsToAlign);
-  const selected = layers.filter((l) => targetSet.has(l.id));
+  const selected = layers.filter((l) => targetSet.has(l.id) && !l.isLocked);
+  if (selected.length === 0) return layers;
+
+  // If only 1 layer is selected OR targetMode is 'canvas', align relative to canvas bounds
+  const useCanvasBounds = targetMode === 'canvas' || (selected.length === 1 && !!canvasWidth && !!canvasHeight);
+
+  if (useCanvasBounds && canvasWidth && canvasHeight) {
+    return layers.map((layer) => {
+      if (!targetSet.has(layer.id) || layer.isLocked) return layer;
+
+      const layerW = layer.width || 240;
+      const layerH = layer.height || 80;
+
+      let nextX = layer.x;
+      let nextY = layer.y;
+
+      switch (alignment) {
+        case 'left':
+          nextX = 24; // Align to margin/left edge
+          break;
+        case 'center':
+          nextX = Math.round((canvasWidth - layerW) / 2);
+          break;
+        case 'right':
+          nextX = Math.round(canvasWidth - layerW - 24);
+          break;
+        case 'top':
+          nextY = 24;
+          break;
+        case 'middle':
+          nextY = Math.round((canvasHeight - layerH) / 2);
+          break;
+        case 'bottom':
+          nextY = Math.round(canvasHeight - layerH - 24);
+          break;
+        default:
+          break;
+      }
+
+      return deepCloneLayer(layer, { x: nextX, y: nextY });
+    });
+  }
+
+  // Multi-layer alignment relative to Selection Union Bounding Box
   if (selected.length < 2) return layers;
 
   const minX = Math.min(...selected.map((l) => l.x));
@@ -274,6 +330,52 @@ export function alignSelectedLayers(
   const maxY = Math.max(...selected.map((l) => l.y + (l.height || 80)));
   const unionWidth = maxX - minX;
   const unionHeight = maxY - minY;
+
+  // Handle Distribute Horizontally
+  if (alignment === 'distribute-h') {
+    const sorted = [...selected].sort((a, b) => a.x - b.x);
+    const totalItemWidths = sorted.reduce((sum, l) => sum + (l.width || 240), 0);
+    const freeSpace = unionWidth - totalItemWidths;
+    const gap = sorted.length > 1 ? freeSpace / (sorted.length - 1) : 0;
+
+    let currentX = minX;
+    const xPositions = new Map<string, number>();
+
+    sorted.forEach((layer) => {
+      xPositions.set(layer.id, Math.round(currentX));
+      currentX += (layer.width || 240) + gap;
+    });
+
+    return layers.map((layer) => {
+      if (xPositions.has(layer.id) && !layer.isLocked) {
+        return deepCloneLayer(layer, { x: xPositions.get(layer.id)! });
+      }
+      return layer;
+    });
+  }
+
+  // Handle Distribute Vertically
+  if (alignment === 'distribute-v') {
+    const sorted = [...selected].sort((a, b) => a.y - b.y);
+    const totalItemHeights = sorted.reduce((sum, l) => sum + (l.height || 80), 0);
+    const freeSpace = unionHeight - totalItemHeights;
+    const gap = sorted.length > 1 ? freeSpace / (sorted.length - 1) : 0;
+
+    let currentY = minY;
+    const yPositions = new Map<string, number>();
+
+    sorted.forEach((layer) => {
+      yPositions.set(layer.id, Math.round(currentY));
+      currentY += (layer.height || 80) + gap;
+    });
+
+    return layers.map((layer) => {
+      if (yPositions.has(layer.id) && !layer.isLocked) {
+        return deepCloneLayer(layer, { y: yPositions.get(layer.id)! });
+      }
+      return layer;
+    });
+  }
 
   return layers.map((layer) => {
     if (!targetSet.has(layer.id) || layer.isLocked) return layer;

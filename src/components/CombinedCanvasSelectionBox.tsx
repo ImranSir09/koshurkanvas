@@ -1,17 +1,46 @@
 import React, { useRef, useState } from 'react';
 import { TextLayer } from '../types';
-import { RotateCw, Layers } from 'lucide-react';
+import { LayerAlignmentType, alignSelectedLayers } from '../lib/layerUtils';
+import {
+  RotateCw,
+  Layers,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  ArrowUp,
+  ArrowDown,
+  MoveVertical,
+  MoveHorizontal,
+} from 'lucide-react';
 
 interface CombinedCanvasSelectionBoxProps {
   selectedLayers: TextLayer[];
   onUpdateMultipleLayers: (updatedLayers: TextLayer[]) => void;
+  onAlignLayers?: (layerIds: string[], alignment: LayerAlignmentType) => void;
   canvasScale: number;
+  onSnapPosition?: (
+    layerIds: string[],
+    rawX: number,
+    rawY: number,
+    width: number,
+    height: number
+  ) => { snappedX: number; snappedY: number; isSnappedX: boolean; isSnappedY: boolean };
+  onDragStateChange?: (
+    isDragging: boolean,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => void;
 }
 
 export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProps> = ({
   selectedLayers,
   onUpdateMultipleLayers,
+  onAlignLayers,
   canvasScale = 1,
+  onSnapPosition,
+  onDragStateChange,
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<boolean>(false);
@@ -30,14 +59,35 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
   const centerX = boxX + boxW / 2;
   const centerY = boxY + boxH / 2;
 
+  // Direct alignment handler
+  const handleAlign = (alignment: LayerAlignmentType) => {
+    if (onAlignLayers) {
+      onAlignLayers(
+        selectedLayers.map((l) => l.id),
+        alignment
+      );
+    } else {
+      const aligned = alignSelectedLayers(
+        selectedLayers,
+        selectedLayers.map((l) => l.id),
+        alignment
+      );
+      onUpdateMultipleLayers(aligned);
+    }
+  };
+
   // Refs for tracking interactive transformations
   const dragStartRef = useRef<{
     clientX: number;
     clientY: number;
+    initialBoxX: number;
+    initialBoxY: number;
     initialLayers: { id: string; x: number; y: number }[];
   }>({
     clientX: 0,
     clientY: 0,
+    initialBoxX: 0,
+    initialBoxY: 0,
     initialLayers: [],
   });
 
@@ -87,7 +137,7 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
     initialLayers: [],
   });
 
-  // 1. Move Combined Selection
+  // 1. Move Combined Selection with Smart Snapping
   const handleDragStart = (e: React.PointerEvent) => {
     e.stopPropagation();
     if (selectedLayers.some((l) => l.isLocked)) return;
@@ -96,12 +146,34 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
     dragStartRef.current = {
       clientX: e.clientX,
       clientY: e.clientY,
+      initialBoxX: boxX,
+      initialBoxY: boxY,
       initialLayers: selectedLayers.map((l) => ({ id: l.id, x: l.x, y: l.y })),
     };
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const dx = (moveEvent.clientX - dragStartRef.current.clientX) / canvasScale;
       const dy = (moveEvent.clientY - dragStartRef.current.clientY) / canvasScale;
+      const rawBoxX = Math.round(dragStartRef.current.initialBoxX + dx);
+      const rawBoxY = Math.round(dragStartRef.current.initialBoxY + dy);
+
+      let finalBoxX = rawBoxX;
+      let finalBoxY = rawBoxY;
+
+      if (onSnapPosition) {
+        const snap = onSnapPosition(
+          selectedLayers.map((l) => l.id),
+          rawBoxX,
+          rawBoxY,
+          boxW,
+          boxH
+        );
+        finalBoxX = snap.snappedX;
+        finalBoxY = snap.snappedY;
+      }
+
+      const appliedDx = finalBoxX - dragStartRef.current.initialBoxX;
+      const appliedDy = finalBoxY - dragStartRef.current.initialBoxY;
 
       const initialMap = new Map<string, { id: string; x: number; y: number }>(
         dragStartRef.current.initialLayers.map((l) => [l.id, l])
@@ -112,16 +184,23 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
         if (!init) return layer;
         return {
           ...layer,
-          x: Math.round(init.x + dx),
-          y: Math.round(init.y + dy),
+          x: Math.round(init.x + appliedDx),
+          y: Math.round(init.y + appliedDy),
         };
       });
 
       onUpdateMultipleLayers(updated);
+
+      if (onDragStateChange) {
+        onDragStateChange(true, finalBoxX, finalBoxY, boxW, boxH);
+      }
     };
 
     const handlePointerUp = () => {
       setIsDragging(false);
+      if (onDragStateChange) {
+        onDragStateChange(false, boxX, boxY, boxW, boxH);
+      }
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
@@ -397,12 +476,131 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
         } cursor-move shadow-sm`}
       />
 
-      {/* Top Header Badge showing multi-selection count */}
-      <div
-        className="absolute -top-7 left-0 bg-emerald-800 text-white rounded-md px-2 py-0.5 text-[10px] font-sans font-bold flex items-center gap-1 shadow-md border border-emerald-700 pointer-events-none select-none"
-      >
-        <Layers size={12} className="text-emerald-200" />
-        <span>{selectedLayers.length} Layers Selected</span>
+      {/* Top Header Badge & Floating Alignment Toolbar */}
+      <div className="absolute -top-11 left-0 flex items-center gap-1 z-50 pointer-events-auto bg-stone-900/95 text-white p-1 rounded-xl shadow-xl border border-stone-700 backdrop-blur-xs select-none">
+        <div className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-sans font-bold text-emerald-300 border-r border-stone-700 mr-0.5">
+          <Layers size={11} className="text-emerald-400" />
+          <span>{selectedLayers.length}</span>
+        </div>
+
+        {/* 6 Edge / Center Bounds Alignments */}
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('left');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Left Edges"
+          aria-label="Align Left Edges"
+        >
+          <AlignLeft size={13} />
+        </button>
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('center');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Horizontal Centers"
+          aria-label="Align Horizontal Centers"
+        >
+          <AlignCenter size={13} />
+        </button>
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('right');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Right Edges"
+          aria-label="Align Right Edges"
+        >
+          <AlignRight size={13} />
+        </button>
+
+        <div className="w-[1px] h-4 bg-stone-700 my-auto mx-0.5" />
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('top');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Top Edges"
+          aria-label="Align Top Edges"
+        >
+          <ArrowUp size={13} />
+        </button>
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('middle');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Vertical Centers"
+          aria-label="Align Vertical Centers"
+        >
+          <MoveVertical size={13} />
+        </button>
+
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAlign('bottom');
+          }}
+          className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Align Bottom Edges"
+          aria-label="Align Bottom Edges"
+        >
+          <ArrowDown size={13} />
+        </button>
+
+        {selectedLayers.length >= 3 && (
+          <>
+            <div className="w-[1px] h-4 bg-stone-700 my-auto mx-0.5" />
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAlign('distribute-h');
+              }}
+              className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Distribute Horizontally"
+              aria-label="Distribute Horizontally"
+            >
+              <MoveHorizontal size={13} />
+            </button>
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAlign('distribute-v');
+              }}
+              className="w-7 h-7 rounded-lg hover:bg-stone-800 active:bg-emerald-800 text-stone-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Distribute Vertically"
+              aria-label="Distribute Vertically"
+            >
+              <MoveVertical size={13} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Rotation Handle (Top Center) */}

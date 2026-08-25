@@ -30,6 +30,7 @@ import {
   mergeSelectedLayers,
   alignSelectedLayers,
   deleteSelectedLayers,
+  LayerAlignmentType,
 } from '../lib/layerUtils';
 import { DEFAULT_TEXT_STYLE } from '../lib/kashmiriData';
 import { getFontFamilyCSS } from '../lib/fontUtils';
@@ -577,10 +578,28 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
   const handleAlignLayers = (
     idsToAlign: string[],
-    alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+    alignment: LayerAlignmentType
   ) => {
-    if (idsToAlign.length < 2) return;
-    const updatedLayers = alignSelectedLayers(textLayers, idsToAlign, alignment);
+    if (idsToAlign.length === 0) return;
+    const cfg = doc.canvasConfig || {
+      aspectRatio: 'auto',
+      color: '#ffffff',
+    };
+    const { refWidth: stageW, refHeight: stageH } = getCanvasRefDimensions(
+      cfg.aspectRatio,
+      cfg.orientation,
+      cfg.customWidth,
+      cfg.customHeight
+    );
+    const targetMode = idsToAlign.length === 1 ? 'canvas' : 'selection';
+    const updatedLayers = alignSelectedLayers(
+      textLayers,
+      idsToAlign,
+      alignment,
+      stageW,
+      stageH,
+      targetMode
+    );
     onUpdateDocument({ textLayers: updatedLayers });
     pushHistory(doc.content, updatedLayers, doc.spans || []);
   };
@@ -1481,7 +1500,10 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                     <CombinedCanvasSelectionBox
                       selectedLayers={textLayers.filter((l) => selectedLayerIds.includes(l.id))}
                       onUpdateMultipleLayers={handleUpdateMultipleLayers}
+                      onAlignLayers={handleAlignLayers}
                       canvasScale={totalScale}
+                      onSnapPosition={handleSnapPosition}
+                      onDragStateChange={handleLayerDragStateChange}
                     />
                   )}
                 </div>
@@ -1549,6 +1571,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
             onOpenCanvasSettings={() => setShowCanvasPanel(true)}
             onCenterHorizontally={handleCenterLayerHorizontally}
             onCenterVertically={handleCenterLayerVertically}
+            onAlignLayers={handleAlignLayers}
+            selectedLayerIds={selectedLayerIds}
+            snapEnabled={snapEnabled}
+            onToggleSnap={setSnapEnabled}
+            snapSensitivity={snapSensitivity}
+            onChangeSnapSensitivity={setSnapSensitivity}
           />
         </div>
       )}

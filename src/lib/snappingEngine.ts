@@ -23,7 +23,7 @@ export interface SnapResult {
  * when moving or resizing layers on the canvas stage.
  */
 export function calculateSnapping(
-  currentLayerId: string,
+  currentLayerId: string | string[],
   rawX: number,
   rawY: number,
   width: number,
@@ -44,6 +44,10 @@ export function calculateSnapping(
     };
   }
 
+  const excludedIds = new Set(
+    Array.isArray(currentLayerId) ? currentLayerId : [currentLayerId]
+  );
+
   let bestX = rawX;
   let bestXDistance = threshold + 1;
   let bestXGuide: SnapGuide | null = null;
@@ -60,11 +64,11 @@ export function calculateSnapping(
 
   // 1. CANVAS BOUNDARY & CENTER TARGETS - VERTICAL (X)
   const canvasTargetsX = [
-    { targetX: canvasWidth / 2 - width / 2, guidePos: canvasWidth / 2, label: 'Center X (کینوس مرکز)', source: 'canvas' as const },
-    { targetX: 0, guidePos: 0, label: 'Left Edge (کھبٕ حد)', source: 'canvas' as const },
-    { targetX: 24, guidePos: 24, label: 'Margin Left (مارجن)', source: 'margin' as const },
-    { targetX: canvasWidth - width, guidePos: canvasWidth, label: 'Right Edge (دۆچھن حد)', source: 'canvas' as const },
-    { targetX: canvasWidth - width - 24, guidePos: canvasWidth - 24, label: 'Margin Right (مارجن)', source: 'margin' as const },
+    { targetX: canvasWidth / 2 - width / 2, guidePos: canvasWidth / 2, label: 'Center X', source: 'canvas' as const },
+    { targetX: 0, guidePos: 0, label: 'Left Edge', source: 'canvas' as const },
+    { targetX: 24, guidePos: 24, label: 'Margin Left', source: 'margin' as const },
+    { targetX: canvasWidth - width, guidePos: canvasWidth, label: 'Right Edge', source: 'canvas' as const },
+    { targetX: canvasWidth - width - 24, guidePos: canvasWidth - 24, label: 'Margin Right', source: 'margin' as const },
   ];
 
   for (const t of canvasTargetsX) {
@@ -86,11 +90,11 @@ export function calculateSnapping(
 
   // 2. CANVAS BOUNDARY & CENTER TARGETS - HORIZONTAL (Y)
   const canvasTargetsY = [
-    { targetY: canvasHeight / 2 - height / 2, guidePos: canvasHeight / 2, label: 'Center Y (کینوس مرکز)', source: 'canvas' as const },
-    { targetY: 0, guidePos: 0, label: 'Top Edge (ہیرِ حد)', source: 'canvas' as const },
-    { targetY: 24, guidePos: 24, label: 'Margin Top (مارجن)', source: 'margin' as const },
-    { targetY: canvasHeight - height, guidePos: canvasHeight, label: 'Bottom Edge (بۆنِ حد)', source: 'canvas' as const },
-    { targetY: canvasHeight - height - 24, guidePos: canvasHeight - 24, label: 'Margin Bottom (مارجن)', source: 'margin' as const },
+    { targetY: canvasHeight / 2 - height / 2, guidePos: canvasHeight / 2, label: 'Center Y', source: 'canvas' as const },
+    { targetY: 0, guidePos: 0, label: 'Top Edge', source: 'canvas' as const },
+    { targetY: 24, guidePos: 24, label: 'Margin Top', source: 'margin' as const },
+    { targetY: canvasHeight - height, guidePos: canvasHeight, label: 'Bottom Edge', source: 'canvas' as const },
+    { targetY: canvasHeight - height - 24, guidePos: canvasHeight - 24, label: 'Margin Bottom', source: 'margin' as const },
   ];
 
   for (const t of canvasTargetsY) {
@@ -112,7 +116,7 @@ export function calculateSnapping(
 
   // 3. INTER-LAYER TARGETS (Aligning against other visible layers)
   for (const layer of allLayers) {
-    if (layer.id === currentLayerId || layer.isHidden) continue;
+    if (excludedIds.has(layer.id) || layer.isHidden) continue;
 
     const otherX = layer.x;
     const otherWidth = layer.width || 200;

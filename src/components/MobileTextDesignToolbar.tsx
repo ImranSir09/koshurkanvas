@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { FontChoice, TextStyleProperties, TextLayer } from '../types';
 import { getFontFamilyCSS } from '../lib/fontUtils';
 import { addCustomFont, getCustomFonts, deleteCustomFont, CustomFontItem } from '../lib/customFonts';
+import { LayerAlignmentType } from '../lib/layerUtils';
 import {
   Edit3,
   Type,
@@ -48,6 +49,8 @@ import {
   Heading2,
   BookOpen,
   Quote,
+  Magnet,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface MobileTextDesignToolbarProps {
@@ -64,9 +67,27 @@ interface MobileTextDesignToolbarProps {
   onOpenCanvasSettings?: () => void;
   onCenterHorizontally?: (layerId: string) => void;
   onCenterVertically?: (layerId: string) => void;
+  onAlignLayers?: (layerIds: string[], alignment: LayerAlignmentType) => void;
+  selectedLayerIds?: string[];
+  snapEnabled?: boolean;
+  onToggleSnap?: (enabled: boolean) => void;
+  snapSensitivity?: number;
+  onChangeSnapSensitivity?: (sensitivity: number) => void;
 }
 
-type ActiveSheet = 'none' | 'presets' | 'font' | 'size' | 'paragraph' | 'style' | 'color' | 'effects' | 'border' | 'transform';
+type ActiveSheet =
+  | 'none'
+  | 'presets'
+  | 'font'
+  | 'size'
+  | 'paragraph'
+  | 'style'
+  | 'color'
+  | 'effects'
+  | 'border'
+  | 'transform'
+  | 'align'
+  | 'snap';
 
 const FONTS: { id: FontChoice; label: string; preview: string }[] = [
   { id: 'Noto Nastaliq Urdu', label: 'نوٹو نستعلیق (Nastaliq)', preview: 'کٲشُر لیٚکھُن' },
@@ -240,6 +261,12 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
   onOpenCanvasSettings,
   onCenterHorizontally,
   onCenterVertically,
+  onAlignLayers,
+  selectedLayerIds = [],
+  snapEnabled = true,
+  onToggleSnap,
+  snapSensitivity = 8,
+  onChangeSnapSensitivity,
 }) => {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>('none');
   const [customFontsList, setCustomFontsList] = useState<CustomFontItem[]>(() => getCustomFonts());
@@ -282,7 +309,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
       dir="ltr"
     >
       {/* 1. EXPANDABLE BOTTOM DRAWER PANELS (High Contrast, Icon-Driven) */}
-      {activeSheet !== 'none' && activeLayer && (
+      {activeSheet !== 'none' && (activeLayer || activeSheet === 'snap') && (
         <div className="w-full bg-stone-50 border-b-2 border-stone-300 p-3 sm:p-4 max-h-[320px] overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-2 duration-150">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-300">
             <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
@@ -290,10 +317,26 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               {activeSheet === 'font' && <Type size={16} className="text-emerald-800" />}
               {activeSheet === 'size' && <Maximize2 size={16} className="text-emerald-800" />}
               {activeSheet === 'style' && <Sliders size={16} className="text-emerald-800" />}
+              {activeSheet === 'paragraph' && <Pilcrow size={16} className="text-emerald-800" />}
               {activeSheet === 'color' && <Palette size={16} className="text-emerald-800" />}
-              {activeSheet === 'effects' && <Sparkles size={16} className="text-emerald-800" />}
               {activeSheet === 'border' && <Square size={16} className="text-emerald-800" />}
+              {activeSheet === 'effects' && <Sparkles size={16} className="text-emerald-800" />}
               {activeSheet === 'transform' && <Move size={16} className="text-emerald-800" />}
+              {activeSheet === 'align' && <AlignLeft size={16} className="text-emerald-800" />}
+              {activeSheet === 'snap' && <Magnet size={16} className="text-emerald-800" />}
+              <span className="capitalize font-sans font-bold">
+                {activeSheet === 'presets' && 'Style Presets'}
+                {activeSheet === 'font' && 'Font Family'}
+                {activeSheet === 'size' && 'Size & Spacing'}
+                {activeSheet === 'style' && 'Text Style & Decoration'}
+                {activeSheet === 'paragraph' && 'Paragraph & Direction'}
+                {activeSheet === 'color' && 'Color & Highlight'}
+                {activeSheet === 'border' && 'Corner Radius & Border'}
+                {activeSheet === 'effects' && 'Shadow & Effects'}
+                {activeSheet === 'transform' && 'Transform & Position'}
+                {activeSheet === 'align' && 'Align to Selection Bounds'}
+                {activeSheet === 'snap' && 'Smart Snapping & Dynamic Guides'}
+              </span>
             </div>
             <button
               type="button"
@@ -1038,8 +1081,129 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
           {/* TRANSFORM, FLIP, ALIGN & LAYER ORDER SHEET */}
           {activeSheet === 'transform' && (
             <div className="flex flex-col gap-3">
+              {/* Align to Selection Bounds / Canvas */}
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Align to Bounds & Canvas</span>
+                  {selectedLayerIds && selectedLayerIds.length > 1 && (
+                    <span className="text-[10px] font-sans font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                      {selectedLayerIds.length} Selected
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-6 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'left'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Left Edges"
+                  >
+                    <AlignLeft size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'center'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Horizontal Centers"
+                  >
+                    <AlignCenter size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'right'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Right Edges"
+                  >
+                    <AlignRight size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'top'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Top Edges"
+                  >
+                    <ArrowUp size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'middle'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Vertical Centers"
+                  >
+                    <MoveVertical size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'bottom'
+                        );
+                      }
+                    }}
+                    className="h-9 rounded-xl bg-white border-2 border-stone-300 hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 transition-all"
+                    title="Align Bottom Edges"
+                  >
+                    <ArrowDown size={16} />
+                  </button>
+                </div>
+              </div>
+
               {/* Quick Flip & Center Tools */}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-stone-300">
                 <button
                   type="button"
                   onClick={() => onUpdateStyle({ flipX: !currentStyle.flipX })}
@@ -1071,7 +1235,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                     type="button"
                     onClick={() => onCenterHorizontally(activeLayer.id)}
                     className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                    title="Center Horizontally"
+                    title="Center Horizontally on Canvas"
                   >
                     <MoveHorizontal size={16} />
                   </button>
@@ -1082,7 +1246,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                     type="button"
                     onClick={() => onCenterVertically(activeLayer.id)}
                     className="h-9 rounded-xl bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
-                    title="Center Vertically"
+                    title="Center Vertically on Canvas"
                   >
                     <MoveVertical size={16} />
                   </button>
@@ -1126,6 +1290,266 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                 >
                   <Trash2 size={16} />
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* ALIGNMENT & DISTRIBUTION SHEET */}
+          {activeSheet === 'align' && (
+            <div className="flex flex-col gap-3">
+              <div>
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>Align to Selection Bounds (6 Edges)</span>
+                  {selectedLayerIds && selectedLayerIds.length > 1 && (
+                    <span className="text-[10px] font-sans font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                      {selectedLayerIds.length} Layers Selected
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'left'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Left Edges"
+                  >
+                    <AlignLeft size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Left</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'center'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Center Horizontal"
+                  >
+                    <AlignCenter size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Center X</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'right'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Right Edges"
+                  >
+                    <AlignRight size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Right</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'top'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Top Edges"
+                  >
+                    <ArrowUp size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Top</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'middle'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Middle Vertical"
+                  >
+                    <MoveVertical size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Middle Y</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'bottom'
+                        );
+                      }
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Align Bottom Edges"
+                  >
+                    <ArrowDown size={18} />
+                    <span className="text-[10px] font-sans font-semibold">Bottom</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Distribution Actions */}
+              <div className="pt-2 border-t border-stone-300">
+                <div className="text-[11px] font-bold text-stone-700 font-sans uppercase tracking-wider mb-2">
+                  Distribute Spacing
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'distribute-h'
+                        );
+                      }
+                    }}
+                    className="h-10 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Distribute Horizontally"
+                  >
+                    <MoveHorizontal size={16} />
+                    <span className="text-xs font-sans font-bold">Distribute Horizontally</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onAlignLayers && activeLayer) {
+                        onAlignLayers(
+                          selectedLayerIds && selectedLayerIds.length > 0
+                            ? selectedLayerIds
+                            : [activeLayer.id],
+                          'distribute-v'
+                        );
+                      }
+                    }}
+                    className="h-10 rounded-xl border-2 border-stone-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 text-stone-900 flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-xs transition-all"
+                    title="Distribute Vertically"
+                  >
+                    <MoveVertical size={16} />
+                    <span className="text-xs font-sans font-bold">Distribute Vertically</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SMART SNAPPING & DYNAMIC GUIDES SHEET */}
+          {activeSheet === 'snap' && (
+            <div className="flex flex-col gap-3">
+              <div className="p-3 bg-white rounded-xl border-2 border-stone-300 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                      snapEnabled ? 'bg-emerald-700 text-white' : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    <Magnet size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-sans font-bold text-stone-900">
+                      Smart Snapping & Dynamic Guides
+                    </h4>
+                    <p className="text-[10px] font-sans text-stone-500">
+                      Auto-align to canvas center, edges & other layers
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onToggleSnap && onToggleSnap(!snapEnabled)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                    snapEnabled ? 'bg-emerald-700' : 'bg-stone-300'
+                  }`}
+                  aria-label="Toggle Smart Snapping"
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                      snapEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Snap Sensitivity Slider */}
+              <div className="p-3 bg-white rounded-xl border-2 border-stone-300 flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs font-sans">
+                  <span className="font-bold text-stone-800">Snapping Sensitivity</span>
+                  <span className="font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">
+                    {snapSensitivity ?? 8} px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={4}
+                  max={20}
+                  step={2}
+                  value={snapSensitivity ?? 8}
+                  onChange={(e) =>
+                    onChangeSnapSensitivity && onChangeSnapSensitivity(Number(e.target.value))
+                  }
+                  disabled={!snapEnabled}
+                  className="w-full accent-emerald-700 h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
+                />
+                <div className="flex justify-between text-[10px] text-stone-500 font-mono font-semibold">
+                  <span>Tight (4px)</span>
+                  <span>Balanced (8px)</span>
+                  <span>Strong (20px)</span>
+                </div>
+              </div>
+
+              {/* Dynamic Guide Color Legend */}
+              <div className="grid grid-cols-3 gap-2 text-[10px] font-sans font-semibold">
+                <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-1.5 text-emerald-900">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0" />
+                  <span>Canvas Center</span>
+                </div>
+                <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-1.5 text-amber-900">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                  <span>Margins</span>
+                </div>
+                <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center gap-1.5 text-indigo-900">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                  <span>Layer Align</span>
+                </div>
               </div>
             </div>
           )}
@@ -1295,20 +1719,105 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
             >
               <Move size={16} />
             </button>
+
+            {/* Align to Bounds Trigger */}
+            <button
+              id="btn-bottom-align"
+              type="button"
+              onClick={() => toggleSheet('align')}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 ${
+                activeSheet === 'align'
+                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                  : 'bg-white text-stone-900 border-stone-300 hover:bg-stone-200'
+              }`}
+              title="Align to Selection Bounds (6 Edges)"
+              aria-label="Align to Selection Bounds"
+            >
+              <AlignLeft size={16} />
+            </button>
+
+            {/* Smart Snapping & Guides Trigger */}
+            <button
+              id="btn-bottom-snap"
+              type="button"
+              onClick={() => toggleSheet('snap')}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 border-2 relative ${
+                activeSheet === 'snap'
+                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                  : snapEnabled
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-white text-stone-400 border-stone-300 hover:bg-stone-200'
+              }`}
+              title={`Smart Snapping & Dynamic Guides (${snapEnabled ? 'Enabled' : 'Disabled'})`}
+              aria-label="Smart Snapping & Dynamic Guides"
+            >
+              <Magnet size={16} />
+              {snapEnabled && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-2xs" />
+              )}
+            </button>
           </div>
         ) : (
-          /* When no layer is selected: Add Text Layer Action */
-          <div className="w-full flex items-center justify-center">
+          /* When no layer is selected: Canvas Level Actions */
+          <div className="w-full flex items-center justify-between gap-1.5">
             <button
+              id="btn-bottom-add-layer"
               type="button"
               onClick={onAddNewText}
-              className="w-full py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800"
+              className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800"
               title="Add Text Layer"
               aria-label="Add Text Layer"
             >
               <Plus size={16} />
-              <span className="font-sans text-xs font-bold">(Add text layer)</span>
+              <span className="font-sans text-xs font-bold">Add Text</span>
             </button>
+
+            {/* Snapping Toggle / Sheet Button */}
+            <button
+              id="btn-bottom-empty-snap"
+              type="button"
+              onClick={() => toggleSheet('snap')}
+              className={`h-9 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer border-2 ${
+                activeSheet === 'snap'
+                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
+                  : snapEnabled
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-white text-stone-600 border-stone-300 hover:bg-stone-200'
+              }`}
+              title="Smart Snapping & Dynamic Guides"
+              aria-label="Smart Snapping & Dynamic Guides"
+            >
+              <Magnet size={15} />
+              <span className="text-[11px] font-sans font-bold">
+                {snapEnabled ? 'Snap: ON' : 'Snap: OFF'}
+              </span>
+            </button>
+
+            {onOpenLayersPanel && (
+              <button
+                id="btn-bottom-empty-layers"
+                type="button"
+                onClick={onOpenLayersPanel}
+                className="w-9 h-9 rounded-lg bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs transition-all shrink-0"
+                title="Layers Manager"
+                aria-label="Layers Manager"
+              >
+                <Layers size={16} />
+              </button>
+            )}
+
+            {onOpenCanvasSettings && (
+              <button
+                id="btn-bottom-empty-settings"
+                type="button"
+                onClick={onOpenCanvasSettings}
+                className="w-9 h-9 rounded-lg bg-white border-2 border-stone-300 text-stone-900 hover:bg-stone-200 flex items-center justify-center cursor-pointer shadow-xs transition-all shrink-0"
+                title="Canvas Settings"
+                aria-label="Canvas Settings"
+              >
+                <Settings size={16} />
+              </button>
+            )}
           </div>
         )}
       </div>

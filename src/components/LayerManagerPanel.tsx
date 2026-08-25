@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TextLayer } from '../types';
+import { LayerAlignmentType } from '../lib/layerUtils';
 import {
   Layers,
   Plus,
@@ -23,6 +24,7 @@ import {
   AlignLeft,
   AlignRight,
   MoveVertical,
+  MoveHorizontal,
 } from 'lucide-react';
 
 interface LayerManagerPanelProps {
@@ -38,7 +40,7 @@ interface LayerManagerPanelProps {
   onMergeLayers?: (layerIds: string[]) => void;
   onAlignLayers?: (
     layerIds: string[],
-    alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'
+    alignment: LayerAlignmentType
   ) => void;
   onDeleteSelectedLayers?: (layerIds: string[]) => void;
   onAddTextLayer: () => void;
@@ -127,7 +129,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
     }
   };
 
-  const handleAlignAction = (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
+  const handleAlignAction = (alignment: LayerAlignmentType) => {
     if (onAlignLayers && selectedLayerIds.length >= 2) {
       onAlignLayers(selectedLayerIds, alignment);
     }
@@ -397,6 +399,24 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
                   aria-label="Align Bottom"
                 >
                   <ArrowDown size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAlignAction('distribute-h')}
+                  className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
+                  title="Distribute Horizontally"
+                  aria-label="Distribute Horizontally"
+                >
+                  <MoveHorizontal size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAlignAction('distribute-v')}
+                  className="w-8 h-8 rounded-lg bg-white border border-stone-300 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 text-stone-800 flex items-center justify-center transition-colors cursor-pointer"
+                  title="Distribute Vertically"
+                  aria-label="Distribute Vertically"
+                >
+                  <MoveVertical size={14} />
                 </button>
               </div>
             </div>
