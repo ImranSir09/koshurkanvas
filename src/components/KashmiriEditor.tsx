@@ -182,7 +182,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   onHistoryStatsChange,
 }) => {
   // Primary Two-Tab Workflow: 'input_text' (Unicode entry) and 'canvas' (Visual design)
-  const [activeTab, setActiveTab] = useState<MobileTab>('input_text');
+  const [activeTab, setActiveTab] = useState<MobileTab>('canvas');
 
   // Keyboard Selector State (Input Text tab only): 'system' | 'kashmiri' | 'none'
   const [activeKeyboard, setActiveKeyboard] = useState<KeyboardType>('kashmiri');
