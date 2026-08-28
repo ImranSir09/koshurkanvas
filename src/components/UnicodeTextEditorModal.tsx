@@ -438,7 +438,7 @@ export const UnicodeTextEditorModal: React.FC<UnicodeTextEditorModalProps> = ({
             onChange={(e) => setText(e.target.value)}
             dir={direction}
             inputMode={showKashmiriKeyboard ? 'none' : 'text'}
-            placeholder="Type Kashmiri text here or use the keyboard..."
+            placeholder="ازکیا چھُ تُہنْدس دماغس منْز..."
             className="w-full h-full min-h-[120px] p-2 bg-transparent text-stone-900 caret-emerald-600 font-nastaliq resize-none border-none outline-hidden cursor-text selection:bg-emerald-100 whitespace-pre-wrap break-words leading-[2.4]"
             style={{
               fontFamily: fontFamCSS,
