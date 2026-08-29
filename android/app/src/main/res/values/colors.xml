@@ -3,7 +3,6 @@
     <color name="colorPrimary">#047857</color>
     <color name="colorPrimaryDark">#064E3B</color>
     <color name="colorAccent">#D97706</color>
-    <color name="ic_launcher_background">#F5EFE3</color>
     <color name="windowBackground">#FFFFFF</color>
     <color name="statusBarColor">#FFFFFF</color>
     <color name="navigationBarColor">#FFFFFF</color>
