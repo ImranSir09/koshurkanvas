@@ -32,6 +32,18 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [isFocusedWritingMode, setIsFocusedWritingMode] = useState<boolean>(true);
 
+  // Undo / Redo Global State
+  const [canUndo, setCanUndo] = useState<boolean>(false);
+  const [canRedo, setCanRedo] = useState<boolean>(false);
+
+  const handleUndo = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('app-undo'));
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('app-redo'));
+  }, []);
+
   // Enforce pure white light mode independently of device OS/phone theme
   useEffect(() => {
     document.documentElement.classList.remove('dark');
@@ -159,6 +171,10 @@ export default function App() {
         onNewDocument={handleNewDocument}
         onOpenCharacterPicker={() => setIsCharPickerOpen(true)}
         onOpenTransliteration={() => setIsTransliterationOpen(true)}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
       />
 
         {/* Main Kashmiri Writing & Typography Workspace */}
@@ -172,6 +188,10 @@ export default function App() {
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
             isFocusedWritingMode={isFocusedWritingMode}
             setIsFocusedWritingMode={setIsFocusedWritingMode}
+            onHistoryChange={(undoable, redoable) => {
+              setCanUndo(undoable);
+              setCanRedo(redoable);
+            }}
           />
         </main>
 

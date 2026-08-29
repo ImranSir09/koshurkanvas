@@ -4,6 +4,8 @@ import {
   Download,
   Edit2,
   CloudCheck,
+  RotateCcw,
+  RotateCw,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -16,6 +18,10 @@ interface HeaderProps {
   onOpenTransliteration?: () => void;
   layoutMode?: 'desktop' | 'phone';
   onToggleLayoutMode?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +29,10 @@ export const Header: React.FC<HeaderProps> = ({
   onRenameDocument,
   onOpenProjects,
   onOpenExport,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(currentDocTitle);
@@ -46,6 +56,22 @@ export const Header: React.FC<HeaderProps> = ({
       onRenameDocument(trimmed);
     } else {
       setTitleInput(currentDocTitle);
+    }
+  };
+
+  const handleTriggerUndo = () => {
+    if (onUndo) {
+      onUndo();
+    } else {
+      window.dispatchEvent(new CustomEvent('app-undo'));
+    }
+  };
+
+  const handleTriggerRedo = () => {
+    if (onRedo) {
+      onRedo();
+    } else {
+      window.dispatchEvent(new CustomEvent('app-redo'));
     }
   };
 
@@ -129,8 +155,34 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Action End (Export) */}
-      <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
+      {/* Action End (Undo, Redo, Export) */}
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" dir="ltr">
+        {/* Undo Button */}
+        <button
+          id="header-undo-btn"
+          type="button"
+          onClick={handleTriggerUndo}
+          disabled={!canUndo}
+          className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 hover:text-black flex items-center justify-center transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:pointer-events-none shadow-2xs"
+          title="Undo (Ctrl+Z)"
+          aria-label="Undo"
+        >
+          <RotateCcw size={15} />
+        </button>
+
+        {/* Redo Button */}
+        <button
+          id="header-redo-btn"
+          type="button"
+          onClick={handleTriggerRedo}
+          disabled={!canRedo}
+          className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 hover:text-black flex items-center justify-center transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:pointer-events-none shadow-2xs"
+          title="Redo (Ctrl+Shift+Z)"
+          aria-label="Redo"
+        >
+          <RotateCw size={15} />
+        </button>
+
         {/* Primary Export Icon Button */}
         <button
           id="header-export-btn"
@@ -146,4 +198,5 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
 

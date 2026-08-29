@@ -56,11 +56,17 @@ import {
   Eye,
   ChevronDown,
   Magnet,
+  RotateCcw,
+  RotateCw,
 } from 'lucide-react';
 import { calculateSnapping, SnapGuide } from '../lib/snappingEngine';
 import { playSnapSound } from '../lib/soundEffects';
 import { toKashmiriNumerals } from '../lib/kashmiriTextTools';
 import { getCanvasRefDimensions } from '../lib/exportEngine';
+import {
+  UndoRedoManager,
+  createDocumentSnapshot,
+} from '../lib/undoManager';
 
 export { getCanvasRefDimensions };
 
@@ -76,6 +82,7 @@ interface KashmiriEditorProps {
   onToggleSound: () => void;
   isFocusedWritingMode: boolean;
   setIsFocusedWritingMode: (val: boolean) => void;
+  onHistoryChange?: (canUndo: boolean, canRedo: boolean) => void;
 }
 
 export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
@@ -87,6 +94,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   onToggleSound,
   isFocusedWritingMode,
   setIsFocusedWritingMode,
+  onHistoryChange,
 }) => {
   // Primary Two-Tab Workflow: 'input_text' (Unicode entry) and 'canvas' (Visual design)
   const [activeTab, setActiveTab] = useState<MobileTab>('canvas');
@@ -108,6 +116,24 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<boolean>(false);
   const [editorDirection, setEditorDirection] = useState<'rtl' | 'ltr'>('rtl');
+
+  // Undo / Redo Toast state
+  const [undoToast, setUndoToast] = useState<{ type: 'undo' | 'redo'; message: string } | null>(null);
+  const toastTimerRef = useRef<any>(null);
+
+  const showUndoToast = useCallback((type: 'undo' | 'redo', message: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setUndoToast({ type, message });
+    toastTimerRef.current = setTimeout(() => {
+      setUndoToast(null);
+    }, 1200);
+  }, []);
+
+  // Undo / Redo Manager instance
+  const undoManagerRef = useRef<UndoRedoManager>(new UndoRedoManager());
+  const isRestoringHistoryRef = useRef<boolean>(false);
+  const [canUndo, setCanUndo] = useState<boolean>(false);
+  const [canRedo, setCanRedo] = useState<boolean>(false);
 
   // Preview container ref for auto-scrolling to active text object
   const previewScrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +238,182 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     }
   }, [activeLayerId, activeTab]);
 
+  // Sync UndoRedoManager with Document and initial state
+  const lastDocIdRef = useRef<string>(doc.id);
+  useEffect(() => {
+    if (lastDocIdRef.current !== doc.id || undoManagerRef.current.getStats().totalCount === 0) {
+      lastDocIdRef.current = doc.id;
+      const initialSnap = createDocumentSnapshot({
+        actionName: 'Initial State',
+        content: doc.content,
+        textLayers: textLayers,
+        spans: doc.spans,
+        canvasConfig: doc.canvasConfig,
+        defaultStyle: doc.defaultStyle,
+        activeLayerId: activeLayerId,
+        selectedLayerIds: selectedLayerIds,
+      });
+      undoManagerRef.current.reset(initialSnap);
+      setCanUndo(false);
+      setCanRedo(false);
+      if (onHistoryChange) onHistoryChange(false, false);
+    }
+  }, [doc.id]);
+
+  // Helper to push history snapshot with optional debouncing (e.g. typing or sliding)
+  const pushSnapshot = useCallback(
+    (
+      actionName: string,
+      overrides?: {
+        content?: string;
+        textLayers?: TextLayer[];
+        spans?: TextStyleSpan[];
+        canvasConfig?: CanvasBackgroundConfig;
+        defaultStyle?: TextStyleProperties;
+        activeLayerId?: string | null;
+        selectedLayerIds?: string[];
+      },
+      options?: { debounceGroup?: string; debounceWindowMs?: number }
+    ) => {
+      if (isRestoringHistoryRef.current) return;
+
+      const snap = createDocumentSnapshot({
+        actionName,
+        content: overrides?.content !== undefined ? overrides.content : doc.content,
+        textLayers: overrides?.textLayers || textLayers,
+        spans: overrides?.spans || doc.spans,
+        canvasConfig: overrides?.canvasConfig || doc.canvasConfig,
+        defaultStyle: overrides?.defaultStyle || doc.defaultStyle,
+        activeLayerId: overrides?.activeLayerId !== undefined ? overrides.activeLayerId : activeLayerId,
+        selectedLayerIds: overrides?.selectedLayerIds || selectedLayerIds,
+      });
+
+      undoManagerRef.current.push(snap, options);
+      const stats = undoManagerRef.current.getStats();
+      setCanUndo(stats.canUndo);
+      setCanRedo(stats.canRedo);
+      if (onHistoryChange) {
+        onHistoryChange(stats.canUndo, stats.canRedo);
+      }
+    },
+    [doc.content, textLayers, doc.spans, doc.canvasConfig, doc.defaultStyle, activeLayerId, selectedLayerIds, onHistoryChange]
+  );
+
+  // Perform Undo
+  const handleUndo = useCallback(() => {
+    const prevSnap = undoManagerRef.current.undo();
+    if (!prevSnap) return;
+
+    isRestoringHistoryRef.current = true;
+
+    onUpdateDocument({
+      content: prevSnap.content,
+      textLayers: prevSnap.textLayers,
+      spans: prevSnap.spans,
+      canvasConfig: prevSnap.canvasConfig,
+      defaultStyle: prevSnap.defaultStyle,
+      activeLayerId: prevSnap.activeLayerId,
+    });
+
+    setActiveLayerId(prevSnap.activeLayerId);
+    setSelectedLayerIds(prevSnap.selectedLayerIds || []);
+    if (prevSnap.activeLayerId) {
+      const layer = prevSnap.textLayers.find((l) => l.id === prevSnap.activeLayerId);
+      if (layer) {
+        setActiveFormatting(layer.style);
+      }
+    } else if (prevSnap.defaultStyle) {
+      setActiveFormatting(prevSnap.defaultStyle);
+    }
+
+    setCursorPos(prevSnap.content.length);
+
+    const stats = undoManagerRef.current.getStats();
+    setCanUndo(stats.canUndo);
+    setCanRedo(stats.canRedo);
+    if (onHistoryChange) onHistoryChange(stats.canUndo, stats.canRedo);
+
+    showUndoToast('undo', `Undone: ${prevSnap.actionName || 'Action'}`);
+
+    setTimeout(() => {
+      isRestoringHistoryRef.current = false;
+    }, 60);
+  }, [onUpdateDocument, onHistoryChange, showUndoToast]);
+
+  // Perform Redo
+  const handleRedo = useCallback(() => {
+    const nextSnap = undoManagerRef.current.redo();
+    if (!nextSnap) return;
+
+    isRestoringHistoryRef.current = true;
+
+    onUpdateDocument({
+      content: nextSnap.content,
+      textLayers: nextSnap.textLayers,
+      spans: nextSnap.spans,
+      canvasConfig: nextSnap.canvasConfig,
+      defaultStyle: nextSnap.defaultStyle,
+      activeLayerId: nextSnap.activeLayerId,
+    });
+
+    setActiveLayerId(nextSnap.activeLayerId);
+    setSelectedLayerIds(nextSnap.selectedLayerIds || []);
+    if (nextSnap.activeLayerId) {
+      const layer = nextSnap.textLayers.find((l) => l.id === nextSnap.activeLayerId);
+      if (layer) {
+        setActiveFormatting(layer.style);
+      }
+    } else if (nextSnap.defaultStyle) {
+      setActiveFormatting(nextSnap.defaultStyle);
+    }
+
+    setCursorPos(nextSnap.content.length);
+
+    const stats = undoManagerRef.current.getStats();
+    setCanUndo(stats.canUndo);
+    setCanRedo(stats.canRedo);
+    if (onHistoryChange) onHistoryChange(stats.canUndo, stats.canRedo);
+
+    showUndoToast('redo', `Redone: ${nextSnap.actionName || 'Action'}`);
+
+    setTimeout(() => {
+      isRestoringHistoryRef.current = false;
+    }, 60);
+  }, [onUpdateDocument, onHistoryChange, showUndoToast]);
+
+  // Keyboard Shortcuts for Undo & Redo (Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y) and Custom Events
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      if (!isCtrlOrCmd) return;
+
+      if (e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if (e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    const handleUndoEvent = () => handleUndo();
+    const handleRedoEvent = () => handleRedo();
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('app-undo', handleUndoEvent);
+    window.addEventListener('app-redo', handleRedoEvent);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('app-undo', handleUndoEvent);
+      window.removeEventListener('app-redo', handleRedoEvent);
+    };
+  }, [handleUndo, handleRedo]);
+
   // Update selection tracking from native textarea
   const updateSelectionFromDOM = useCallback(() => {
     if (!textareaRef.current) return;
@@ -272,6 +474,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       return layer;
     });
 
+    pushSnapshot(
+      'Typing',
+      {
+        content: newContent,
+        spans: updatedSpans,
+        textLayers: updatedLayers,
+        activeLayerId,
+      },
+      { debounceGroup: 'typing', debounceWindowMs: 700 }
+    );
+
     onUpdateDocument({
       content: newContent,
       spans: updatedSpans,
@@ -308,6 +521,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         return layer;
       });
 
+      pushSnapshot(
+        textToInsert.length === 1 ? `Typed "${textToInsert}"` : 'Insert text',
+        {
+          content: newContent,
+          spans: updatedSpans,
+          textLayers: updatedLayers,
+          activeLayerId,
+        },
+        { debounceGroup: 'typing', debounceWindowMs: 700 }
+      );
+
       onUpdateDocument({
         content: newContent,
         spans: updatedSpans,
@@ -325,7 +549,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         }
       }, 10);
     },
-    [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument]
+    [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushSnapshot]
   );
 
   // Handle external insert character events
@@ -349,6 +573,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const newContent = before + after;
       const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart, -(activeEnd - activeStart));
       const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
+
+      pushSnapshot(
+        'Delete selection',
+        { content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId },
+        { debounceGroup: 'typing', debounceWindowMs: 700 }
+      );
+
       onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
       setCursorPos(activeStart);
       setSelection({ start: activeStart, end: activeStart, text: '' });
@@ -364,6 +595,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const newContent = before + after;
       const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart - 1, -1);
       const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
+
+      pushSnapshot(
+        'Delete character',
+        { content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId },
+        { debounceGroup: 'typing', debounceWindowMs: 700 }
+      );
+
       onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
       const newPos = activeStart - 1;
       setCursorPos(newPos);
@@ -375,7 +613,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         }
       }, 10);
     }
-  }, [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument]);
+  }, [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushSnapshot]);
 
   const handleKeyboardEnter = useCallback(() => {
     handleInsertText('\n');
@@ -394,12 +632,18 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const targetIds = selectedLayerIds.length > 0 ? selectedLayerIds : (activeLayerId ? [activeLayerId] : []);
       const updatedLayers = applyStyleToLayers(textLayers, targetIds, styleUpdates);
 
+      const styleKeys = Object.keys(styleUpdates).join(', ');
+      pushSnapshot(`Format ${styleKeys || 'style'}`, {
+        textLayers: updatedLayers,
+        defaultStyle: newActiveStyle,
+      });
+
       onUpdateDocument({
         textLayers: updatedLayers,
         defaultStyle: newActiveStyle,
       });
     },
-    [activeFormatting, textLayers, activeLayerId, selectedLayerIds, onUpdateDocument]
+    [activeFormatting, textLayers, activeLayerId, selectedLayerIds, onUpdateDocument, pushSnapshot]
   );
 
   // Layer Management Callbacks
@@ -434,11 +678,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     if (idsToGroup.length < 2) return;
     const updatedLayers = groupSelectedLayers(textLayers, idsToGroup);
     setSelectedLayerIds(idsToGroup);
+    pushSnapshot('Group layers', { textLayers: updatedLayers, selectedLayerIds: idsToGroup });
     onUpdateDocument({ textLayers: updatedLayers });
   };
 
   const handleUngroupLayers = (targetGroupId: string) => {
     const updatedLayers = ungroupSelectedLayers(textLayers, targetGroupId);
+    pushSnapshot('Ungroup layers', { textLayers: updatedLayers });
     onUpdateDocument({ textLayers: updatedLayers });
   };
 
@@ -448,6 +694,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     setActiveLayerId(mergedLayer.id);
     setSelectedLayerIds([mergedLayer.id]);
     setActiveFormatting(mergedLayer.style);
+    pushSnapshot('Merge layers', {
+      textLayers: updatedLayers,
+      activeLayerId: mergedLayer.id,
+      selectedLayerIds: [mergedLayer.id],
+      content: mergedLayer.text,
+    });
     onUpdateDocument({
       textLayers: updatedLayers,
       activeLayerId: mergedLayer.id,
@@ -479,6 +731,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       stageH,
       targetMode
     );
+    pushSnapshot(`Align layers (${alignment})`, { textLayers: updatedLayers });
     onUpdateDocument({ textLayers: updatedLayers });
   };
 
@@ -490,6 +743,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     if (activeL) {
       setActiveFormatting(activeL.style);
     }
+    pushSnapshot('Delete layers', {
+      textLayers: updatedLayers,
+      activeLayerId: nextActiveId,
+      selectedLayerIds: nextActiveId ? [nextActiveId] : [],
+      content: activeL ? activeL.text : '',
+    });
     onUpdateDocument({
       textLayers: updatedLayers,
       activeLayerId: nextActiveId,
@@ -500,6 +759,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   const handleUpdateMultipleLayers = (updated: TextLayer[]) => {
     const updatedMap = new Map(updated.map((l) => [l.id, l]));
     const nextLayers = textLayers.map((l) => updatedMap.get(l.id) || l);
+    pushSnapshot('Update layers', { textLayers: nextLayers });
     onUpdateDocument({ textLayers: nextLayers });
   };
 
@@ -515,6 +775,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   const handleUpdateLayer = (layerId: string, updates: Partial<TextLayer>) => {
     const updatedLayers = updateLayersCollection(textLayers, layerId, updates, selectedLayerIds);
     const isCurrentActive = layerId === activeLayerId;
+    pushSnapshot(
+      'Update layer',
+      {
+        textLayers: updatedLayers,
+        content: isCurrentActive && updates.text !== undefined ? updates.text : doc.content,
+      },
+      { debounceGroup: 'layer_update', debounceWindowMs: 300 }
+    );
     onUpdateDocument({
       textLayers: updatedLayers,
       content: isCurrentActive && updates.text !== undefined ? updates.text : doc.content,
@@ -562,6 +830,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const updatedLayers = [...textLayers, newLayer];
     setActiveLayerId(newLayerId);
     setActiveFormatting(newLayer.style);
+
+    pushSnapshot('Add text layer', {
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+      content: newLayer.text,
+      selectedLayerIds: [newLayerId],
+    });
+
     onUpdateDocument({
       textLayers: updatedLayers,
       activeLayerId: newLayerId,
@@ -587,6 +863,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
     const updatedLayers = [...textLayers, cloned];
     setActiveLayerId(newLayerId);
+
+    pushSnapshot(`Duplicate ${source.name || 'layer'}`, {
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+      content: cloned.text,
+      selectedLayerIds: [newLayerId],
+    });
+
     onUpdateDocument({
       textLayers: updatedLayers,
       activeLayerId: newLayerId,
@@ -605,6 +889,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     setActiveLayerId(nextActive);
     setSelectedLayerIds((prev) => prev.filter((id) => id !== layerId));
     const nextLayer = updatedLayers[0];
+
+    pushSnapshot(`Delete ${layerToDelete?.name || 'layer'}`, {
+      textLayers: updatedLayers,
+      activeLayerId: nextActive,
+      selectedLayerIds: nextActive ? [nextActive] : [],
+      content: nextLayer ? nextLayer.text : '',
+    });
+
     onUpdateDocument({
       textLayers: updatedLayers,
       activeLayerId: nextActive,
@@ -656,10 +948,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   };
 
   const handleLayerTransformEnd = useCallback(
-    (_layerId: string, _actionType: 'move' | 'rotate' | 'resize') => {
-      // Transformation already applied via continuous state updates
+    (layerId: string, actionType: 'move' | 'rotate' | 'resize') => {
+      const layer = textLayers.find((l) => l.id === layerId);
+      const actionName =
+        actionType === 'move'
+          ? `Move ${layer?.name || 'layer'}`
+          : actionType === 'rotate'
+          ? `Rotate ${layer?.name || 'layer'}`
+          : `Resize ${layer?.name || 'layer'}`;
+      pushSnapshot(actionName, { textLayers });
     },
-    []
+    [textLayers, pushSnapshot]
   );
 
   // Deselect active layer when clicking outside on the canvas stage or sheet background
@@ -859,11 +1158,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         overlayOpacity: 0,
       };
       const nextConfig = { ...currentConfig, ...updates };
+      const configKey = Object.keys(updates).join(', ');
+      pushSnapshot(`Canvas ${configKey || 'settings'}`, {
+        canvasConfig: nextConfig,
+      });
       onUpdateDocument({
         canvasConfig: nextConfig,
       });
     },
-    [doc.canvasConfig, onUpdateDocument]
+    [doc.canvasConfig, onUpdateDocument, pushSnapshot]
   );
 
   const stageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -944,6 +1247,32 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
           {/* Center / Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Undo / Redo Buttons */}
+            <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg border border-stone-300">
+              <button
+                id="editor-undo-btn"
+                type="button"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className="w-8 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer text-stone-700 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none"
+                title="Undo (Ctrl+Z)"
+                aria-label="Undo"
+              >
+                <RotateCcw size={14} />
+              </button>
+              <button
+                id="editor-redo-btn"
+                type="button"
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className="w-8 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer text-stone-700 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none"
+                title="Redo (Ctrl+Shift+Z / Ctrl+Y)"
+                aria-label="Redo"
+              >
+                <RotateCw size={14} />
+              </button>
+            </div>
+
             {/* Add Text Button (available in both tabs) */}
             <button
               id="btn-add-text-layer-primary"
@@ -1518,6 +1847,20 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         snapSensitivity={snapSensitivity}
         onChangeSnapSensitivity={setSnapSensitivity}
       />
+
+      {/* Floating Undo/Redo Action Toast */}
+      {undoToast && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-200">
+          <div className="px-3.5 py-1.5 rounded-full bg-stone-900/90 backdrop-blur-md text-white text-xs font-semibold shadow-lg border border-stone-700/60 flex items-center gap-2">
+            {undoToast.type === 'undo' ? (
+              <RotateCcw size={13} className="text-emerald-400" />
+            ) : (
+              <RotateCw size={13} className="text-emerald-400" />
+            )}
+            <span>{undoToast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
