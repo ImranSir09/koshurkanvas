@@ -17,9 +17,9 @@ export interface NotificationState {
 }
 
 let notificationState: NotificationState = {
-  pushToken: localStorage.getItem('kashur_fcm_token') || null,
-  pushEnabled: localStorage.getItem('kashur_push_enabled') !== 'false',
-  localEnabled: localStorage.getItem('kashur_local_enabled') !== 'false',
+  pushToken: typeof window !== 'undefined' ? localStorage.getItem('kashur_fcm_token') || null : null,
+  pushEnabled: typeof window !== 'undefined' && localStorage.getItem('kashur_push_enabled') === 'true',
+  localEnabled: typeof window !== 'undefined' && localStorage.getItem('kashur_local_enabled') === 'true',
   lastError: null,
 };
 
@@ -31,57 +31,62 @@ export function onNotificationReceived(callback: NotificationCallback) {
 }
 
 /**
- * Initialize Push Notifications (FCM) & Local Notifications
+ * Initialize Push Notifications (FCM) & Local Notifications only when explicitly called/enabled by user
  */
 export async function initNotificationService(): Promise<NotificationState> {
   if (typeof window === 'undefined') return notificationState;
 
   if (Capacitor.isNativePlatform()) {
     try {
-      // 1. Request Push Notification permissions
-      const pushPerm = await PushNotifications.checkPermissions();
-      if (pushPerm.receive === 'prompt' || pushPerm.receive === 'prompt-with-rationale') {
-        const req = await PushNotifications.requestPermissions();
-        if (req.receive === 'granted') {
-          await registerPushListeners();
+      // 1. Create Notification Channel on Android if local notifications enabled
+      try {
+        await LocalNotifications.createChannel({
+          id: 'kashur_kanvas_notifications',
+          name: 'Kashur Kanvas Notifications',
+          description: 'Daily Kashmiri Calligraphy Prompts & Custom Alerts',
+          importance: 4,
+          visibility: 1,
+          vibration: true,
+          sound: 'default',
+        });
+      } catch (e) {
+        console.warn('Could not create local notification channel:', e);
+      }
+
+      // 2. Push Notifications registration if enabled
+      if (notificationState.pushEnabled) {
+        try {
+          const pushPerm = await PushNotifications.checkPermissions();
+          if (pushPerm.receive === 'prompt' || pushPerm.receive === 'prompt-with-rationale') {
+            const req = await PushNotifications.requestPermissions();
+            if (req.receive === 'granted') {
+              await registerPushListeners();
+            }
+          } else if (pushPerm.receive === 'granted') {
+            await registerPushListeners();
+          }
+        } catch (e: any) {
+          console.warn('Push notification check/registration warning:', e);
+          notificationState.lastError = e?.message || String(e);
         }
-      } else if (pushPerm.receive === 'granted') {
-        await registerPushListeners();
       }
 
-      // 2. Request Local Notification permissions
-      const localPerm = await LocalNotifications.checkPermissions();
-      if (localPerm.display === 'prompt' || localPerm.display === 'prompt-with-rationale') {
-        await LocalNotifications.requestPermissions();
-      }
-
-      // 3. Create Notification Channel on Android
-      await LocalNotifications.createChannel({
-        id: 'kashur_kanvas_notifications',
-        name: 'Kashur Kanvas Notifications',
-        description: 'Daily Kashmiri Calligraphy Prompts & Custom Alerts',
-        importance: 4,
-        visibility: 1,
-        vibration: true,
-        sound: 'default',
-      });
-
-      // 4. Schedule daily local inspiration
+      // 3. Local Notifications permission & schedule if enabled
       if (notificationState.localEnabled) {
-        await scheduleDailyInspiration();
+        try {
+          const localPerm = await LocalNotifications.checkPermissions();
+          if (localPerm.display === 'prompt' || localPerm.display === 'prompt-with-rationale') {
+            await LocalNotifications.requestPermissions();
+          }
+          await scheduleDailyInspiration();
+        } catch (e: any) {
+          console.warn('Local notification check/schedule warning:', e);
+          notificationState.lastError = e?.message || String(e);
+        }
       }
     } catch (err: any) {
-      console.warn('Native notification initialization error:', err);
+      console.warn('Native notification service error (non-blocking):', err);
       notificationState.lastError = err?.message || String(err);
-    }
-  } else if ('Notification' in window) {
-    // Web fallback
-    if (Notification.permission === 'default') {
-      try {
-        await Notification.requestPermission();
-      } catch (e) {
-        console.warn('Web notification permission error:', e);
-      }
     }
   }
 
@@ -228,11 +233,19 @@ export async function sendTestNotification(customTitle?: string, customBody?: st
 /**
  * Toggle push notification settings
  */
-export function togglePushNotifications(enabled: boolean) {
+export async function togglePushNotifications(enabled: boolean) {
   notificationState.pushEnabled = enabled;
   localStorage.setItem('kashur_push_enabled', enabled ? 'true' : 'false');
   if (enabled && Capacitor.isNativePlatform()) {
-    PushNotifications.register().catch(console.warn);
+    try {
+      const pushPerm = await PushNotifications.requestPermissions();
+      if (pushPerm.receive === 'granted') {
+        await registerPushListeners();
+      }
+    } catch (e: any) {
+      console.warn('Push notification enable failed:', e);
+      notificationState.lastError = e?.message || String(e);
+    }
   }
 }
 
@@ -243,9 +256,23 @@ export async function toggleLocalNotifications(enabled: boolean) {
   notificationState.localEnabled = enabled;
   localStorage.setItem('kashur_local_enabled', enabled ? 'true' : 'false');
   if (enabled) {
-    await scheduleDailyInspiration();
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const localPerm = await LocalNotifications.requestPermissions();
+        if (localPerm.display === 'granted') {
+          await scheduleDailyInspiration();
+        }
+      } catch (e: any) {
+        console.warn('Local notification enable failed:', e);
+        notificationState.lastError = e?.message || String(e);
+      }
+    }
   } else if (Capacitor.isNativePlatform()) {
-    await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+    try {
+      await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+    } catch (e) {
+      console.warn('Failed to cancel local notifications:', e);
+    }
   }
 }
 

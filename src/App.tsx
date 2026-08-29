@@ -49,7 +49,6 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.remove('dark');
     loadSavedCustomFonts();
-    initNotificationService().catch(console.warn);
   }, []);
 
   // Load IndexedDB documents on mount
