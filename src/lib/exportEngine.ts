@@ -4,8 +4,8 @@ import { CanvasAspectRatio, DocumentPaperSize, KashurDocument, TextStyleProperti
 import { getFontFamilyCSS } from './fontUtils';
 import { buildRenderedSlices } from './textEngine';
 import { DEFAULT_TEXT_STYLE } from './kashmiriData';
-
 import { getCustomFontsCSS } from './customFonts';
+import { saveExportToPublicStorage, shareFileNative, isNativeAndroid } from './nativeStorage';
 
 export interface ExportOptions {
   fileName: string;
@@ -797,7 +797,7 @@ export async function exportDocumentClean(
         }
       }
 
-      triggerDownload(dataUrl, `${fileName}.png`);
+      await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
       return dataUrl;
     }
 
@@ -815,7 +815,7 @@ export async function exportDocumentClean(
         }
       }
 
-      triggerDownload(dataUrl, `${fileName}-transparent.png`);
+      await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
       return dataUrl;
     }
 
@@ -833,7 +833,7 @@ export async function exportDocumentClean(
         }
       }
 
-      triggerDownload(dataUrl, `${fileName}.jpg`);
+      await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
       return dataUrl;
     }
 
@@ -842,7 +842,7 @@ export async function exportDocumentClean(
         ...commonOptions,
       });
 
-      triggerDownload(dataUrl, `${fileName}.svg`);
+      await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
       return dataUrl;
     }
 
@@ -876,8 +876,9 @@ export async function exportDocumentClean(
       });
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
-      pdf.save(`${fileName}.pdf`);
-      return dataUrl;
+      const pdfDataUri = pdf.output('datauristring');
+      await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+      return pdfDataUri;
     }
 
     return '';
@@ -887,7 +888,7 @@ export async function exportDocumentClean(
 }
 
 /**
- * Share document image directly via Web Share API using clean offscreen renderer
+ * Share document image directly via native sharing / Web Share API using clean offscreen renderer
  */
 export async function shareCanvasDocument(
   doc: KashurDocument,
@@ -912,25 +913,12 @@ export async function shareCanvasDocument(
       quality: 1,
     });
 
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], `${title || 'kashur-design'}.png`, { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: title || 'کٲشُر لیٚکھُن سٹوڈیو',
-        text: 'Created with Kashur Lekhun Studio',
-        files: [file],
-      });
-      return true;
-    } else if (navigator.share) {
-      await navigator.share({
-        title: title || 'کٲشُر لیٚکھُن سٹوڈیو',
-        text: 'Created with Kashur Lekhun Studio',
-        url: window.location.href,
-      });
-      return true;
-    }
+    return await shareFileNative(
+      dataUrl,
+      `${title || 'kashur-design'}.png`,
+      title || 'کٲشُر لیٚکھُن سٹوڈیو',
+      'Created with Kashur Kanvas'
+    );
   } catch (err) {
     if ((err as Error).name !== 'AbortError') {
       console.warn('Share error:', err);
@@ -1008,7 +996,7 @@ export async function exportElement(
       ...commonHtmlToImageOptions,
       quality: 1,
     });
-    triggerDownload(dataUrl, `${fileName}.png`);
+    await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
     return dataUrl;
   }
 
@@ -1018,7 +1006,7 @@ export async function exportElement(
       backgroundColor: 'transparent',
       quality: 1,
     });
-    triggerDownload(dataUrl, `${fileName}-transparent.png`);
+    await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
     return dataUrl;
   }
 
@@ -1028,7 +1016,7 @@ export async function exportElement(
       quality: options.quality || 0.96,
       backgroundColor: '#ffffff',
     });
-    triggerDownload(dataUrl, `${fileName}.jpg`);
+    await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
     return dataUrl;
   }
 
@@ -1036,7 +1024,7 @@ export async function exportElement(
     dataUrl = await htmlToImage.toSvg(element, {
       ...commonHtmlToImageOptions,
     });
-    triggerDownload(dataUrl, `${fileName}.svg`);
+    await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
     return dataUrl;
   }
 
@@ -1064,8 +1052,9 @@ export async function exportElement(
     });
 
     pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
-    pdf.save(`${fileName}.pdf`);
-    return dataUrl;
+    const pdfDataUri = pdf.output('datauristring');
+    await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+    return pdfDataUri;
   }
 
   return '';
@@ -1115,18 +1104,12 @@ export async function shareCanvasImage(
       },
     });
 
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], 'kashur-design.png', { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: title || 'کٲشُر لیٚکھُن سٹوڈیو',
-        text: 'Created with Kashur Lekhun Studio',
-        files: [file],
-      });
-      return true;
-    }
+    return await shareFileNative(
+      dataUrl,
+      'kashur-design.png',
+      title || 'کٲشُر لیٚکھُن سٹوڈیو',
+      'Created with Kashur Kanvas'
+    );
   } catch (err) {
     if ((err as Error).name !== 'AbortError') {
       console.warn('Share error:', err);
@@ -1159,10 +1142,14 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
 }
 
 export function downloadTextFile(content: string, filename: string) {
+  const fullFileName = filename.endsWith('.txt') ? filename : `${filename}.txt`;
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  triggerDownload(url, filename.endsWith('.txt') ? filename : `${filename}.txt`);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const dataUrl = reader.result as string;
+    saveExportToPublicStorage(dataUrl, fullFileName, 'text/plain;charset=utf-8');
+  };
+  reader.readAsDataURL(blob);
 }
 
 export function downloadDocFile(
@@ -1256,19 +1243,25 @@ h1.doc-title {
 </body>
 </html>`;
 
+  const fullFileName = filename.endsWith('.doc') ? filename : `${filename}.doc`;
   const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  triggerDownload(url, filename.endsWith('.doc') ? filename : `${filename}.doc`);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const dataUrl = reader.result as string;
+    saveExportToPublicStorage(dataUrl, fullFileName, 'application/msword');
+  };
+  reader.readAsDataURL(blob);
 }
 
 function triggerDownload(dataUrl: string, filename: string) {
-  const link = document.createElement('a');
-  link.download = filename;
-  link.href = dataUrl;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  saveExportToPublicStorage(dataUrl, filename).catch(() => {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
 }
 
 

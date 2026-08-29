@@ -1,7 +1,7 @@
 {
   "id": "kashur-kanvas-app",
-  "name": "کٲشُر لیٚکھُن سٹوڈیو — Koshur Kanvas",
-  "short_name": "KoshurKanvas",
+  "name": "Kashur Kanvas — Kashmiri Design Studio",
+  "short_name": "Kashur Kanvas",
   "description": "Modern Kashmiri Unicode writing and calligraphy editor with virtual Nastaliq keyboard, rich formatting, and multi-format export.",
   "start_url": "./",
   "scope": "./",
