@@ -19,6 +19,8 @@
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/push-notifications": "^8.1.2",
     "@fontsource/amiri": "^5.3.0",
     "@fontsource/gulzar": "^5.3.0",
     "@fontsource/noto-nastaliq-urdu": "^5.3.0",

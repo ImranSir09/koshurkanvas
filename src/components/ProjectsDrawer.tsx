@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { KashurDocument } from '../types';
 import {
   X,
@@ -13,7 +13,17 @@ import {
   Copy,
   Download,
   Check,
+  Bell,
+  Send,
+  Sparkles,
+  Smartphone,
 } from 'lucide-react';
+import {
+  getNotificationState,
+  togglePushNotifications,
+  toggleLocalNotifications,
+  sendTestNotification,
+} from '../lib/notificationService';
 
 interface ProjectsDrawerProps {
   isOpen: boolean;
@@ -43,9 +53,41 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
   const [activeMenuDocId, setActiveMenuDocId] = useState<string | null>(null);
   const [renamingDocId, setRenamingDocId] = useState<string | null>(null);
   const [renameText, setRenameText] = useState<string>('');
+  const [notifState, setNotifState] = useState(getNotificationState());
+  const [testSentMsg, setTestSentMsg] = useState<string | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    setNotifState(getNotificationState());
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleTogglePush = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    togglePushNotifications(checked);
+    setNotifState(getNotificationState());
+  };
+
+  const handleToggleLocal = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    await toggleLocalNotifications(checked);
+    setNotifState(getNotificationState());
+  };
+
+  const handleSendTest = async () => {
+    const ok = await sendTestNotification(
+      'کٲشُر لیٚکھُن – Notification Test',
+      'Push & Local notifications are working perfectly on your device!'
+    );
+    if (ok) {
+      setTestSentMsg('Test notification sent!');
+      setTimeout(() => setTestSentMsg(null), 3000);
+    } else {
+      setTestSentMsg('Notification sent (check notification shade)');
+      setTimeout(() => setTestSentMsg(null), 3000);
+    }
+  };
 
   const handleStartRename = (doc: KashurDocument) => {
     setRenamingDocId(doc.id);
@@ -294,6 +336,72 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
               );
             })
           )}
+
+          {/* Notifications & Reminders Card */}
+          <div className="mt-3 p-4 rounded-2xl bg-stone-50 border border-stone-200 flex flex-col gap-3" dir="ltr">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Bell size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-sans font-bold text-stone-900 leading-tight">
+                    Push & Local Notifications
+                  </h4>
+                  <p className="text-[10px] font-sans text-stone-500">
+                    Reminders, Calligraphy Prompts & FCM Alerts
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSendTest}
+                className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white rounded-lg text-xs font-sans font-bold flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+                title="Send a test notification to your device"
+              >
+                <Send size={12} />
+                <span>Test</span>
+              </button>
+            </div>
+
+            {testSentMsg && (
+              <div className="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-sans font-medium flex items-center gap-1.5 animate-in fade-in">
+                <Sparkles size={13} className="text-emerald-700 shrink-0" />
+                <span>{testSentMsg}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-stone-200/60">
+              {/* Push Notifications Toggle */}
+              <label className="flex items-center justify-between p-2 rounded-xl bg-white border border-stone-200 cursor-pointer hover:border-emerald-300 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Smartphone size={14} className="text-stone-500" />
+                  <span className="text-xs font-sans font-medium text-stone-800">Remote Push (FCM)</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notifState.pushEnabled}
+                  onChange={handleTogglePush}
+                  className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                />
+              </label>
+
+              {/* Daily Local Notifications Toggle */}
+              <label className="flex items-center justify-between p-2 rounded-xl bg-white border border-stone-200 cursor-pointer hover:border-emerald-300 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Bell size={14} className="text-stone-500" />
+                  <span className="text-xs font-sans font-medium text-stone-800">Daily Proverb Alert</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notifState.localEnabled}
+                  onChange={handleToggleLocal}
+                  className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

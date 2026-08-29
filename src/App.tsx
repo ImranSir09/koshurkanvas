@@ -16,6 +16,7 @@ import { ExportModal } from './components/ExportModal';
 import { ProjectsDrawer } from './components/ProjectsDrawer';
 import { TransliterationModal } from './components/TransliterationModal';
 import { loadSavedCustomFonts } from './lib/customFonts';
+import { initNotificationService } from './lib/notificationService';
 
 export default function App() {
   // Data State
@@ -48,6 +49,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.remove('dark');
     loadSavedCustomFonts();
+    initNotificationService().catch(console.warn);
   }, []);
 
   // Load IndexedDB documents on mount
