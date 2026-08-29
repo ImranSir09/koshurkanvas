@@ -5,6 +5,7 @@ import {
   DocumentPaperSize,
   SocialCardSize,
 } from '../types';
+import { ColorGradientPicker } from './ColorGradientPicker';
 import {
   Layout,
   Palette,
@@ -830,108 +831,30 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
             </div>
           )}
 
-          {/* SECTION 2: COLORS & TEXTURES */}
+          {/* SECTION 2: COLORS & GRADIENTS */}
           {activeSection === 'color' && (
-            <div className="flex flex-col gap-3.5 animate-in fade-in duration-150">
-              {/* Paper Color Swatches */}
-              <div className="p-3.5 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-2.5">
-                <span className="text-xs font-sans font-bold text-stone-900 flex items-center gap-1.5">
-                  <Palette size={14} className="text-emerald-700" />
-                  <span>Paper Background Palettes</span>
-                </span>
-
-                <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar py-1">
-                  {CANVAS_COLOR_SWATCHES.map((swatch, idx) => {
-                    const isSelected = currentColor.toLowerCase() === swatch.color.toLowerCase() && !currentImage;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() =>
-                          onUpdateCanvasConfig({
-                            color: swatch.color,
-                            image: undefined,
-                          })
-                        }
-                        className="w-8 h-8 rounded-full border border-stone-300 flex items-center justify-center shrink-0 transition-transform active:scale-90 shadow-2xs cursor-pointer hover:scale-105"
-                        style={{ backgroundColor: swatch.color }}
-                        title={swatch.name}
-                      >
-                        {isSelected && (
-                          <Check
-                            size={14}
-                            className={
-                              swatch.color === '#ffffff' ||
-                              swatch.color === '#fbf8ee' ||
-                              swatch.color === '#f5f5f4' ||
-                              swatch.color === '#fef3c7' ||
-                              swatch.color === '#f0fdf4' ||
-                              swatch.color === '#f0f9ff' ||
-                              swatch.color === '#fdf2f8'
-                                ? 'text-black'
-                                : 'text-white'
-                            }
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {/* Custom Hex Picker */}
-                  <div className="flex items-center gap-1.5 shrink-0 pr-1">
-                    <input
-                      type="color"
-                      value={currentColor.startsWith('#') ? currentColor : '#ffffff'}
-                      onChange={(e) =>
-                        onUpdateCanvasConfig({
-                          color: e.target.value,
-                          image: undefined,
-                        })
-                      }
-                      className="w-8 h-8 rounded-full cursor-pointer border border-stone-300 shrink-0"
-                      title="Custom Hex Color"
-                    />
-                    <span className="text-[10px] font-sans text-stone-500">Custom</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Royal Texture Gradients */}
-              <div className="p-3.5 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-2.5">
-                <span className="text-xs font-sans font-bold text-stone-900 flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-emerald-700" />
-                  <span>Curated Texture Gradients</span>
-                </span>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {CANVAS_TEXTURE_PRESETS.map((tex) => {
-                    const isActive = currentImage === tex.value;
-                    return (
-                      <button
-                        key={tex.id}
-                        type="button"
-                        onClick={() =>
-                          onUpdateCanvasConfig({
-                            image: tex.value,
-                            imageOpacity: 1,
-                            overlayOpacity: 0,
-                          })
-                        }
-                        className={`p-2 rounded-xl border text-xs font-sans flex items-center gap-2 cursor-pointer transition-all active:scale-95 text-right ${
-                          isActive
-                            ? 'border-emerald-600 ring-1 ring-emerald-600 font-bold bg-emerald-50 text-emerald-900 shadow-xs'
-                            : 'border-stone-200 bg-white hover:bg-stone-50 hover:border-emerald-200 text-stone-800'
-                        }`}
-                      >
-                        <div
-                          className="w-5 h-5 rounded-lg border border-stone-300 shrink-0 shadow-2xs"
-                          style={{ background: tex.value }}
-                        />
-                        <span className="truncate">{tex.name.split('(')[0].trim()}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="flex flex-col gap-3 animate-in fade-in duration-150">
+              <div className="p-3 bg-stone-50/90 border border-stone-200 rounded-xl flex flex-col gap-2">
+                <ColorGradientPicker
+                  label="Canvas Background"
+                  value={canvasConfig.gradient || (canvasConfig.image && (canvasConfig.image.startsWith('linear-gradient') || canvasConfig.image.startsWith('radial-gradient')) ? canvasConfig.image : (canvasConfig.color || '#ffffff'))}
+                  gradientValue={canvasConfig.gradient || (canvasConfig.image && (canvasConfig.image.startsWith('linear-gradient') || canvasConfig.image.startsWith('radial-gradient')) ? canvasConfig.image : undefined)}
+                  allowNone={false}
+                  onChange={(res) => {
+                    if (res.type === 'gradient') {
+                      onUpdateCanvasConfig({
+                        gradient: res.gradient,
+                        image: undefined,
+                      });
+                    } else {
+                      onUpdateCanvasConfig({
+                        color: res.color || '#ffffff',
+                        gradient: undefined,
+                        image: undefined,
+                      });
+                    }
+                  }}
+                />
               </div>
             </div>
           )}

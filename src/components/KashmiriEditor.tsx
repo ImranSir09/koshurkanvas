@@ -7,9 +7,6 @@ import {
   TextStyleProperties,
   TextStyleSpan,
   TextLayer,
-  HistorySnapshot,
-  HistoryActionCategory,
-  HistoryStats,
 } from '../types';
 import { KashmiriKeyboard } from './KashmiriKeyboard';
 import { MobileTextDesignToolbar } from './MobileTextDesignToolbar';
@@ -18,7 +15,6 @@ import { CanvasTextLayerObject } from './CanvasTextLayerObject';
 import { CombinedCanvasSelectionBox } from './CombinedCanvasSelectionBox';
 import { LayerManagerPanel } from './LayerManagerPanel';
 import { VoiceInputButton } from './VoiceInputButton';
-import { BatchHistoryModal } from './BatchHistoryModal';
 import { useVisualViewport } from '../lib/useVisualViewport';
 import {
   shiftSpansOnTextChange,
@@ -36,21 +32,9 @@ import {
   deleteSelectedLayers,
   LayerAlignmentType,
 } from '../lib/layerUtils';
-import {
-  createHistorySnapshot,
-  describeTextChange,
-  describeStyleChange,
-  cloneLayers,
-  cloneSpans,
-  cloneCanvasConfig,
-  cloneStyle,
-} from '../lib/historyManager';
 import { DEFAULT_TEXT_STYLE } from '../lib/kashmiriData';
 import { getFontFamilyCSS } from '../lib/fontUtils';
 import {
-  RotateCcw,
-  RotateCw,
-  History,
   Layers,
   Settings,
   Plus,
@@ -76,84 +60,9 @@ import {
 import { calculateSnapping, SnapGuide } from '../lib/snappingEngine';
 import { playSnapSound } from '../lib/soundEffects';
 import { toKashmiriNumerals } from '../lib/kashmiriTextTools';
+import { getCanvasRefDimensions } from '../lib/exportEngine';
 
-export const QUICK_KASHMIRI_SPECIAL_CHARS = [
-  { char: 'ٲ', label: 'Alif Madda (ٲ)', title: 'ٲ - Alif Madda' },
-  { char: 'ۄ', label: 'Waw Ring (ۄ)', title: 'ۄ - Waw Ring' },
-  { char: 'ؠ', label: 'Tshae Yeh (ؠ)', title: 'ؠ - Tshae Yeh' },
-  { char: 'ژ', label: 'Tse (ژ)', title: 'ژ - Tse' },
-  { char: 'ۆ', label: 'Short O (ۆ)', title: 'ۆ - Short O' },
-  { char: 'ےٚ', label: 'Bari Yeh Inverted V (ےٚ)', title: 'ےٚ - Bari Yeh Inverted V' },
-  { char: 'ـ', label: 'Kashida (ـ)', title: 'ـ - Kashida (Tatweel)' },
-  { char: 'ٕ', label: 'Kashmiri Zer (ٕ)', title: 'ٕ - Kashmiri Zer (Inverted V below)' },
-  { char: 'ٔ', label: 'Hamza (ٔ)', title: 'ٔ - Hamza above' },
-  { char: 'ٚ', label: 'Inverted V (ٚ)', title: 'ٚ - Inverted V above' },
-  { char: '٘', label: 'Noon Ghunna (٘)', title: '٘ - Noon Ghunna above' },
-  { char: 'ْ', label: 'Jazm (ْ)', title: 'ْ - Jazm / Sukun' },
-  { char: 'َ', label: 'Zabar (َ)', title: 'َ - Zabar (Fatha)' },
-  { char: 'ِ', label: 'Zer (ِ)', title: 'ِ - Zer (Kasra)' },
-  { char: 'ُ', label: 'Pesh (ُ)', title: 'ُ - Pesh (Damma)' },
-  { char: '۔', label: 'Full Stop (۔)', title: '۔ - Kashmiri Full Stop' },
-  { char: '،', label: 'Comma (،)', title: '، - Kashmiri Comma' },
-  { char: '؟', label: 'Question (؟)', title: '؟ - Kashmiri Question Mark' },
-  { char: '؛', label: 'Semicolon (؛)', title: '؛ - Semicolon' },
-  { char: '«', label: 'Quote («)', title: '« - Right Guilloche' },
-  { char: '»', label: 'Quote (»)', title: '» - Left Guilloche' },
-];
-
-export function getCanvasRefDimensions(
-  aspectRatio?: CanvasAspectRatio,
-  orientation?: 'portrait' | 'landscape',
-  customW?: number,
-  customH?: number
-): { refWidth: number; refHeight: number } {
-  const isLandscape = orientation === 'landscape';
-
-  if (aspectRatio === 'custom' && customW && customH) {
-    const w = isLandscape ? Math.max(customW, customH) : customW;
-    const h = isLandscape ? Math.min(customW, customH) : customH;
-    return {
-      refWidth: isLandscape ? 680 : 520,
-      refHeight: Math.max(100, Math.round((isLandscape ? 680 : 520) * (h / w))),
-    };
-  }
-
-  switch (aspectRatio) {
-    case '1:1':
-      return { refWidth: 520, refHeight: 520 };
-    case '4:5':
-      return isLandscape ? { refWidth: 575, refHeight: 460 } : { refWidth: 460, refHeight: 575 };
-    case '9:16':
-      return isLandscape ? { refWidth: 640, refHeight: 360 } : { refWidth: 360, refHeight: 640 };
-    case '16:9':
-      return isLandscape ? { refWidth: 720, refHeight: 405 } : { refWidth: 405, refHeight: 720 };
-    case '3:4':
-      return isLandscape ? { refWidth: 640, refHeight: 480 } : { refWidth: 480, refHeight: 640 };
-    case '2:3':
-      return isLandscape ? { refWidth: 640, refHeight: 426 } : { refWidth: 426, refHeight: 640 };
-    case 'a3':
-      return isLandscape ? { refWidth: 720, refHeight: 509 } : { refWidth: 509, refHeight: 720 };
-    case 'a4':
-      return isLandscape ? { refWidth: 680, refHeight: 480 } : { refWidth: 520, refHeight: 735 };
-    case 'a5':
-      return isLandscape ? { refWidth: 600, refHeight: 424 } : { refWidth: 424, refHeight: 600 };
-    case 'a6':
-      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
-    case 'letter':
-      return isLandscape ? { refWidth: 680, refHeight: 525 } : { refWidth: 525, refHeight: 680 };
-    case 'legal':
-      return isLandscape ? { refWidth: 720, refHeight: 437 } : { refWidth: 437, refHeight: 720 };
-    case 'tabloid':
-      return isLandscape ? { refWidth: 720, refHeight: 465 } : { refWidth: 465, refHeight: 720 };
-    case 'b4':
-    case 'b5':
-    case 'b6':
-      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
-    case 'auto':
-    default:
-      return { refWidth: 620, refHeight: 480 };
-  }
-}
+export { getCanvasRefDimensions };
 
 export type MobileTab = 'input_text' | 'canvas';
 export type KeyboardType = 'system' | 'kashmiri' | 'none';
@@ -167,7 +76,6 @@ interface KashmiriEditorProps {
   onToggleSound: () => void;
   isFocusedWritingMode: boolean;
   setIsFocusedWritingMode: (val: boolean) => void;
-  onHistoryStatsChange?: (stats: HistoryStats) => void;
 }
 
 export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
@@ -179,7 +87,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   onToggleSound,
   isFocusedWritingMode,
   setIsFocusedWritingMode,
-  onHistoryStatsChange,
 }) => {
   // Primary Two-Tab Workflow: 'input_text' (Unicode entry) and 'canvas' (Visual design)
   const [activeTab, setActiveTab] = useState<MobileTab>('canvas');
@@ -199,7 +106,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   // UI Panels
   const [showCanvasPanel, setShowCanvasPanel] = useState<boolean>(false);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(false);
-  const [isBatchHistoryModalOpen, setIsBatchHistoryModalOpen] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<boolean>(false);
   const [editorDirection, setEditorDirection] = useState<'rtl' | 'ltr'>('rtl');
 
@@ -283,243 +189,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       setEditorDirection(activeFormatting.direction);
     }
   }, [activeFormatting.direction]);
-
-  // Comprehensive Batch Undo/Redo History Manager Stack
-  const historyRef = useRef<HistorySnapshot[]>([
-    createHistorySnapshot({
-      description: 'Initial document state',
-      category: 'document_init',
-      content: doc.content,
-      textLayers: textLayers,
-      spans: doc.spans || [],
-      canvasConfig: doc.canvasConfig,
-      defaultStyle: doc.defaultStyle,
-      activeLayerId,
-      selectedLayerIds,
-      docTitle: doc.title,
-    }),
-  ]);
-  const historyIndexRef = useRef<number>(0);
-  const [, setHistoryVersion] = useState<number>(0);
-
-  // Sync document switch to fresh history stack
-  const lastDocIdRef = useRef<string>(doc.id);
-  useEffect(() => {
-    if (lastDocIdRef.current !== doc.id) {
-      lastDocIdRef.current = doc.id;
-      historyRef.current = [
-        createHistorySnapshot({
-          description: `Loaded "${doc.title || 'Document'}"`,
-          category: 'document_init',
-          content: doc.content,
-          textLayers: textLayers,
-          spans: doc.spans || [],
-          canvasConfig: doc.canvasConfig,
-          defaultStyle: doc.defaultStyle,
-          activeLayerId: doc.activeLayerId || (textLayers[0]?.id || null),
-          docTitle: doc.title,
-        }),
-      ];
-      historyIndexRef.current = 0;
-      setHistoryVersion((v) => v + 1);
-    }
-  }, [doc.id, doc.title, doc.content, textLayers, doc.spans, doc.canvasConfig, doc.defaultStyle, doc.activeLayerId]);
-
-  // Central function to push snapshot to history
-  const pushHistory = useCallback(
-    (
-      content: string,
-      layers: TextLayer[],
-      spans: TextStyleSpan[],
-      description?: string,
-      category: HistoryActionCategory = 'text_edit',
-      meta?: HistorySnapshot['meta'],
-      canvasConfig?: CanvasBackgroundConfig,
-      defaultStyle?: TextStyleProperties
-    ) => {
-      const snap = createHistorySnapshot({
-        description: description || 'Modified document',
-        category,
-        content,
-        textLayers: layers,
-        spans,
-        canvasConfig: canvasConfig || doc.canvasConfig,
-        defaultStyle: defaultStyle || doc.defaultStyle,
-        activeLayerId,
-        selectedLayerIds,
-        docTitle: doc.title,
-        meta,
-      });
-
-      const currentHist = historyRef.current.slice(0, historyIndexRef.current + 1);
-      currentHist.push(snap);
-      if (currentHist.length > 100) currentHist.shift();
-      historyRef.current = currentHist;
-      historyIndexRef.current = currentHist.length - 1;
-      setHistoryVersion((v) => v + 1);
-    },
-    [doc.canvasConfig, doc.defaultStyle, doc.title, activeLayerId, selectedLayerIds]
-  );
-
-  // Apply Snapshot state
-  const applySnapshot = useCallback(
-    (snap: HistorySnapshot) => {
-      const clonedL = cloneLayers(snap.textLayers);
-      const clonedS = cloneSpans(snap.spans);
-      const clonedC = cloneCanvasConfig(snap.canvasConfig);
-      const clonedSt = cloneStyle(snap.defaultStyle);
-
-      onUpdateDocument({
-        content: snap.content,
-        textLayers: clonedL,
-        spans: clonedS,
-        canvasConfig: clonedC,
-        defaultStyle: clonedSt,
-        activeLayerId: snap.activeLayerId || (clonedL[0]?.id || null),
-      });
-
-      if (snap.activeLayerId) {
-        setActiveLayerId(snap.activeLayerId);
-        const activeL = clonedL.find((l) => l.id === snap.activeLayerId);
-        if (activeL) {
-          setActiveFormatting(activeL.style);
-        }
-      }
-      if (snap.selectedLayerIds) {
-        setSelectedLayerIds(snap.selectedLayerIds);
-      }
-      setCursorPos(snap.content.length);
-      setHistoryVersion((v) => v + 1);
-    },
-    [onUpdateDocument]
-  );
-
-  // Single Undo (1 step back)
-  const handleUndo = useCallback(() => {
-    if (historyIndexRef.current > 0) {
-      historyIndexRef.current -= 1;
-      const snap = historyRef.current[historyIndexRef.current];
-      applySnapshot(snap);
-    }
-  }, [applySnapshot]);
-
-  // Single Redo (1 step forward)
-  const handleRedo = useCallback(() => {
-    if (historyIndexRef.current < historyRef.current.length - 1) {
-      historyIndexRef.current += 1;
-      const snap = historyRef.current[historyIndexRef.current];
-      applySnapshot(snap);
-    }
-  }, [applySnapshot]);
-
-  // Batch Undo (revert multiple steps at once)
-  const handleBatchUndo = useCallback(
-    (steps: number) => {
-      const targetIndex = Math.max(0, historyIndexRef.current - steps);
-      if (targetIndex !== historyIndexRef.current) {
-        historyIndexRef.current = targetIndex;
-        const snap = historyRef.current[targetIndex];
-        applySnapshot(snap);
-      }
-    },
-    [applySnapshot]
-  );
-
-  // Batch Redo (restore multiple steps at once)
-  const handleBatchRedo = useCallback(
-    (steps: number) => {
-      const targetIndex = Math.min(historyRef.current.length - 1, historyIndexRef.current + steps);
-      if (targetIndex !== historyIndexRef.current) {
-        historyIndexRef.current = targetIndex;
-        const snap = historyRef.current[targetIndex];
-        applySnapshot(snap);
-      }
-    },
-    [applySnapshot]
-  );
-
-  // Jump to specific snapshot index directly
-  const handleJumpToSnapshot = useCallback(
-    (targetIndex: number) => {
-      if (targetIndex >= 0 && targetIndex < historyRef.current.length && targetIndex !== historyIndexRef.current) {
-        historyIndexRef.current = targetIndex;
-        const snap = historyRef.current[targetIndex];
-        applySnapshot(snap);
-      }
-    },
-    [applySnapshot]
-  );
-
-  // Revert all changes in current session to initial snapshot
-  const handleRevertToInitial = useCallback(() => {
-    if (historyIndexRef.current > 0 && historyRef.current.length > 0) {
-      historyIndexRef.current = 0;
-      const snap = historyRef.current[0];
-      applySnapshot(snap);
-    }
-  }, [applySnapshot]);
-
-  // Sync history stats to parent (Header)
-  useEffect(() => {
-    if (onHistoryStatsChange) {
-      const pastCount = historyIndexRef.current;
-      const futureCount = Math.max(0, historyRef.current.length - 1 - historyIndexRef.current);
-      onHistoryStatsChange({
-        canUndo: pastCount > 0,
-        canRedo: futureCount > 0,
-        pastCount,
-        futureCount,
-        totalCount: historyRef.current.length,
-        currentIndex: historyIndexRef.current,
-        lastAction: historyRef.current[historyIndexRef.current],
-        nextRedoAction: futureCount > 0 ? historyRef.current[historyIndexRef.current + 1] : undefined,
-      });
-    }
-  }, [onHistoryStatsChange, applySnapshot, historyIndexRef.current, historyRef.current.length]);
-
-  // Global Keyboard Shortcuts (Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, Ctrl+H)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
-
-      if (isCmdOrCtrl && e.key.toLowerCase() === 'z') {
-        if (e.shiftKey) {
-          e.preventDefault();
-          handleRedo();
-        } else {
-          e.preventDefault();
-          handleUndo();
-        }
-      } else if (isCmdOrCtrl && e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        handleRedo();
-      } else if (isCmdOrCtrl && (e.key.toLowerCase() === 'h' || (e.altKey && e.key.toLowerCase() === 'h'))) {
-        e.preventDefault();
-        setIsBatchHistoryModalOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo]);
-
-  // Custom App Events from Header & UI triggers
-  useEffect(() => {
-    const onUndoEvent = () => handleUndo();
-    const onRedoEvent = () => handleRedo();
-    const onOpenHistoryEvent = () => setIsBatchHistoryModalOpen(true);
-
-    window.addEventListener('app-undo', onUndoEvent);
-    window.addEventListener('app-redo', onRedoEvent);
-    window.addEventListener('app-open-history', onOpenHistoryEvent);
-
-    return () => {
-      window.removeEventListener('app-undo', onUndoEvent);
-      window.removeEventListener('app-redo', onRedoEvent);
-      window.removeEventListener('app-open-history', onOpenHistoryEvent);
-    };
-  }, [handleUndo, handleRedo]);
 
   // Sync activeLayer style when activeLayer changes
   useEffect(() => {
@@ -610,11 +279,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId,
     });
 
-    const desc = describeTextChange(doc.content, newContent);
-    pushHistory(newContent, updatedLayers, updatedSpans, desc, 'text_edit', {
-      layerId: activeLayerId || undefined,
-      charsDelta: deltaLength,
-    });
     updateSelectionFromDOM();
   };
 
@@ -651,16 +315,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         activeLayerId,
       });
 
-      const desc =
-        textToInsert.length === 1
-          ? `Typed "${textToInsert}"`
-          : `Inserted "${textToInsert.slice(0, 10)}${textToInsert.length > 10 ? '...' : ''}"`;
-
-      pushHistory(newContent, updatedLayers, updatedSpans, desc, 'text_edit', {
-        layerId: activeLayerId || undefined,
-        charsDelta: textToInsert.length,
-      });
-
       setCursorPos(newPos);
       setSelection({ start: newPos, end: newPos, text: '' });
 
@@ -671,7 +325,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         }
       }, 10);
     },
-    [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushHistory]
+    [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument]
   );
 
   // Handle external insert character events
@@ -696,10 +350,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart, -(activeEnd - activeStart));
       const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
       onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
-      pushHistory(newContent, updatedLayers, updatedSpans, 'Deleted selected text', 'text_edit', {
-        layerId: activeLayerId || undefined,
-        charsDelta: -(activeEnd - activeStart),
-      });
       setCursorPos(activeStart);
       setSelection({ start: activeStart, end: activeStart, text: '' });
       setTimeout(() => {
@@ -715,10 +365,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       const updatedSpans = shiftSpansOnTextChange(doc.spans || [], activeStart - 1, -1);
       const updatedLayers = textLayers.map((l) => (l.id === activeLayerId ? { ...l, text: newContent } : l));
       onUpdateDocument({ content: newContent, spans: updatedSpans, textLayers: updatedLayers, activeLayerId });
-      pushHistory(newContent, updatedLayers, updatedSpans, 'Deleted character (Backspace)', 'text_edit', {
-        layerId: activeLayerId || undefined,
-        charsDelta: -1,
-      });
       const newPos = activeStart - 1;
       setCursorPos(newPos);
       setSelection({ start: newPos, end: newPos, text: '' });
@@ -729,7 +375,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         }
       }, 10);
     }
-  }, [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument, pushHistory]);
+  }, [cursorPos, doc.content, doc.spans, textLayers, activeLayerId, onUpdateDocument]);
 
   const handleKeyboardEnter = useCallback(() => {
     handleInsertText('\n');
@@ -752,13 +398,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         textLayers: updatedLayers,
         defaultStyle: newActiveStyle,
       });
-
-      const desc = describeStyleChange(styleUpdates);
-      pushHistory(doc.content, updatedLayers, doc.spans || [], desc, 'format_change', {
-        layerId: activeLayerId || undefined,
-      });
     },
-    [activeFormatting, textLayers, activeLayerId, selectedLayerIds, doc.content, doc.spans, onUpdateDocument, pushHistory]
+    [activeFormatting, textLayers, activeLayerId, selectedLayerIds, onUpdateDocument]
   );
 
   // Layer Management Callbacks
@@ -794,13 +435,11 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const updatedLayers = groupSelectedLayers(textLayers, idsToGroup);
     setSelectedLayerIds(idsToGroup);
     onUpdateDocument({ textLayers: updatedLayers });
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Grouped ${idsToGroup.length} layers`, 'layer_group');
   };
 
   const handleUngroupLayers = (targetGroupId: string) => {
     const updatedLayers = ungroupSelectedLayers(textLayers, targetGroupId);
     onUpdateDocument({ textLayers: updatedLayers });
-    pushHistory(doc.content, updatedLayers, doc.spans || [], 'Ungrouped layers', 'layer_ungroup');
   };
 
   const handleMergeLayers = (idsToMerge: string[]) => {
@@ -814,7 +453,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId: mergedLayer.id,
       content: mergedLayer.text,
     });
-    pushHistory(mergedLayer.text, updatedLayers, doc.spans || [], `Merged ${idsToMerge.length} layers`, 'layer_group');
   };
 
   const handleAlignLayers = (
@@ -842,7 +480,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       targetMode
     );
     onUpdateDocument({ textLayers: updatedLayers });
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Aligned layers: ${alignment}`, 'layer_align');
   };
 
   const handleDeleteSelectedLayers = (idsToDelete: string[]) => {
@@ -858,13 +495,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId: nextActiveId,
       content: activeL ? activeL.text : '',
     });
-    pushHistory(
-      activeL ? activeL.text : '',
-      updatedLayers,
-      doc.spans || [],
-      `Deleted ${idsToDelete.length} selected layer(s)`,
-      'layer_delete'
-    );
   };
 
   const handleUpdateMultipleLayers = (updated: TextLayer[]) => {
@@ -937,9 +567,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId: newLayerId,
       content: newLayer.text,
     });
-    pushHistory(newLayer.text, updatedLayers, doc.spans || [], `Added "${newLayer.name}"`, 'layer_add', {
-      layerId: newLayerId,
-    });
 
     // Switch to Input Text tab to immediately allow writing
     setActiveTab('input_text');
@@ -965,9 +592,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId: newLayerId,
       content: cloned.text,
     });
-    pushHistory(cloned.text, updatedLayers, doc.spans || [], `Duplicated "${source.name}"`, 'layer_duplicate', {
-      layerId: newLayerId,
-    });
   };
 
   const handleDeleteLayer = (layerId: string) => {
@@ -986,30 +610,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       activeLayerId: nextActive,
       content: nextLayer ? nextLayer.text : '',
     });
-    pushHistory(
-      nextLayer ? nextLayer.text : '',
-      updatedLayers,
-      doc.spans || [],
-      `Deleted layer "${layerToDelete?.name || 'Layer'}"`,
-      'layer_delete'
-    );
   };
 
   const handleBringToFront = (layerId: string) => {
     const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
-    const layer = textLayers.find((l) => l.id === layerId);
     handleUpdateLayer(layerId, { zIndex: maxZ + 1 });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, zIndex: maxZ + 1 } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Brought "${layer?.name || 'Layer'}" to front`, 'layer_order');
   };
 
   const handleSendToBack = (layerId: string) => {
     const minZ = Math.min(1, ...textLayers.map((l) => l.zIndex ?? 0));
-    const layer = textLayers.find((l) => l.id === layerId);
     const newZ = Math.max(0, minZ - 1);
     handleUpdateLayer(layerId, { zIndex: newZ });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, zIndex: newZ } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Sent "${layer?.name || 'Layer'}" to back`, 'layer_order');
   };
 
   const handleMoveLayerUp = (layerId: string) => {
@@ -1017,8 +628,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     if (!layer) return;
     const newZ = (layer.zIndex ?? 0) + 1;
     handleUpdateLayer(layerId, { zIndex: newZ });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, zIndex: newZ } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Moved "${layer.name}" up`, 'layer_order');
   };
 
   const handleMoveLayerDown = (layerId: string) => {
@@ -1026,8 +635,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     if (!layer) return;
     const newZ = Math.max(0, (layer.zIndex ?? 0) - 1);
     handleUpdateLayer(layerId, { zIndex: newZ });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, zIndex: newZ } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Moved "${layer.name}" down`, 'layer_order');
   };
 
   const handleCenterLayerHorizontally = (layerId: string) => {
@@ -1037,8 +644,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const actualWidth = layerEl ? layerEl.offsetWidth : (targetLayer.width || 240);
     const centeredX = Math.round((refWidth - actualWidth) / 2);
     handleUpdateLayer(layerId, { x: centeredX });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, x: centeredX } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Centered "${targetLayer.name}" horizontally`, 'layer_align');
   };
 
   const handleCenterLayerVertically = (layerId: string) => {
@@ -1048,31 +653,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     const actualHeight = layerEl ? layerEl.offsetHeight : (targetLayer.height || 80);
     const centeredY = Math.round((refHeight - actualHeight) / 2);
     handleUpdateLayer(layerId, { y: centeredY });
-    const updatedLayers = textLayers.map((l) => (l.id === layerId ? { ...l, y: centeredY } : l));
-    pushHistory(doc.content, updatedLayers, doc.spans || [], `Centered "${targetLayer.name}" vertically`, 'layer_align');
   };
 
   const handleLayerTransformEnd = useCallback(
-    (layerId: string, actionType: 'move' | 'rotate' | 'resize') => {
-      const layer = textLayers.find((l) => l.id === layerId);
-      const layerName = layer?.name || 'Layer';
-      const actionDesc =
-        actionType === 'move'
-          ? `Moved ${layerName}`
-          : actionType === 'rotate'
-          ? `Rotated ${layerName}`
-          : `Resized ${layerName}`;
-
-      pushHistory(
-        doc.content,
-        textLayers,
-        doc.spans || [],
-        actionDesc,
-        'layer_transform',
-        { actionDetails: actionType, layerId }
-      );
+    (_layerId: string, _actionType: 'move' | 'rotate' | 'resize') => {
+      // Transformation already applied via continuous state updates
     },
-    [textLayers, doc.content, doc.spans, pushHistory]
+    []
   );
 
   // Deselect active layer when clicking outside on the canvas stage or sheet background
@@ -1216,15 +803,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       spans: [],
       textLayers: updatedLayers,
     });
-    pushHistory('', updatedLayers, [], 'Cleared all text', 'text_clear', {
-      layerId: activeLayerId || undefined,
-    });
     setCursorPos(0);
     setSelection({ start: 0, end: 0, text: '' });
     setTimeout(() => {
       textareaRef.current?.focus({ preventScroll: true });
     }, 20);
-  }, [doc.content, textLayers, activeLayerId, onUpdateDocument, pushHistory]);
+  }, [doc.content, textLayers, activeLayerId, onUpdateDocument]);
 
   // Visual Viewport tracking for Android Keyboard
   const { isKeyboardOpen, keyboardHeight } = useVisualViewport();
@@ -1278,16 +862,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       onUpdateDocument({
         canvasConfig: nextConfig,
       });
-      const desc = updates.aspectRatio
-        ? `Canvas ratio: ${updates.aspectRatio}`
-        : updates.color
-        ? 'Canvas background color'
-        : updates.image
-        ? 'Canvas background image'
-        : 'Updated canvas settings';
-      pushHistory(doc.content, textLayers, doc.spans || [], desc, 'canvas_setup', undefined, nextConfig);
     },
-    [doc.canvasConfig, doc.content, textLayers, doc.spans, onUpdateDocument, pushHistory]
+    [doc.canvasConfig, onUpdateDocument]
   );
 
   const stageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -1366,7 +942,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
             </button>
           </div>
 
-          {/* Center: Context Actions depending on Tab */}
+          {/* Center / Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Add Text Button (available in both tabs) */}
             <button
@@ -1379,64 +955,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
             >
               <Plus size={16} />
             </button>
-
-            {/* Canvas-only tools: Layers Manager & Canvas Settings */}
-            {activeTab === 'canvas' && (
-              <>
-                <button
-                  id="btn-toggle-layers-panel"
-                  type="button"
-                  onClick={() => setShowLayersPanel(!showLayersPanel)}
-                  className={`relative w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
-                    showLayersPanel
-                      ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
-                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Layers Manager"
-                  aria-label="Layers"
-                >
-                  <Layers size={16} className={showLayersPanel ? 'text-emerald-900' : 'text-stone-800'} />
-                  {textLayers.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-700 text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-xs">
-                      {textLayers.length}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  id="btn-toggle-canvas-settings"
-                  type="button"
-                  onClick={() => setShowCanvasPanel(!showCanvasPanel)}
-                  className={`w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
-                    showCanvasPanel
-                      ? 'bg-emerald-100 text-emerald-950 border-emerald-600 shadow-2xs'
-                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Canvas Settings"
-                  aria-label="Canvas Settings"
-                >
-                  <Settings size={16} className={showCanvasPanel ? 'text-emerald-900' : 'text-stone-800'} />
-                </button>
-
-                <button
-                  id="btn-toggle-snap-guides"
-                  type="button"
-                  onClick={() => setSnapEnabled(!snapEnabled)}
-                  className={`relative w-9 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
-                    snapEnabled
-                      ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs'
-                      : 'bg-stone-100 text-stone-900 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title={snapEnabled ? 'Magnet Snap: ON' : 'Magnet Snap: OFF'}
-                  aria-label="Toggle Magnet Snap"
-                >
-                  <Magnet size={16} />
-                  {snapEnabled && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border border-emerald-800 rounded-full shadow-2xs" />
-                  )}
-                </button>
-              </>
-            )}
 
             {/* Input Text-only tools: Layer Switcher Dropdown if multi-layer */}
             {activeTab === 'input_text' && textLayers.length > 1 && (
@@ -1456,43 +974,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 </select>
               </div>
             )}
-          </div>
-
-          {/* Right: Undo / Redo & Batch History */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={handleUndo}
-              disabled={historyIndexRef.current <= 0}
-              className="w-8.5 h-8 flex items-center justify-center rounded-lg bg-stone-100 border border-stone-300 text-stone-900 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
-              title="Undo (Ctrl+Z)"
-              aria-label="Undo"
-            >
-              <RotateCcw size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={handleRedo}
-              disabled={historyIndexRef.current >= historyRef.current.length - 1}
-              className="w-8.5 h-8 flex items-center justify-center rounded-lg bg-stone-100 border border-stone-300 text-stone-900 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
-              title="Redo (Ctrl+Y)"
-              aria-label="Redo"
-            >
-              <RotateCw size={15} />
-            </button>
-            <button
-              id="btn-open-batch-history-modal"
-              type="button"
-              onClick={() => setIsBatchHistoryModalOpen(true)}
-              className="h-8 px-2 flex items-center justify-center gap-1.5 rounded-lg bg-stone-100 border border-stone-300 text-stone-900 hover:text-emerald-950 hover:bg-emerald-100/70 hover:border-emerald-400 transition-all cursor-pointer text-xs font-semibold"
-              title="Action History & Batch Revert (Ctrl+H)"
-              aria-label="History and Batch Revert"
-            >
-              <History size={14} className="text-emerald-800" />
-              <span className="text-[10px] font-mono font-bold text-stone-700">
-                {historyIndexRef.current + 1}/{historyRef.current.length}
-              </span>
-            </button>
           </div>
         </div>
       </div>
@@ -1524,22 +1005,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         canvasConfig={canvasConfig}
         onUpdateCanvasConfig={handleUpdateCanvasConfig}
         onClose={() => setShowCanvasPanel(false)}
-      />
-
-      {/* Batch Undo/Redo & History Timeline Modal */}
-      <BatchHistoryModal
-        isOpen={isBatchHistoryModalOpen}
-        onClose={() => setIsBatchHistoryModalOpen(false)}
-        snapshots={historyRef.current}
-        currentIndex={historyIndexRef.current}
-        canUndo={historyIndexRef.current > 0}
-        canRedo={historyIndexRef.current < historyRef.current.length - 1}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onBatchUndo={handleBatchUndo}
-        onBatchRedo={handleBatchRedo}
-        onJumpToSnapshot={handleJumpToSnapshot}
-        onRevertToInitial={handleRevertToInitial}
       />
 
       {/* ========================================================================= */}
@@ -1772,8 +1237,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                   height: `${refHeight}px`,
                   transform: `scale(${totalScale})`,
                   transformOrigin: 'center center',
-                  backgroundColor: canvasConfig.color || '#ffffff',
-                  backgroundImage: canvasConfig.image ? `url(${canvasConfig.image})` : undefined,
+                  backgroundColor:
+                    !canvasConfig.gradient && (!canvasConfig.image || (!canvasConfig.image.startsWith('linear-gradient') && !canvasConfig.image.startsWith('radial-gradient')))
+                      ? (canvasConfig.color || '#ffffff')
+                      : undefined,
+                  backgroundImage: canvasConfig.gradient
+                    ? canvasConfig.gradient
+                    : canvasConfig.image && (canvasConfig.image.startsWith('linear-gradient') || canvasConfig.image.startsWith('radial-gradient'))
+                    ? canvasConfig.image
+                    : canvasConfig.image
+                    ? `url(${canvasConfig.image})`
+                    : undefined,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
@@ -1978,6 +1452,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
           {/* Bottom Canvas Design Toolbar */}
           <MobileTextDesignToolbar
             activeLayer={activeLayer}
+            layersCount={textLayers.length}
             currentStyle={activeFormatting}
             onUpdateStyle={handleUpdateStyle}
             onOpenUnicodeEditor={() => {

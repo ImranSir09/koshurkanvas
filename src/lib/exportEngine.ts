@@ -251,6 +251,63 @@ export function getPaperDimensionsInPt(
 }
 
 /**
+ * Canvas reference stage dimensions for editing coordinate space
+ */
+export function getCanvasRefDimensions(
+  aspectRatio?: CanvasAspectRatio,
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  customW?: number,
+  customH?: number
+): { refWidth: number; refHeight: number } {
+  const isLandscape = orientation === 'landscape';
+
+  if (aspectRatio === 'custom' && customW && customH) {
+    const w = isLandscape ? Math.max(customW, customH) : customW;
+    const h = isLandscape ? Math.min(customW, customH) : customH;
+    return {
+      refWidth: isLandscape ? 680 : 520,
+      refHeight: Math.max(100, Math.round((isLandscape ? 680 : 520) * (h / w))),
+    };
+  }
+
+  switch (aspectRatio) {
+    case '1:1':
+      return { refWidth: 520, refHeight: 520 };
+    case '4:5':
+      return isLandscape ? { refWidth: 575, refHeight: 460 } : { refWidth: 460, refHeight: 575 };
+    case '9:16':
+      return isLandscape ? { refWidth: 640, refHeight: 360 } : { refWidth: 360, refHeight: 640 };
+    case '16:9':
+      return isLandscape ? { refWidth: 720, refHeight: 405 } : { refWidth: 405, refHeight: 720 };
+    case '3:4':
+      return isLandscape ? { refWidth: 640, refHeight: 480 } : { refWidth: 480, refHeight: 640 };
+    case '2:3':
+      return isLandscape ? { refWidth: 640, refHeight: 426 } : { refWidth: 426, refHeight: 640 };
+    case 'a3':
+      return isLandscape ? { refWidth: 720, refHeight: 509 } : { refWidth: 509, refHeight: 720 };
+    case 'a4':
+      return isLandscape ? { refWidth: 680, refHeight: 480 } : { refWidth: 520, refHeight: 735 };
+    case 'a5':
+      return isLandscape ? { refWidth: 600, refHeight: 424 } : { refWidth: 424, refHeight: 600 };
+    case 'a6':
+      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
+    case 'letter':
+      return isLandscape ? { refWidth: 680, refHeight: 525 } : { refWidth: 525, refHeight: 680 };
+    case 'legal':
+      return isLandscape ? { refWidth: 720, refHeight: 437 } : { refWidth: 437, refHeight: 720 };
+    case 'tabloid':
+      return isLandscape ? { refWidth: 720, refHeight: 465 } : { refWidth: 465, refHeight: 720 };
+    case 'b4':
+    case 'b5':
+    case 'b6':
+      return isLandscape ? { refWidth: 640, refHeight: 450 } : { refWidth: 450, refHeight: 640 };
+    case 'auto':
+    default:
+      return { refWidth: 620, refHeight: 480 };
+  }
+}
+
+/**
  * Returns target export pixel dimensions and the base reference scale
  */
 export function getExportResolutionDimensions(
@@ -259,6 +316,7 @@ export function getExportResolutionDimensions(
   customW?: number,
   customH?: number
 ): { width: number; height: number; refWidth: number; refHeight: number } {
+  const { refWidth, refHeight } = getCanvasRefDimensions(aspectRatio, orientation, customW, customH);
   const isLand = orientation === 'landscape';
 
   if (aspectRatio === 'custom' && customW && customH) {
@@ -267,74 +325,46 @@ export function getExportResolutionDimensions(
     return {
       width: w,
       height: h,
-      refWidth: isLand ? 680 : 520,
-      refHeight: Math.round((isLand ? 680 : 520) * (h / w)),
+      refWidth,
+      refHeight,
     };
   }
 
   switch (aspectRatio) {
     case '1:1':
-      return { width: 1200, height: 1200, refWidth: 520, refHeight: 520 };
+      return { width: 1200, height: 1200, refWidth, refHeight };
     case '4:5':
-      return isLand
-        ? { width: 1350, height: 1080, refWidth: 575, refHeight: 460 }
-        : { width: 1080, height: 1350, refWidth: 460, refHeight: 575 };
+      return { width: isLand ? 1350 : 1080, height: isLand ? 1080 : 1350, refWidth, refHeight };
     case '9:16':
-      return isLand
-        ? { width: 1920, height: 1080, refWidth: 640, refHeight: 360 }
-        : { width: 1080, height: 1920, refWidth: 360, refHeight: 640 };
+      return { width: isLand ? 1920 : 1080, height: isLand ? 1080 : 1920, refWidth, refHeight };
     case '16:9':
-      return isLand
-        ? { width: 1920, height: 1080, refWidth: 720, refHeight: 405 }
-        : { width: 1080, height: 1920, refWidth: 405, refHeight: 720 };
+      return { width: isLand ? 1920 : 1080, height: isLand ? 1080 : 1920, refWidth, refHeight };
     case '3:4':
-      return isLand
-        ? { width: 1600, height: 1200, refWidth: 640, refHeight: 480 }
-        : { width: 1200, height: 1600, refWidth: 480, refHeight: 640 };
+      return { width: isLand ? 1600 : 1200, height: isLand ? 1200 : 1600, refWidth, refHeight };
     case '2:3':
-      return isLand
-        ? { width: 1800, height: 1200, refWidth: 640, refHeight: 426 }
-        : { width: 1200, height: 1800, refWidth: 426, refHeight: 640 };
+      return { width: isLand ? 1800 : 1200, height: isLand ? 1200 : 1800, refWidth, refHeight };
     case 'a3':
-      return isLand
-        ? { width: 2480, height: 1754, refWidth: 720, refHeight: 509 }
-        : { width: 1754, height: 2480, refWidth: 509, refHeight: 720 };
+      return { width: isLand ? 2480 : 1754, height: isLand ? 1754 : 2480, refWidth, refHeight };
     case 'a4':
-      return isLand
-        ? { width: 1754, height: 1240, refWidth: 680, refHeight: 480 }
-        : { width: 1240, height: 1754, refWidth: 520, refHeight: 735 };
+      return { width: isLand ? 1754 : 1240, height: isLand ? 1240 : 1754, refWidth, refHeight };
     case 'a5':
-      return isLand
-        ? { width: 1240, height: 874, refWidth: 600, refHeight: 424 }
-        : { width: 874, height: 1240, refWidth: 424, refHeight: 600 };
+      return { width: isLand ? 1240 : 874, height: isLand ? 874 : 1240, refWidth, refHeight };
     case 'letter':
-      return isLand
-        ? { width: 1650, height: 1275, refWidth: 680, refHeight: 525 }
-        : { width: 1275, height: 1650, refWidth: 525, refHeight: 680 };
+      return { width: isLand ? 1650 : 1275, height: isLand ? 1275 : 1650, refWidth, refHeight };
     case 'legal':
-      return isLand
-        ? { width: 2100, height: 1275, refWidth: 720, refHeight: 437 }
-        : { width: 1275, height: 2100, refWidth: 437, refHeight: 720 };
+      return { width: isLand ? 2100 : 1275, height: isLand ? 1275 : 2100, refWidth, refHeight };
     case 'tabloid':
-      return isLand
-        ? { width: 2550, height: 1650, refWidth: 720, refHeight: 465 }
-        : { width: 1650, height: 2550, refWidth: 465, refHeight: 720 };
+      return { width: isLand ? 2550 : 1650, height: isLand ? 1650 : 2550, refWidth, refHeight };
     case 'b4':
-      return isLand
-        ? { width: 2102, height: 1488, refWidth: 640, refHeight: 450 }
-        : { width: 1488, height: 2102, refWidth: 450, refHeight: 640 };
+      return { width: isLand ? 2102 : 1488, height: isLand ? 1488 : 2102, refWidth, refHeight };
     case 'b5':
-      return isLand
-        ? { width: 1488, height: 1050, refWidth: 640, refHeight: 450 }
-        : { width: 1050, height: 1488, refWidth: 450, refHeight: 640 };
+      return { width: isLand ? 1488 : 1050, height: isLand ? 1050 : 1488, refWidth, refHeight };
     case 'a6':
     case 'b6':
-      return isLand
-        ? { width: 1240, height: 874, refWidth: 640, refHeight: 450 }
-        : { width: 874, height: 1240, refWidth: 450, refHeight: 640 };
+      return { width: isLand ? 1240 : 874, height: isLand ? 874 : 1240, refWidth, refHeight };
     case 'auto':
     default:
-      return { width: 1240, height: 960, refWidth: 620, refHeight: 480 };
+      return { width: 1240, height: 960, refWidth, refHeight };
   }
 }
 
@@ -351,9 +381,21 @@ function applySliceStyleToElement(
   el.style.fontWeight = style.bold ? 'bold' : 'normal';
   el.style.fontStyle = style.italic ? 'italic' : 'normal';
   el.style.textDecoration = style.underline ? 'underline' : 'none';
-  el.style.color = style.color || '#1c1917';
+  if (style.gradient) {
+    el.style.backgroundImage = style.gradient;
+    (el.style as any).webkitBackgroundClip = 'text';
+    (el.style as any).backgroundClip = 'text';
+    (el.style as any).webkitTextFillColor = 'transparent';
+    el.style.color = 'transparent';
+  } else {
+    el.style.color = style.color || '#1c1917';
+  }
 
-  if (style.highlightColor && style.highlightColor !== 'transparent') {
+  if (style.highlightGradient) {
+    el.style.backgroundImage = style.highlightGradient;
+    el.style.borderRadius = `${Math.round(4 * scale)}px`;
+    el.style.padding = `0 ${Math.round(4 * scale)}px`;
+  } else if (style.highlightColor && style.highlightColor !== 'transparent') {
     el.style.backgroundColor = style.highlightColor;
     el.style.borderRadius = `${Math.round(4 * scale)}px`;
     el.style.padding = `0 ${Math.round(4 * scale)}px`;
@@ -439,13 +481,22 @@ export function createCleanOffscreenDom(
   container.style.overflow = 'hidden';
   container.style.margin = '0px';
   container.style.padding = '0px';
-  container.style.backgroundColor =
-    options.format === 'transparent_png' ? 'transparent' : canvasConfig.color || '#ffffff';
-
-  if (canvasConfig.image && options.format !== 'transparent_png') {
-    container.style.backgroundImage = `url(${canvasConfig.image})`;
-    container.style.backgroundSize = 'cover';
-    container.style.backgroundPosition = 'center';
+  if (options.format === 'transparent_png') {
+    container.style.backgroundColor = 'transparent';
+  } else if (canvasConfig.gradient) {
+    container.style.background = canvasConfig.gradient;
+  } else if (
+    canvasConfig.image &&
+    (canvasConfig.image.startsWith('linear-gradient') || canvasConfig.image.startsWith('radial-gradient'))
+  ) {
+    container.style.background = canvasConfig.image;
+  } else {
+    container.style.backgroundColor = canvasConfig.color || '#ffffff';
+    if (canvasConfig.image) {
+      container.style.backgroundImage = `url(${canvasConfig.image})`;
+      container.style.backgroundSize = 'cover';
+      container.style.backgroundPosition = 'center';
+    }
   }
 
   // Canvas background overlay if configured
@@ -522,7 +573,9 @@ export function createCleanOffscreenDom(
       if (layer.style?.padding) {
         layerDiv.style.padding = `${Math.round(layer.style.padding * scale)}px`;
       }
-      if (layer.style?.highlightColor && layer.style.highlightColor !== 'transparent') {
+      if (layer.style?.highlightGradient) {
+        layerDiv.style.background = layer.style.highlightGradient;
+      } else if (layer.style?.highlightColor && layer.style.highlightColor !== 'transparent') {
         layerDiv.style.backgroundColor = layer.style.highlightColor;
       }
 

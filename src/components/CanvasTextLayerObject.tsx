@@ -354,8 +354,10 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
           fontWeight: layer.style.bold ? 'bold' : 'normal',
           fontStyle: layer.style.italic ? 'italic' : 'normal',
           textDecoration: layer.style.underline ? 'underline' : 'none',
-          color: layer.style.color || '#1c1917',
-          backgroundColor: layer.style.highlightColor || 'transparent',
+          backgroundColor: layer.style.highlightGradient
+            ? undefined
+            : (layer.style.highlightColor || 'transparent'),
+          backgroundImage: layer.style.highlightGradient || undefined,
           borderRadius: `${layer.style.borderRadius || 0}px`,
           padding: `${layer.style.padding !== undefined ? layer.style.padding : 6}px`,
           borderWidth: `${layer.style.borderWidth || 0}px`,
@@ -372,7 +374,34 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
           fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
         }}
       >
-        {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
+        {layer.style.gradient ? (
+          <span
+            key={`gradient-span-${layer.id}`}
+            style={{
+              backgroundColor: 'transparent',
+              backgroundImage: layer.style.gradient,
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              display: 'inline-block',
+              maxWidth: '100%',
+            }}
+          >
+            {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
+          </span>
+        ) : (
+          <span
+            key={`solid-span-${layer.id}`}
+            style={{
+              backgroundColor: 'transparent',
+              color: layer.style.color || '#1c1917',
+              display: 'inline-block',
+              maxWidth: '100%',
+            }}
+          >
+            {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
+          </span>
+        )}
       </div>
 
       {/* Interactive Selection Bounding Box & Transformation Handles */}

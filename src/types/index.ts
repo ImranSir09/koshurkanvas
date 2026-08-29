@@ -9,7 +9,12 @@ export interface TextStyleProperties {
   italic: boolean;
   underline: boolean;
   color: string;
+  colorType?: 'solid' | 'gradient';
+  gradient?: string; // CSS gradient string, e.g. "linear-gradient(135deg, #064e3b 0%, #10b981 100%)"
+  gradientAngle?: number;
   highlightColor?: string;
+  highlightType?: 'none' | 'solid' | 'gradient';
+  highlightGradient?: string;
   align: 'right' | 'center' | 'left' | 'justify';
   verticalAlign?: 'top' | 'center' | 'bottom';
   lineHeight: number;
@@ -70,6 +75,7 @@ export type CanvasAspectRatio = DocumentPaperSize | SocialCardSize;
 
 export interface CanvasBackgroundConfig {
   color?: string;
+  gradient?: string;
   image?: string;
   imageOpacity?: number;
   overlayColor?: string;
@@ -248,5 +254,3 @@ export interface KeyboardKey {
   longPress?: string[];
   isKashmiriSpecial?: boolean;
 }
-
-export * from './history';

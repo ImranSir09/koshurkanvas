@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   FolderOpen,
   Download,
-  RotateCcw,
-  RotateCw,
-  History,
   Edit2,
   CloudCheck,
 } from 'lucide-react';
@@ -19,13 +16,6 @@ interface HeaderProps {
   onOpenTransliteration?: () => void;
   layoutMode?: 'desktop' | 'phone';
   onToggleLayoutMode?: () => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
-  onOpenHistory?: () => void;
-  historyTotalCount?: number;
-  historyCurrentStep?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,13 +23,6 @@ export const Header: React.FC<HeaderProps> = ({
   onRenameDocument,
   onOpenProjects,
   onOpenExport,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
-  onOpenHistory,
-  historyTotalCount,
-  historyCurrentStep,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(currentDocTitle);
@@ -146,55 +129,8 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Left / End (in RTL): Icon-Only Undo, Redo, Export */}
+      {/* Action End (Export) */}
       <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
-        {/* Undo */}
-        {onUndo && (
-          <button
-            type="button"
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-stone-900 hover:text-black bg-stone-100 hover:bg-stone-200 border border-stone-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
-            title="Undo (Ctrl+Z)"
-            aria-label="Undo"
-          >
-            <RotateCcw size={15} />
-          </button>
-        )}
-
-        {/* Redo */}
-        {onRedo && (
-          <button
-            type="button"
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-stone-900 hover:text-black bg-stone-100 hover:bg-stone-200 border border-stone-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
-            title="Redo (Ctrl+Shift+Z)"
-            aria-label="Redo"
-          >
-            <RotateCw size={15} />
-          </button>
-        )}
-
-        {/* Batch History Manager Button */}
-        {onOpenHistory && (
-          <button
-            type="button"
-            id="header-history-btn"
-            onClick={onOpenHistory}
-            className="h-8.5 sm:h-9 px-2 sm:px-2.5 rounded-lg text-stone-800 hover:text-emerald-950 bg-stone-100 hover:bg-emerald-100 border border-stone-300 hover:border-emerald-400 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs font-sans text-xs font-semibold"
-            title="History & Batch Actions (Ctrl+H)"
-            aria-label="History and Batch Revert"
-          >
-            <History size={15} className="text-emerald-800" />
-            {historyTotalCount !== undefined && historyTotalCount > 1 && (
-              <span className="text-[10px] font-mono font-bold bg-stone-200/90 group-hover:bg-white text-stone-800 px-1 py-0.2 rounded-sm hidden sm:inline">
-                {historyCurrentStep !== undefined ? `${historyCurrentStep}/${historyTotalCount}` : historyTotalCount}
-              </span>
-            )}
-          </button>
-        )}
-
         {/* Primary Export Icon Button */}
         <button
           id="header-export-btn"

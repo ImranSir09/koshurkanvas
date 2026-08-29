@@ -9,6 +9,7 @@ import {
   downloadDocFile,
 } from '../lib/exportEngine';
 import { CanvasAspectRatio, DocumentPaperSize, KashurDocument, SocialCardSize } from '../types';
+import { DOCUMENT_SIZE_OPTIONS, SOCIAL_SIZE_OPTIONS } from './CanvasSettingsPanel';
 import {
   X,
   Download,
@@ -38,33 +39,19 @@ interface ExportModalProps {
   document?: KashurDocument;
 }
 
-const PAPER_SIZES: {
-  id: DocumentPaperSize;
-  label: string;
-  shortCode: string;
-  dimensions: string;
-}[] = [
-  { id: 'a4', label: 'A4 Document', shortCode: 'A4', dimensions: '210 × 297 mm' },
-  { id: 'a3', label: 'A3 Poster', shortCode: 'A3', dimensions: '297 × 420 mm' },
-  { id: 'a5', label: 'A5 Booklet', shortCode: 'A5', dimensions: '148 × 210 mm' },
-  { id: 'letter', label: 'Letter Size', shortCode: 'Letter', dimensions: '215.9 × 279.4 mm' },
-  { id: 'legal', label: 'Legal Size', shortCode: 'Legal', dimensions: '215.9 × 355.6 mm' },
-  { id: 'b5', label: 'B5 Book', shortCode: 'B5', dimensions: '176 × 250 mm' },
-];
+const PAPER_SIZES = DOCUMENT_SIZE_OPTIONS.map((opt) => ({
+  id: opt.id,
+  label: opt.label,
+  shortCode: opt.id.toUpperCase(),
+  dimensions: opt.dimensionsMm,
+}));
 
-const SOCIAL_SIZES: {
-  id: SocialCardSize;
-  label: string;
-  shortCode: string;
-  dimensions: string;
-}[] = [
-  { id: '1:1', label: 'Square (1:1)', shortCode: '1:1', dimensions: '1080 × 1080 px' },
-  { id: '9:16', label: 'Story / Reel (9:16)', shortCode: '9:16', dimensions: '1080 × 1920 px' },
-  { id: '16:9', label: 'Landscape (16:9)', shortCode: '16:9', dimensions: '1920 × 1080 px' },
-  { id: '4:5', label: 'Portrait (4:5)', shortCode: '4:5', dimensions: '1080 × 1350 px' },
-  { id: '3:4', label: 'Classic (3:4)', shortCode: '3:4', dimensions: '1200 × 1600 px' },
-  { id: 'auto', label: 'Adaptive Canvas', shortCode: 'Auto', dimensions: 'Adaptive Canvas' },
-];
+const SOCIAL_SIZES = SOCIAL_SIZE_OPTIONS.map((opt) => ({
+  id: opt.id,
+  label: opt.label,
+  shortCode: opt.id === 'auto' ? 'Auto' : opt.id,
+  dimensions: opt.dimensionsPx,
+}));
 
 export const ExportModal: React.FC<ExportModalProps> = ({
   isOpen,

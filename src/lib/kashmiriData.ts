@@ -743,6 +743,241 @@ export const KASHMIRI_STICKERS = [
   { id: 'mountain', name: 'Himalayan / Pir Panjal', icon: 'Mountain', preview: '🏔️' },
 ];
 
+// Comprehensive Solid Color Palettes
+export interface ColorSwatch {
+  name: string;
+  color: string;
+}
+
+export interface PaletteGroup {
+  id: string;
+  name: string;
+  swatches: ColorSwatch[];
+}
+
+export const SOLID_PALETTE_GROUPS: PaletteGroup[] = [
+  {
+    id: 'heritage',
+    name: 'Kashmiri Heritage (کٲشُر وِرثہٕ)',
+    swatches: [
+      { name: 'Saffron Gold (کۄنگ)', color: '#d97706' },
+      { name: 'Chinar Crimson (بونہٕ رنگ)', color: '#991b1b' },
+      { name: 'Dal Emerald (ڈَل سَر)', color: '#047857' },
+      { name: 'Walnut Wood (دوان)', color: '#451a03' },
+      { name: 'Pashmina Cream (پَشمِینہٕ)', color: '#fef3c7' },
+      { name: 'Pir Panjal Slate (پیر پَنچال)', color: '#334155' },
+      { name: 'Khatamband Teal (خَتَم بَنٛد)', color: '#0f766e' },
+      { name: 'Mughal Blue (شاہی نیول)', color: '#1e3a8a' },
+      { name: 'Gulab Rose (گُلاب)', color: '#be185d' },
+      { name: 'Charcoal Obsidian (سیاہ)', color: '#18181b' },
+      { name: 'Almond Tan (بادام)', color: '#b45309' },
+      { name: 'Willow Sage (ویر)', color: '#65a30d' },
+    ],
+  },
+  {
+    id: 'vibrant',
+    name: 'Vibrant & Modern (روشن)',
+    swatches: [
+      { name: 'Ruby Red', color: '#dc2626' },
+      { name: 'Sunset Orange', color: '#ea580c' },
+      { name: 'Solar Amber', color: '#f59e0b' },
+      { name: 'Leaf Green', color: '#16a34a' },
+      { name: 'Forest Green', color: '#15803d' },
+      { name: 'Cyan Sky', color: '#0891b2' },
+      { name: 'Electric Azure', color: '#0284c7' },
+      { name: 'Indigo Velvet', color: '#4338ca' },
+      { name: 'Vivid Violet', color: '#7c3aed' },
+      { name: 'Hot Magenta', color: '#c026d3' },
+      { name: 'Rose Pink', color: '#e11d48' },
+      { name: 'Coral Flame', color: '#f43f5e' },
+    ],
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome & Earthy (قدرتی)',
+    swatches: [
+      { name: 'Pitch Black', color: '#000000' },
+      { name: 'Dark Obsidian', color: '#1c1917' },
+      { name: 'Slate 800', color: '#1e293b' },
+      { name: 'Charcoal 700', color: '#334155' },
+      { name: 'Steel 500', color: '#64748b' },
+      { name: 'Stone 400', color: '#a8a29e' },
+      { name: 'Warm Parchment', color: '#fdfbf7' },
+      { name: 'Pure White', color: '#ffffff' },
+      { name: 'Sandstone Ochre', color: '#78350f' },
+      { name: 'Raw Umber', color: '#57534e' },
+      { name: 'Linen Soft', color: '#f5f5f4' },
+      { name: 'Silver Mist', color: '#e2e8f0' },
+    ],
+  },
+  {
+    id: 'pastel',
+    name: 'Pastel & Gentle (نَرم رنگ)',
+    swatches: [
+      { name: 'Blush Rose', color: '#fecdd3' },
+      { name: 'Warm Peach', color: '#ffedd5' },
+      { name: 'Pale Saffron', color: '#fef3c7' },
+      { name: 'Butter Cream', color: '#fef9c3' },
+      { name: 'Mint Breeze', color: '#dcfce7' },
+      { name: 'Teal Foam', color: '#ccfbf1' },
+      { name: 'Sky Frost', color: '#e0f2fe' },
+      { name: 'Lavender Mist', color: '#f3e8ff' },
+      { name: 'Lilac Soft', color: '#ede9fe' },
+      { name: 'Cotton White', color: '#fafafa' },
+      { name: 'Sage Tint', color: '#f0fdf4' },
+      { name: 'Ice Cyan', color: '#ecfeff' },
+    ],
+  },
+];
+
+export interface GradientPreset {
+  id: string;
+  name: string;
+  value: string;
+  colors: [string, string, ...string[]];
+  type: 'linear' | 'radial';
+  category?: 'heritage' | 'vibrant' | 'dark' | 'metallic';
+}
+
+export const GRADIENT_PRESETS: GradientPreset[] = [
+  {
+    id: 'grad-emerald',
+    name: 'Imperial Emerald (شاہی زُمُرُد)',
+    value: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)',
+    colors: ['#064e3b', '#047857', '#10b981'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-saffron',
+    name: 'Saffron Gold (زَعفران کۄنگ)',
+    value: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fde047 100%)',
+    colors: ['#92400e', '#d97706', '#fde047'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-chinar',
+    name: 'Chinar Autumn Fire (بونہٕ نار)',
+    value: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #f97316 100%)',
+    colors: ['#7f1d1d', '#dc2626', '#f97316'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-goldfoil',
+    name: 'Kashmiri Gold Foil (طَلائی زَر)',
+    value: 'linear-gradient(135deg, #78350f 0%, #d97706 35%, #fef08a 70%, #b45309 100%)',
+    colors: ['#78350f', '#d97706', '#fef08a', '#b45309'],
+    type: 'linear',
+    category: 'metallic',
+  },
+  {
+    id: 'grad-twilight',
+    name: 'Dal Twilight (ڈَل شام)',
+    value: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #6366f1 75%, #f43f5e 100%)',
+    colors: ['#0f172a', '#1e1b4b', '#6366f1', '#f43f5e'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-royal-purple',
+    name: 'Mughal Royal Velvet (مُغلی مخمل)',
+    value: 'linear-gradient(135deg, #2e1065 0%, #581c87 50%, #a855f7 100%)',
+    colors: ['#2e1065', '#581c87', '#a855f7'],
+    type: 'linear',
+    category: 'vibrant',
+  },
+  {
+    id: 'grad-rose',
+    name: 'Gulab Blossom (کٲشُر گُلاب)',
+    value: 'linear-gradient(135deg, #701a75 0%, #be185d 50%, #f472b6 100%)',
+    colors: ['#701a75', '#be185d', '#f472b6'],
+    type: 'linear',
+    category: 'vibrant',
+  },
+  {
+    id: 'grad-ocean',
+    name: 'Glacier Stream (پیر پنچال آب)',
+    value: 'linear-gradient(135deg, #082f49 0%, #0284c7 50%, #38bdf8 100%)',
+    colors: ['#082f49', '#0284c7', '#38bdf8'],
+    type: 'linear',
+    category: 'vibrant',
+  },
+  {
+    id: 'grad-khatamband',
+    name: 'Mystic Khatamband (خَتَم بَنٛد)',
+    value: 'linear-gradient(135deg, #042f2e 0%, #0f766e 50%, #2dd4bf 100%)',
+    colors: ['#042f2e', '#0f766e', '#2dd4bf'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-obsidian',
+    name: 'Obsidian Silver Chrome (سیاہ چاندی)',
+    value: 'linear-gradient(135deg, #09090b 0%, #27272a 50%, #71717a 100%)',
+    colors: ['#09090b', '#27272a', '#71717a'],
+    type: 'linear',
+    category: 'metallic',
+  },
+  {
+    id: 'grad-parchment',
+    name: 'Antique Manuscript (قَدیم قلمی نسخہ)',
+    value: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #d97706 100%)',
+    colors: ['#fef3c7', '#fde68a', '#d97706'],
+    type: 'linear',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-aurora',
+    name: 'Northern Aurora (نورِ سَحر)',
+    value: 'linear-gradient(135deg, #065f46 0%, #0284c7 50%, #eab308 100%)',
+    colors: ['#065f46', '#0284c7', '#eab308'],
+    type: 'linear',
+    category: 'vibrant',
+  },
+  {
+    id: 'grad-cyber',
+    name: 'Cyber Neon (روشن نئون)',
+    value: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%)',
+    colors: ['#ec4899', '#8b5cf6', '#06b6d4'],
+    type: 'linear',
+    category: 'vibrant',
+  },
+  {
+    id: 'grad-cosmic',
+    name: 'Cosmic Indigo Night (شاہی شب)',
+    value: 'linear-gradient(135deg, #020617 0%, #1e1b4b 60%, #4338ca 100%)',
+    colors: ['#020617', '#1e1b4b', '#4338ca'],
+    type: 'linear',
+    category: 'dark',
+  },
+  {
+    id: 'grad-radial-saffron',
+    name: 'Radial Saffron Orb (دائرہٕ کۄنگ)',
+    value: 'radial-gradient(circle, #fbbf24 0%, #d97706 60%, #78350f 100%)',
+    colors: ['#fbbf24', '#d97706', '#78350f'],
+    type: 'radial',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-radial-emerald',
+    name: 'Radial Emerald Jewel (دائرہٕ زُمُرُد)',
+    value: 'radial-gradient(circle, #34d399 0%, #059669 60%, #064e3b 100%)',
+    colors: ['#34d399', '#059669', '#064e3b'],
+    type: 'radial',
+    category: 'heritage',
+  },
+  {
+    id: 'grad-radial-velvet',
+    name: 'Radial Mughal Velvet (دائرہٕ مخمل)',
+    value: 'radial-gradient(circle, #c084fc 0%, #7e22ce 60%, #3b0764 100%)',
+    colors: ['#c084fc', '#7e22ce', '#3b0764'],
+    type: 'radial',
+    category: 'vibrant',
+  },
+];
+
 // Aesthetic Kashmiri Background Themes & Palettes
 export const KASHMIRI_PALETTES = [
   {
