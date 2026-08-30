@@ -155,7 +155,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         id: 'layer-primary',
         name: 'Layer 1',
         type: 'text',
-        text: doc.content || 'ازکیا چھُ تُہنْدس دماغس منْز',
+        text: doc.content || '',
         x: 40,
         y: 80,
         width: 480,
@@ -819,7 +819,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       id: newLayerId,
       name: `Layer ${textLayers.length + 1}`,
       type: 'text',
-      text: 'ازکیا چھُ تُہنْدس دماغس منْز',
+      text: '',
       x: 60 + (textLayers.length % 4) * 20,
       y: 100 + (textLayers.length % 4) * 35,
       width: 440,
@@ -1268,7 +1268,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 onKeyUp={updateSelectionFromDOM}
                 dir={editorDirection}
                 inputMode={activeKeyboard === 'system' ? 'text' : 'none'}
-                placeholder="ازکیا چھُ تُہنْدس دماغس منْز..."
+                placeholder="کٲشُر متن لؠکھِیو..."
                 className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq font-normal cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6] touch-pan-y overscroll-contain"
                 style={{
                   fontFamily: getFontFamilyCSS(activeFormatting.fontFamily || 'Noto Nastaliq Urdu'),

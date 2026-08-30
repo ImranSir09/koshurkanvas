@@ -43,24 +43,9 @@ function openDB(): Promise<IDBDatabase> {
 // Initial sample document
 export const INITIAL_DOCUMENT: KashurDocument = {
   id: 'doc-welcome-kashmiri',
-  title: 'Welcome Draft',
-  content: `آمِ پَنہٕ سوَدَرَس ناڤ چَھم لَگان
-کاتیہ رازی دَے مےٚ تی تاری ہا
-
-کٲشُر لیٚکھُن سٹوڈیو چُھ کٲشِرِ زَبانہِ ہٕنٛدِ خٲطرٕ اَکھ مۄکَمَل تہٕ جَدِید یُونیکوڈ سِسٹم۔
-تُہؠ ہؠکِو اَتھ مَنٛز کٲشِرؠ واول (ٲ، ۄ، ؠ، ۆ، ےٚ)، اِعراب (ـَ ـِ ـُ ـْ ـّ ـٚ ـ٘ ـٕ ـٔ) لؠکھِتھ، شٲعِری تہٕ پوسٹَر تَیار کٔرِتھ۔`,
-  spans: [
-    {
-      id: 'span-1',
-      start: 0,
-      end: 63,
-      style: {
-        fontSize: 32,
-        bold: true,
-        color: '#b45309', // amber-700
-      },
-    },
-  ],
+  title: 'Untitled Document',
+  content: '',
+  spans: [],
   defaultStyle: DEFAULT_TEXT_STYLE,
   createdAt: Date.now(),
   updatedAt: Date.now(),

@@ -342,6 +342,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
         zIndex: layer.zIndex ?? 10,
         opacity: layer.opacity ?? 1,
         touchAction: 'none',
+        willChange: isDragging || isResizing || isRotating ? 'transform, left, top' : 'auto',
       }}
     >
       {/* Pure Unicode Text Rendering Layer with Noto Nastaliq Urdu OpenType Shaping */}
