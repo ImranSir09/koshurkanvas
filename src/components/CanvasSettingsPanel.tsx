@@ -581,7 +581,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   {/* 4. YouTube Thumbnail (16:9) */}
                   <button
                     type="button"
-                    onClick={() => onUpdateCanvasConfig({ aspectRatio: '16:9' })}
+                    onClick={() => onUpdateCanvasConfig({ aspectRatio: '16:9', orientation: 'landscape' })}
                     className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === '16:9'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'

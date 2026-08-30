@@ -1,4 +1,5 @@
 import { TextLayer } from '../types';
+import { getLayerVisualBounds } from './layerUtils';
 
 export interface SnapGuide {
   id: string;
@@ -118,15 +119,16 @@ export function calculateSnapping(
   for (const layer of allLayers) {
     if (excludedIds.has(layer.id) || layer.isHidden) continue;
 
-    const otherX = layer.x;
-    const otherWidth = layer.width || 200;
-    const otherCenterX = otherX + otherWidth / 2;
-    const otherRightX = otherX + otherWidth;
+    const bounds = getLayerVisualBounds(layer);
+    const otherX = bounds.minX;
+    const otherWidth = bounds.visualWidth;
+    const otherCenterX = bounds.centerX;
+    const otherRightX = bounds.maxX;
 
-    const otherY = layer.y;
-    const otherHeight = layer.height || 60;
-    const otherCenterY = otherY + otherHeight / 2;
-    const otherBottomY = otherY + otherHeight;
+    const otherY = bounds.minY;
+    const otherHeight = bounds.visualHeight;
+    const otherCenterY = bounds.centerY;
+    const otherBottomY = bounds.maxY;
 
     const startY = Math.min(rawY, otherY) - 15;
     const endY = Math.max(rawY + height, otherY + otherHeight) + 15;

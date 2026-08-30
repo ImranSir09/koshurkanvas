@@ -184,7 +184,7 @@ export function getAspectRatioNumeric(
     case '9:16':
       return isLand ? 16 / 9 : 9 / 16;
     case '16:9':
-      return isLand ? 16 / 9 : 16 / 9;
+      return 16 / 9;
     case '3:4':
       return isLand ? 4 / 3 : 3 / 4;
     case '2:3':
@@ -278,7 +278,7 @@ export function getCanvasRefDimensions(
     case '9:16':
       return isLandscape ? { refWidth: 640, refHeight: 360 } : { refWidth: 360, refHeight: 640 };
     case '16:9':
-      return isLandscape ? { refWidth: 720, refHeight: 405 } : { refWidth: 405, refHeight: 720 };
+      return { refWidth: 720, refHeight: 405 };
     case '3:4':
       return isLandscape ? { refWidth: 640, refHeight: 480 } : { refWidth: 480, refHeight: 640 };
     case '2:3':
@@ -338,7 +338,7 @@ export function getExportResolutionDimensions(
     case '9:16':
       return { width: isLand ? 1920 : 1080, height: isLand ? 1080 : 1920, refWidth, refHeight };
     case '16:9':
-      return { width: isLand ? 1920 : 1080, height: isLand ? 1080 : 1920, refWidth, refHeight };
+      return { width: 1920, height: 1080, refWidth: 720, refHeight: 405 };
     case '3:4':
       return { width: isLand ? 1600 : 1200, height: isLand ? 1200 : 1600, refWidth, refHeight };
     case '2:3':

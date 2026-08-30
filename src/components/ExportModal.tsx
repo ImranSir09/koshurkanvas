@@ -396,7 +396,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setSelectedSize(item.id)}
+                    onClick={() => {
+                      setSelectedSize(item.id);
+                      if (item.id === '16:9') {
+                        setOrientation('landscape');
+                      } else if (item.id === '9:16' || item.id === '4:5' || item.id === '3:4' || item.id === '2:3') {
+                        setOrientation('portrait');
+                      }
+                    }}
                     className={`py-2 px-2 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
                       isSelected
                         ? 'bg-emerald-700 text-white border-emerald-800 font-bold shadow-xs'

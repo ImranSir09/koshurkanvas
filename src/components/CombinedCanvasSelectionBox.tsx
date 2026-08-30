@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { TextLayer } from '../types';
-import { LayerAlignmentType, alignSelectedLayers } from '../lib/layerUtils';
+import { LayerAlignmentType, alignSelectedLayers, getLayerVisualBounds } from '../lib/layerUtils';
 import {
   RotateCw,
   Layers,
@@ -46,11 +46,12 @@ export const CombinedCanvasSelectionBox: React.FC<CombinedCanvasSelectionBoxProp
   const [isResizing, setIsResizing] = useState<boolean>(false);
   const [isRotating, setIsRotating] = useState<boolean>(false);
 
-  // Compute union bounding box
-  const minX = Math.min(...selectedLayers.map((l) => l.x));
-  const minY = Math.min(...selectedLayers.map((l) => l.y));
-  const maxX = Math.max(...selectedLayers.map((l) => l.x + (l.width || 200)));
-  const maxY = Math.max(...selectedLayers.map((l) => l.y + (l.height || 60)));
+  // Compute union bounding box using visual bounds
+  const layerBounds = selectedLayers.map((l) => getLayerVisualBounds(l));
+  const minX = Math.min(...layerBounds.map((b) => b.minX));
+  const minY = Math.min(...layerBounds.map((b) => b.minY));
+  const maxX = Math.max(...layerBounds.map((b) => b.maxX));
+  const maxY = Math.max(...layerBounds.map((b) => b.maxY));
 
   const boxX = minX;
   const boxY = minY;

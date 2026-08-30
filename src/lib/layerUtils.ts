@@ -174,10 +174,14 @@ export function mergeSelectedLayers(
   }
 
   // Calculate union bounds
-  const minX = Math.min(...selected.map((l) => l.x));
-  const minY = Math.min(...selected.map((l) => l.y));
-  const maxX = Math.max(...selected.map((l) => l.x + (l.width || 240)));
-  const maxY = Math.max(...selected.map((l) => l.y + (l.height || 80)));
+  const selectedWithBounds = selected.map((l) => ({
+    layer: l,
+    bounds: getLayerVisualBounds(l),
+  }));
+  const minX = Math.min(...selectedWithBounds.map((b) => b.bounds.minX));
+  const minY = Math.min(...selectedWithBounds.map((b) => b.bounds.minY));
+  const maxX = Math.max(...selectedWithBounds.map((b) => b.bounds.maxX));
+  const maxY = Math.max(...selectedWithBounds.map((b) => b.bounds.maxY));
   const unionWidth = Math.max(160, maxX - minX);
   const unionHeight = Math.max(60, maxY - minY);
   const maxZ = Math.max(...selected.map((l) => l.zIndex ?? 0));
@@ -254,6 +258,69 @@ export function mergeSelectedLayers(
   return { updatedLayers, mergedLayer };
 }
 
+export interface LayerVisualBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  centerX: number;
+  centerY: number;
+  visualWidth: number;
+  visualHeight: number;
+  halfAABBWidth: number;
+  halfAABBHeight: number;
+  baseWidth: number;
+  baseHeight: number;
+}
+
+/**
+ * Calculates exact visual axis-aligned bounding box (AABB) and center coordinates
+ * for a layer, accounting for width, height, scale, and rotation.
+ */
+export function getLayerVisualBounds(
+  layer: Partial<TextLayer> & { id?: string; x: number; y: number }
+): LayerVisualBounds {
+  const layerEl =
+    typeof document !== 'undefined' && layer.id
+      ? document.getElementById(`canvas-text-layer-${layer.id}`)
+      : null;
+
+  const baseWidth = layerEl ? layerEl.offsetWidth : (layer.width || 240);
+  const baseHeight = layerEl ? layerEl.offsetHeight : (layer.height || 80);
+  const scale = layer.scale || 1;
+  const rotation = layer.rotation || 0;
+
+  const sw = (baseWidth * scale) / 2;
+  const sh = (baseHeight * scale) / 2;
+  const rad = (rotation * Math.PI) / 180;
+
+  const halfAABBWidth = Math.abs(sw * Math.cos(rad)) + Math.abs(sh * Math.sin(rad));
+  const halfAABBHeight = Math.abs(sw * Math.sin(rad)) + Math.abs(sh * Math.cos(rad));
+
+  const centerX = layer.x + baseWidth / 2;
+  const centerY = layer.y + baseHeight / 2;
+
+  const minX = centerX - halfAABBWidth;
+  const maxX = centerX + halfAABBWidth;
+  const minY = centerY - halfAABBHeight;
+  const maxY = centerY + halfAABBHeight;
+
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    centerX,
+    centerY,
+    visualWidth: 2 * halfAABBWidth,
+    visualHeight: 2 * halfAABBHeight,
+    halfAABBWidth,
+    halfAABBHeight,
+    baseWidth,
+    baseHeight,
+  };
+}
+
 export type LayerAlignmentType =
   | 'left'
   | 'center'
@@ -288,30 +355,39 @@ export function alignSelectedLayers(
     return layers.map((layer) => {
       if (!targetSet.has(layer.id) || layer.isLocked) return layer;
 
-      const layerW = layer.width || 240;
-      const layerH = layer.height || 80;
+      const bounds = getLayerVisualBounds(layer);
+      const halfW = bounds.halfAABBWidth;
+      const halfH = bounds.halfAABBHeight;
+      const baseW = bounds.baseWidth;
+      const baseH = bounds.baseHeight;
 
       let nextX = layer.x;
       let nextY = layer.y;
 
       switch (alignment) {
         case 'left':
-          nextX = 24; // Align to margin/left edge
+          // Exact canvas left edge
+          nextX = Math.round(halfW - baseW / 2);
           break;
         case 'center':
-          nextX = Math.round((canvasWidth - layerW) / 2);
+          // Exact canvas horizontal center
+          nextX = Math.round(canvasWidth / 2 - baseW / 2);
           break;
         case 'right':
-          nextX = Math.round(canvasWidth - layerW - 24);
+          // Exact canvas right edge
+          nextX = Math.round(canvasWidth - halfW - baseW / 2);
           break;
         case 'top':
-          nextY = 24;
+          // Exact canvas top edge
+          nextY = Math.round(halfH - baseH / 2);
           break;
         case 'middle':
-          nextY = Math.round((canvasHeight - layerH) / 2);
+          // Exact canvas vertical center
+          nextY = Math.round(canvasHeight / 2 - baseH / 2);
           break;
         case 'bottom':
-          nextY = Math.round(canvasHeight - layerH - 24);
+          // Exact canvas bottom edge
+          nextY = Math.round(canvasHeight - halfH - baseH / 2);
           break;
         default:
           break;
@@ -324,26 +400,35 @@ export function alignSelectedLayers(
   // Multi-layer alignment relative to Selection Union Bounding Box
   if (selected.length < 2) return layers;
 
-  const minX = Math.min(...selected.map((l) => l.x));
-  const minY = Math.min(...selected.map((l) => l.y));
-  const maxX = Math.max(...selected.map((l) => l.x + (l.width || 240)));
-  const maxY = Math.max(...selected.map((l) => l.y + (l.height || 80)));
+  const selectedWithBounds = selected.map((l) => ({
+    layer: l,
+    bounds: getLayerVisualBounds(l),
+  }));
+
+  const minX = Math.min(...selectedWithBounds.map((b) => b.bounds.minX));
+  const minY = Math.min(...selectedWithBounds.map((b) => b.bounds.minY));
+  const maxX = Math.max(...selectedWithBounds.map((b) => b.bounds.maxX));
+  const maxY = Math.max(...selectedWithBounds.map((b) => b.bounds.maxY));
   const unionWidth = maxX - minX;
   const unionHeight = maxY - minY;
+  const unionCenterX = (minX + maxX) / 2;
+  const unionCenterY = (minY + maxY) / 2;
 
   // Handle Distribute Horizontally
   if (alignment === 'distribute-h') {
-    const sorted = [...selected].sort((a, b) => a.x - b.x);
-    const totalItemWidths = sorted.reduce((sum, l) => sum + (l.width || 240), 0);
+    const sorted = [...selectedWithBounds].sort((a, b) => a.bounds.centerX - b.bounds.centerX);
+    const totalItemWidths = sorted.reduce((sum, item) => sum + item.bounds.visualWidth, 0);
     const freeSpace = unionWidth - totalItemWidths;
     const gap = sorted.length > 1 ? freeSpace / (sorted.length - 1) : 0;
 
-    let currentX = minX;
+    let currentMinX = minX;
     const xPositions = new Map<string, number>();
 
-    sorted.forEach((layer) => {
-      xPositions.set(layer.id, Math.round(currentX));
-      currentX += (layer.width || 240) + gap;
+    sorted.forEach((item) => {
+      const targetMinX = currentMinX;
+      const nextX = Math.round(targetMinX + item.bounds.halfAABBWidth - item.bounds.baseWidth / 2);
+      xPositions.set(item.layer.id, nextX);
+      currentMinX += item.bounds.visualWidth + gap;
     });
 
     return layers.map((layer) => {
@@ -356,17 +441,19 @@ export function alignSelectedLayers(
 
   // Handle Distribute Vertically
   if (alignment === 'distribute-v') {
-    const sorted = [...selected].sort((a, b) => a.y - b.y);
-    const totalItemHeights = sorted.reduce((sum, l) => sum + (l.height || 80), 0);
+    const sorted = [...selectedWithBounds].sort((a, b) => a.bounds.centerY - b.bounds.centerY);
+    const totalItemHeights = sorted.reduce((sum, item) => sum + item.bounds.visualHeight, 0);
     const freeSpace = unionHeight - totalItemHeights;
     const gap = sorted.length > 1 ? freeSpace / (sorted.length - 1) : 0;
 
-    let currentY = minY;
+    let currentMinY = minY;
     const yPositions = new Map<string, number>();
 
-    sorted.forEach((layer) => {
-      yPositions.set(layer.id, Math.round(currentY));
-      currentY += (layer.height || 80) + gap;
+    sorted.forEach((item) => {
+      const targetMinY = currentMinY;
+      const nextY = Math.round(targetMinY + item.bounds.halfAABBHeight - item.bounds.baseHeight / 2);
+      yPositions.set(item.layer.id, nextY);
+      currentMinY += item.bounds.visualHeight + gap;
     });
 
     return layers.map((layer) => {
@@ -380,30 +467,33 @@ export function alignSelectedLayers(
   return layers.map((layer) => {
     if (!targetSet.has(layer.id) || layer.isLocked) return layer;
 
-    const layerW = layer.width || 240;
-    const layerH = layer.height || 80;
+    const bounds = getLayerVisualBounds(layer);
+    const halfW = bounds.halfAABBWidth;
+    const halfH = bounds.halfAABBHeight;
+    const baseW = bounds.baseWidth;
+    const baseH = bounds.baseHeight;
 
     let nextX = layer.x;
     let nextY = layer.y;
 
     switch (alignment) {
       case 'left':
-        nextX = minX;
+        nextX = Math.round(minX + halfW - baseW / 2);
         break;
       case 'center':
-        nextX = Math.round(minX + (unionWidth - layerW) / 2);
+        nextX = Math.round(unionCenterX - baseW / 2);
         break;
       case 'right':
-        nextX = Math.round(maxX - layerW);
+        nextX = Math.round(maxX - halfW - baseW / 2);
         break;
       case 'top':
-        nextY = minY;
+        nextY = Math.round(minY + halfH - baseH / 2);
         break;
       case 'middle':
-        nextY = Math.round(minY + (unionHeight - layerH) / 2);
+        nextY = Math.round(unionCenterY - baseH / 2);
         break;
       case 'bottom':
-        nextY = Math.round(maxY - layerH);
+        nextY = Math.round(maxY - halfH - baseH / 2);
         break;
     }
 
