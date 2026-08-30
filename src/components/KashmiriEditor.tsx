@@ -1268,7 +1268,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 onKeyUp={updateSelectionFromDOM}
                 dir={editorDirection}
                 inputMode={activeKeyboard === 'system' ? 'text' : 'none'}
-                placeholder="کٲشُر متن لؠکھِیو..."
+                placeholder="ولِو کٲشُر لیٚکھو..."
                 className="w-full h-full bg-transparent text-stone-900 caret-emerald-700 resize-none border-none outline-hidden font-nastaliq font-normal cursor-text selection:bg-emerald-200/80 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar leading-[2.6] touch-pan-y overscroll-contain"
                 style={{
                   fontFamily: getFontFamilyCSS(activeFormatting.fontFamily || 'Noto Nastaliq Urdu'),
