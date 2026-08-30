@@ -1,11 +1,20 @@
 package com.kashurkanvas.app;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.DownloadListener;
 import android.webkit.WebView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -22,9 +31,15 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(KashurMediaExportPlugin.class);
         super.onCreate(savedInstanceState);
 
+        configureSystemUI();
+
         try {
             if (getBridge() != null && getBridge().getWebView() != null) {
                 final WebView webView = getBridge().getWebView();
+                
+                // Prevent white flashes during transitions
+                webView.setBackgroundColor(ContextCompat.getColor(this, R.color.windowBackground));
+
                 webView.addJavascriptInterface(new KashurMediaExportPlugin.JsInterface(this), "KashurNativeExport");
                 webView.setDownloadListener(new DownloadListener() {
                     @Override
@@ -118,6 +133,57 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error setting up WebView download listener", e);
         }
+    }
+
+    private void configureSystemUI() {
+        try {
+            Window window = getWindow();
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+
+            int statusBarColor = ContextCompat.getColor(this, R.color.statusBarColor);
+            int navBarColor = ContextCompat.getColor(this, R.color.navigationBarColor);
+
+            window.setStatusBarColor(statusBarColor);
+            window.setNavigationBarColor(navBarColor);
+
+            // Configure light/dark icon contrast for status bar and navigation bar
+            WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+            if (insetsController != null) {
+                // false = light (white) status bar icons on dark green background
+                insetsController.setAppearanceLightStatusBars(false);
+                // false = light (white) navigation bar icons on dark green background
+                insetsController.setAppearanceLightNavigationBars(false);
+            }
+
+            // Handle display cutouts (camera notches / punch holes) gracefully
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                WindowManager.LayoutParams layoutParams = window.getAttributes();
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                window.setAttributes(layoutParams);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error configuring System UI", e);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        configureSystemUI();
+    }
+
+    @Override
+    public void onActionModeStarted(ActionMode mode) {
+        super.onActionModeStarted(mode);
+        try {
+            View customView = mode.getCustomView();
+            if (customView != null) {
+                customView.setBackgroundColor(ContextCompat.getColor(this, R.color.actionModeBackground));
+            }
+        } catch (Exception ignored) {}
     }
 }
 

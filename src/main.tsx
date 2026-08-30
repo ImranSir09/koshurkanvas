@@ -1,6 +1,15 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import App from './App.tsx';
+
+// Initialize Capacitor StatusBar styling on native platforms
+if (Capacitor.isNativePlatform()) {
+  StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+  StatusBar.setBackgroundColor({ color: '#064E3B' }).catch(() => {});
+  StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+}
 
 // Self-hosted fonts for 100% offline & fast rendering
 import '@fontsource/noto-nastaliq-urdu/400.css';

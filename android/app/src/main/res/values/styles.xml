@@ -1,23 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- Base application theme with KoshurKanvas green branding & text-selection action mode styles -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Primary Brand Colors -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- System Status Bar and Navigation Bar -->
+        <item name="android:statusBarColor">@color/statusBarColor</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Window Background -->
+        <item name="android:windowBackground">@color/windowBackground</item>
+
+        <!-- Text Selection Highlight Color -->
+        <item name="android:textColorHighlight">@color/textSelectHighlight</item>
+
+        <!-- Floating Background for Native Text Selection Menu (Copy / Paste / Select All) -->
+        <item name="android:colorBackgroundFloating">@color/actionModeBackground</item>
+        <item name="colorBackgroundFloating">@color/actionModeBackground</item>
+
+        <!-- Action Mode Theme items -->
+        <item name="android:actionModeBackground">@color/actionModeBackground</item>
+        <item name="actionModeBackground">@color/actionModeBackground</item>
+        <item name="android:actionModeSplitBackground">@color/actionModeBackground</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:actionModeStyle">@style/KoshurActionModeStyle</item>
+
+        <!-- Popup Menu Theme for Floating Text Selection Actions -->
+        <item name="android:actionBarPopupTheme">@style/KoshurPopupMenuTheme</item>
+        <item name="android:popupMenuStyle">@style/KoshurPopupMenuStyle</item>
+        <item name="android:actionMenuTextColor">@color/actionModeTextColor</item>
+        <item name="actionMenuTextColor">@color/actionModeTextColor</item>
+        <item name="android:textColorPrimary">@color/actionModeTextColor</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <!-- Action Mode Style for Text Selection Toolbar -->
+    <style name="KoshurActionModeStyle" parent="Widget.AppCompat.ActionMode">
+        <item name="background">@color/actionModeBackground</item>
+        <item name="android:background">@color/actionModeBackground</item>
+        <item name="titleTextStyle">@style/KoshurActionModeTitle</item>
+        <item name="subtitleTextStyle">@style/KoshurActionModeSubtitle</item>
+    </style>
+
+    <style name="KoshurActionModeTitle">
+        <item name="android:textColor">@color/actionModeTextColor</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="KoshurActionModeSubtitle">
+        <item name="android:textColor">@color/actionModeTextColor</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Popup Menu Theme for Contextual Text Selection Actions -->
+    <style name="KoshurPopupMenuTheme" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:colorBackground">@color/actionModeBackground</item>
+        <item name="android:textColor">@color/actionModeTextColor</item>
+        <item name="android:textColorPrimary">@color/actionModeTextColor</item>
+        <item name="android:colorBackgroundFloating">@color/actionModeBackground</item>
+    </style>
+
+    <style name="KoshurPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@color/actionModeBackground</item>
+    </style>
+
+    <!-- Main NoActionBar Theme -->
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@color/windowBackground</item>
         <item name="android:statusBarColor">@color/statusBarColor</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/navigationBarColor</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
+    <!-- Splash Screen / Launch Theme -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:statusBarColor">@color/statusBarColor</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
+
 </resources>

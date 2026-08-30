@@ -4,6 +4,10 @@
     <color name="colorPrimaryDark">#064E3B</color>
     <color name="colorAccent">#D97706</color>
     <color name="windowBackground">#FFFFFF</color>
-    <color name="statusBarColor">#047857</color>
-    <color name="navigationBarColor">#FFFFFF</color>
+    <color name="statusBarColor">#064E3B</color>
+    <color name="navigationBarColor">#064E3B</color>
+    <color name="actionModeBackground">#064E3B</color>
+    <color name="actionModeTextColor">#FFFFFF</color>
+    <color name="textSelectHighlight">#40047857</color>
+    <color name="splashBackground">#064E3B</color>
 </resources>

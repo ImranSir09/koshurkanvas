@@ -177,5 +177,21 @@ textarea {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+/* Custom Text Selection Highlight Styling matching KoshurKanvas Emerald Brand */
+::selection {
+  background-color: rgba(4, 120, 87, 0.28) !important;
+  color: #022c22 !important;
+}
+::-moz-selection {
+  background-color: rgba(4, 120, 87, 0.28) !important;
+  color: #022c22 !important;
+}
+
+/* Ensure native text selection is available on inputs, textareas, and editable text */
+input, textarea, [contenteditable="true"], .selectable-text {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
 
 
