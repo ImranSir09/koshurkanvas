@@ -1,7 +1,7 @@
 import { DesignProject, KashurDocument } from '../types';
 import { DEFAULT_TEXT_STYLE } from './kashmiriData';
-import { db, handleFirestoreError, OperationType } from './firebase';
-import { doc as firestoreDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { doc as firestoreDoc, setDoc } from 'firebase/firestore';
 
 const DB_NAME = 'KashurLekhunStudioDB';
 const DB_VERSION = 1;
@@ -246,30 +246,20 @@ export async function saveDocument(docItem: KashurDocument): Promise<void> {
   try {
     if (db) {
       const docRef = firestoreDoc(db, 'documents', docItem.id);
-      setDoc(docRef, JSON.parse(JSON.stringify(docItem)), { merge: true }).catch((err) => {
-        handleFirestoreError(err, OperationType.WRITE, `documents/${docItem.id}`);
-      });
+      setDoc(docRef, JSON.parse(JSON.stringify(docItem)), { merge: true }).catch(() => {});
     }
   } catch {}
 }
 
 export async function deleteDocument(id: string): Promise<void> {
   try {
-    const dbInstance = await openDB();
-    const transaction = dbInstance.transaction(STORE_DOCS, 'readwrite');
+    const db = await openDB();
+    const transaction = db.transaction(STORE_DOCS, 'readwrite');
     transaction.objectStore(STORE_DOCS).delete(id);
   } catch {
     const docs = getFallbackDocs().filter((d) => d.id !== id);
     localStorage.setItem('kashur_docs_fallback', JSON.stringify(docs));
   }
-
-  try {
-    if (db) {
-      deleteDoc(firestoreDoc(db, 'documents', id)).catch((err) => {
-        handleFirestoreError(err, OperationType.DELETE, `documents/${id}`);
-      });
-    }
-  } catch {}
 }
 
 function getFallbackDocs(): KashurDocument[] {
@@ -325,30 +315,20 @@ export async function saveDesign(designItem: DesignProject): Promise<void> {
   try {
     if (db) {
       const docRef = firestoreDoc(db, 'designs', designItem.id);
-      setDoc(docRef, JSON.parse(JSON.stringify(designItem)), { merge: true }).catch((err) => {
-        handleFirestoreError(err, OperationType.WRITE, `designs/${designItem.id}`);
-      });
+      setDoc(docRef, JSON.parse(JSON.stringify(designItem)), { merge: true }).catch(() => {});
     }
   } catch {}
 }
 
 export async function deleteDesign(id: string): Promise<void> {
   try {
-    const dbInstance = await openDB();
-    const transaction = dbInstance.transaction(STORE_DESIGNS, 'readwrite');
+    const db = await openDB();
+    const transaction = db.transaction(STORE_DESIGNS, 'readwrite');
     transaction.objectStore(STORE_DESIGNS).delete(id);
   } catch {
     const list = getFallbackDesigns().filter((d) => d.id !== id);
     localStorage.setItem('kashur_designs_fallback', JSON.stringify(list));
   }
-
-  try {
-    if (db) {
-      deleteDoc(firestoreDoc(db, 'designs', id)).catch((err) => {
-        handleFirestoreError(err, OperationType.DELETE, `designs/${id}`);
-      });
-    }
-  } catch {}
 }
 
 function getFallbackDesigns(): DesignProject[] {

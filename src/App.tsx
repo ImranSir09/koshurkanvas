@@ -17,7 +17,6 @@ import { ProjectsDrawer } from './components/ProjectsDrawer';
 import { TransliterationModal } from './components/TransliterationModal';
 import { loadSavedCustomFonts } from './lib/customFonts';
 import { initNotificationService } from './lib/notificationService';
-import { testConnection } from './lib/firebase';
 
 export default function App() {
   // Data State
@@ -50,7 +49,6 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.remove('dark');
     loadSavedCustomFonts();
-    testConnection();
   }, []);
 
   // Load IndexedDB documents on mount
