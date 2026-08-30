@@ -797,7 +797,10 @@ export async function exportDocumentClean(
         }
       }
 
-      await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
+      const res = await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
+      if (res && res.success === false) {
+        throw new Error(res.message || 'Failed to save PNG image');
+      }
       return dataUrl;
     }
 
@@ -815,7 +818,10 @@ export async function exportDocumentClean(
         }
       }
 
-      await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
+      const res = await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
+      if (res && res.success === false) {
+        throw new Error(res.message || 'Failed to save transparent PNG image');
+      }
       return dataUrl;
     }
 
@@ -833,7 +839,10 @@ export async function exportDocumentClean(
         }
       }
 
-      await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
+      const res = await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
+      if (res && res.success === false) {
+        throw new Error(res.message || 'Failed to save JPEG image');
+      }
       return dataUrl;
     }
 
@@ -842,7 +851,10 @@ export async function exportDocumentClean(
         ...commonOptions,
       });
 
-      await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
+      const res = await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
+      if (res && res.success === false) {
+        throw new Error(res.message || 'Failed to save SVG file');
+      }
       return dataUrl;
     }
 
@@ -877,7 +889,10 @@ export async function exportDocumentClean(
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
       const pdfDataUri = pdf.output('datauristring');
-      await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+      const res = await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+      if (res && res.success === false) {
+        throw new Error(res.message || 'Failed to save PDF document');
+      }
       return pdfDataUri;
     }
 
@@ -996,7 +1011,10 @@ export async function exportElement(
       ...commonHtmlToImageOptions,
       quality: 1,
     });
-    await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
+    const res = await saveExportToPublicStorage(dataUrl, `${fileName}.png`, 'image/png');
+    if (res && res.success === false) {
+      throw new Error(res.message || 'Failed to save PNG image');
+    }
     return dataUrl;
   }
 
@@ -1006,7 +1024,10 @@ export async function exportElement(
       backgroundColor: 'transparent',
       quality: 1,
     });
-    await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
+    const res = await saveExportToPublicStorage(dataUrl, `${fileName}-transparent.png`, 'image/png');
+    if (res && res.success === false) {
+      throw new Error(res.message || 'Failed to save transparent PNG');
+    }
     return dataUrl;
   }
 
@@ -1016,7 +1037,10 @@ export async function exportElement(
       quality: options.quality || 0.96,
       backgroundColor: '#ffffff',
     });
-    await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
+    const res = await saveExportToPublicStorage(dataUrl, `${fileName}.jpg`, 'image/jpeg');
+    if (res && res.success === false) {
+      throw new Error(res.message || 'Failed to save JPEG image');
+    }
     return dataUrl;
   }
 
@@ -1024,7 +1048,10 @@ export async function exportElement(
     dataUrl = await htmlToImage.toSvg(element, {
       ...commonHtmlToImageOptions,
     });
-    await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
+    const res = await saveExportToPublicStorage(dataUrl, `${fileName}.svg`, 'image/svg+xml');
+    if (res && res.success === false) {
+      throw new Error(res.message || 'Failed to save SVG file');
+    }
     return dataUrl;
   }
 
@@ -1053,7 +1080,10 @@ export async function exportElement(
 
     pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
     const pdfDataUri = pdf.output('datauristring');
-    await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+    const res = await saveExportToPublicStorage(pdfDataUri, `${fileName}.pdf`, 'application/pdf');
+    if (res && res.success === false) {
+      throw new Error(res.message || 'Failed to save PDF document');
+    }
     return pdfDataUri;
   }
 
@@ -1141,24 +1171,28 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function downloadTextFile(content: string, filename: string) {
+export async function downloadTextFile(
+  content: string,
+  filename: string
+): Promise<{ success: boolean; path?: string; uri?: string; message?: string }> {
   const fullFileName = filename.endsWith('.txt') ? filename : `${filename}.txt`;
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    const dataUrl = reader.result as string;
-    saveExportToPublicStorage(dataUrl, fullFileName, 'text/plain;charset=utf-8');
-  };
-  reader.readAsDataURL(blob);
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed reading text file blob'));
+    reader.readAsDataURL(blob);
+  });
+  return await saveExportToPublicStorage(dataUrl, fullFileName, 'text/plain;charset=utf-8');
 }
 
-export function downloadDocFile(
+export async function downloadDocFile(
   title: string,
   content: string,
   filename: string,
   paperSize: DocumentPaperSize = 'a4',
   orientation: 'portrait' | 'landscape' = 'portrait'
-) {
+): Promise<{ success: boolean; path?: string; uri?: string; message?: string }> {
   const sizeMap: Record<DocumentPaperSize, string> = {
     a3: '297mm 420mm',
     a4: '210mm 297mm',
@@ -1245,12 +1279,13 @@ h1.doc-title {
 
   const fullFileName = filename.endsWith('.doc') ? filename : `${filename}.doc`;
   const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    const dataUrl = reader.result as string;
-    saveExportToPublicStorage(dataUrl, fullFileName, 'application/msword');
-  };
-  reader.readAsDataURL(blob);
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed reading doc file blob'));
+    reader.readAsDataURL(blob);
+  });
+  return await saveExportToPublicStorage(dataUrl, fullFileName, 'application/msword');
 }
 
 function triggerDownload(dataUrl: string, filename: string) {

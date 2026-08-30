@@ -1,5 +1,6 @@
 package com.kashurkanvas.app;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,25 +17,28 @@ import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.core.content.FileProvider;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 @CapacitorPlugin(name = "KashurMediaExport")
 public class KashurMediaExportPlugin extends Plugin {
     private static final String TAG = "KashurMediaExport";
     private static final String ALBUM_NAME = "KoshurKanvas";
+
+    private byte[] pendingSafBytes = null;
 
     @PluginMethod
     public void saveImageToGallery(PluginCall call) {
@@ -43,17 +47,30 @@ public class KashurMediaExportPlugin extends Plugin {
         String mimeType = call.getString("mimeType", "image/png");
         String album = call.getString("album", ALBUM_NAME);
 
-        if (data == null || data.isEmpty()) {
-            call.reject("Data is required");
+        if (data == null || data.trim().isEmpty()) {
+            call.reject("Data is required and cannot be empty");
             return;
         }
 
         try {
             byte[] bytes = decodeData(data);
-            Uri savedUri = saveImageBytes(getContext(), bytes, fileName, mimeType, album);
+            if (bytes == null || bytes.length == 0) {
+                call.reject("Decoded file bytes are empty (0 bytes)");
+                return;
+            }
+
+            Uri savedUri = null;
+            if ("image/svg+xml".equalsIgnoreCase(mimeType) || fileName.endsWith(".svg")) {
+                savedUri = saveImageBytes(getContext(), bytes, fileName, mimeType, album);
+                if (savedUri == null) {
+                    savedUri = saveDocumentBytes(getContext(), bytes, fileName, mimeType, album);
+                }
+            } else {
+                savedUri = saveImageBytes(getContext(), bytes, fileName, mimeType, album);
+            }
 
             if (savedUri != null) {
-                showToast("Image saved to Pictures/" + album);
+                showToast("Saved to Pictures/" + album);
                 JSObject ret = new JSObject();
                 ret.put("success", true);
                 ret.put("uri", savedUri.toString());
@@ -76,17 +93,22 @@ public class KashurMediaExportPlugin extends Plugin {
         String mimeType = call.getString("mimeType", "application/pdf");
         String folder = call.getString("folder", ALBUM_NAME);
 
-        if (data == null || data.isEmpty()) {
-            call.reject("Data is required");
+        if (data == null || data.trim().isEmpty()) {
+            call.reject("Data is required and cannot be empty");
             return;
         }
 
         try {
             byte[] bytes = decodeData(data);
+            if (bytes == null || bytes.length == 0) {
+                call.reject("Decoded document bytes are empty (0 bytes)");
+                return;
+            }
+
             Uri savedUri = saveDocumentBytes(getContext(), bytes, fileName, mimeType, folder);
 
             if (savedUri != null) {
-                showToast("Document saved to Downloads/" + folder);
+                showToast("Saved to Downloads/" + folder);
                 JSObject ret = new JSObject();
                 ret.put("success", true);
                 ret.put("uri", savedUri.toString());
@@ -94,12 +116,69 @@ public class KashurMediaExportPlugin extends Plugin {
                 ret.put("path", "Downloads/" + folder + "/" + fileName);
                 call.resolve(ret);
             } else {
-                call.reject("Failed to save document to MediaStore");
+                call.reject("Failed to save document to MediaStore Downloads");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error saving document", e);
             call.reject("Error saving document: " + e.getMessage(), e);
         }
+    }
+
+    @PluginMethod
+    public void saveWithSAF(PluginCall call) {
+        String data = call.getString("data");
+        String fileName = call.getString("fileName", "kashur-export.png");
+        String mimeType = call.getString("mimeType", "image/png");
+
+        if (data == null || data.trim().isEmpty()) {
+            call.reject("Data is required");
+            return;
+        }
+
+        byte[] bytes = decodeData(data);
+        if (bytes == null || bytes.length == 0) {
+            call.reject("Decoded file bytes are empty (0 bytes)");
+            return;
+        }
+
+        pendingSafBytes = bytes;
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+
+        startActivityForResult(call, intent, "handleSafResult");
+    }
+
+    @ActivityCallback
+    private void handleSafResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+            Uri uri = result.getData().getData();
+            if (uri != null && pendingSafBytes != null && pendingSafBytes.length > 0) {
+                try (OutputStream os = getContext().getContentResolver().openOutputStream(uri)) {
+                    if (os != null) {
+                        os.write(pendingSafBytes);
+                        os.flush();
+                        showToast("Saved to selected location");
+                        JSObject ret = new JSObject();
+                        ret.put("success", true);
+                        ret.put("uri", uri.toString());
+                        call.resolve(ret);
+                        return;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error writing to SAF URI", e);
+                    call.reject("Failed to write to selected file location: " + e.getMessage());
+                    return;
+                } finally {
+                    pendingSafBytes = null;
+                }
+            }
+        }
+        pendingSafBytes = null;
+        call.reject("Save operation cancelled or failed");
     }
 
     @PluginMethod
@@ -110,13 +189,18 @@ public class KashurMediaExportPlugin extends Plugin {
         String title = call.getString("title", "Kashur Kanvas");
         String text = call.getString("text", "Created with Kashur Kanvas");
 
-        if (data == null || data.isEmpty()) {
-            call.reject("Data is required");
+        if (data == null || data.trim().isEmpty()) {
+            call.reject("Data is required and cannot be empty");
             return;
         }
 
         try {
             byte[] bytes = decodeData(data);
+            if (bytes == null || bytes.length == 0) {
+                call.reject("Decoded file bytes are empty (0 bytes)");
+                return;
+            }
+
             Context context = getContext();
             File cacheDir = new File(context.getCacheDir(), "shared_exports");
             if (!cacheDir.exists()) {
@@ -152,6 +236,7 @@ public class KashurMediaExportPlugin extends Plugin {
 
             JSObject ret = new JSObject();
             ret.put("success", true);
+            ret.put("uri", contentUri.toString());
             call.resolve(ret);
         } catch (Exception e) {
             Log.e(TAG, "Error sharing file", e);
@@ -161,6 +246,10 @@ public class KashurMediaExportPlugin extends Plugin {
 
     // Static helper methods for direct Java / Bridge usage
     public static byte[] decodeData(String data) {
+        if (data == null || data.isEmpty()) {
+            return new byte[0];
+        }
+
         if (data.startsWith("data:")) {
             int commaIndex = data.indexOf(",");
             if (commaIndex != -1) {
@@ -169,10 +258,15 @@ public class KashurMediaExportPlugin extends Plugin {
                 if (meta.contains(";base64")) {
                     return Base64.decode(raw, Base64.DEFAULT);
                 } else {
-                    return Uri.decode(raw).getBytes(StandardCharsets.UTF_8);
+                    try {
+                        return URLDecoder.decode(raw, "UTF-8").getBytes(StandardCharsets.UTF_8);
+                    } catch (Exception e) {
+                        return raw.getBytes(StandardCharsets.UTF_8);
+                    }
                 }
             }
         }
+
         try {
             return Base64.decode(data, Base64.DEFAULT);
         } catch (Exception e) {
@@ -180,7 +274,66 @@ public class KashurMediaExportPlugin extends Plugin {
         }
     }
 
+    public static String getMimeTypeFromFileName(String fileName) {
+        if (fileName == null) return "application/octet-stream";
+        String ext = fileName.toLowerCase();
+        if (ext.endsWith(".png")) return "image/png";
+        if (ext.endsWith(".jpg") || ext.endsWith(".jpeg")) return "image/jpeg";
+        if (ext.endsWith(".svg")) return "image/svg+xml";
+        if (ext.endsWith(".webp")) return "image/webp";
+        if (ext.endsWith(".pdf")) return "application/pdf";
+        if (ext.endsWith(".doc")) return "application/msword";
+        if (ext.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (ext.endsWith(".txt")) return "text/plain;charset=utf-8";
+        if (ext.endsWith(".json")) return "application/json";
+        return "application/octet-stream";
+    }
+
+    public static String parseFileName(String contentDisposition, String url, String mimeType) {
+        String fileName = null;
+        if (contentDisposition != null) {
+            int idx = contentDisposition.toLowerCase().indexOf("filename=");
+            if (idx != -1) {
+                fileName = contentDisposition.substring(idx + 9).trim();
+                if (fileName.startsWith("\"") && fileName.endsWith("\"") && fileName.length() > 1) {
+                    fileName = fileName.substring(1, fileName.length() - 1);
+                }
+                if (fileName.contains(";")) {
+                    fileName = fileName.substring(0, fileName.indexOf(";")).trim();
+                }
+            }
+        }
+        if (fileName == null || fileName.isEmpty()) {
+            if (url != null && !url.startsWith("data:") && !url.startsWith("blob:")) {
+                try {
+                    String path = Uri.parse(url).getPath();
+                    if (path != null && path.contains("/")) {
+                        fileName = path.substring(path.lastIndexOf('/') + 1);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+        if (fileName == null || fileName.isEmpty() || !fileName.contains(".")) {
+            String ext = ".png";
+            if (mimeType != null) {
+                if (mimeType.contains("jpeg") || mimeType.contains("jpg")) ext = ".jpg";
+                else if (mimeType.contains("svg")) ext = ".svg";
+                else if (mimeType.contains("pdf")) ext = ".pdf";
+                else if (mimeType.contains("word") || mimeType.contains("msword")) ext = ".doc";
+                else if (mimeType.contains("text")) ext = ".txt";
+                else if (mimeType.contains("json")) ext = ".json";
+            }
+            fileName = "kashur-export-" + System.currentTimeMillis() + ext;
+        }
+        return fileName;
+    }
+
     public static Uri saveImageBytes(Context context, byte[] bytes, String fileName, String mimeType, String album) {
+        if (bytes == null || bytes.length == 0) {
+            Log.e(TAG, "saveImageBytes called with 0 bytes");
+            return null;
+        }
+
         ContentResolver resolver = context.getContentResolver();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -202,8 +355,10 @@ public class KashurMediaExportPlugin extends Plugin {
                     resolver.update(uri, values, null, null);
                     return uri;
                 } catch (Exception e) {
-                    Log.e(TAG, "Failed writing to MediaStore", e);
-                    resolver.delete(uri, null, null);
+                    Log.e(TAG, "Failed writing to MediaStore Images", e);
+                    try {
+                        resolver.delete(uri, null, null);
+                    } catch (Exception ignored) {}
                 }
             }
         } else {
@@ -224,13 +379,18 @@ public class KashurMediaExportPlugin extends Plugin {
                 );
                 return Uri.fromFile(outFile);
             } catch (Exception e) {
-                Log.e(TAG, "Failed writing to public directory", e);
+                Log.e(TAG, "Failed writing to public pictures directory", e);
             }
         }
         return null;
     }
 
     public static Uri saveDocumentBytes(Context context, byte[] bytes, String fileName, String mimeType, String folder) {
+        if (bytes == null || bytes.length == 0) {
+            Log.e(TAG, "saveDocumentBytes called with 0 bytes");
+            return null;
+        }
+
         ContentResolver resolver = context.getContentResolver();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -252,8 +412,10 @@ public class KashurMediaExportPlugin extends Plugin {
                     resolver.update(uri, values, null, null);
                     return uri;
                 } catch (Exception e) {
-                    Log.e(TAG, "Failed writing document to MediaStore", e);
-                    resolver.delete(uri, null, null);
+                    Log.e(TAG, "Failed writing document to MediaStore Downloads", e);
+                    try {
+                        resolver.delete(uri, null, null);
+                    } catch (Exception ignored) {}
                 }
             }
         } else {
@@ -274,7 +436,7 @@ public class KashurMediaExportPlugin extends Plugin {
                 );
                 return Uri.fromFile(outFile);
             } catch (Exception e) {
-                Log.e(TAG, "Failed writing document to public directory", e);
+                Log.e(TAG, "Failed writing document to public downloads directory", e);
             }
         }
         return null;
@@ -302,10 +464,14 @@ public class KashurMediaExportPlugin extends Plugin {
         public String saveImage(String data, String fileName, String mimeType) {
             try {
                 byte[] bytes = decodeData(data);
+                if (bytes == null || bytes.length == 0) return "";
                 Uri uri = saveImageBytes(context, bytes, fileName, mimeType, ALBUM_NAME);
+                if (uri == null && ("image/svg+xml".equalsIgnoreCase(mimeType) || fileName.endsWith(".svg"))) {
+                    uri = saveDocumentBytes(context, bytes, fileName, mimeType, ALBUM_NAME);
+                }
                 if (uri != null) {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(context, "Image saved to Pictures/KoshurKanvas", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Saved to Pictures/" + ALBUM_NAME, Toast.LENGTH_LONG).show()
                     );
                     return uri.toString();
                 }
@@ -319,10 +485,11 @@ public class KashurMediaExportPlugin extends Plugin {
         public String saveDocument(String data, String fileName, String mimeType) {
             try {
                 byte[] bytes = decodeData(data);
+                if (bytes == null || bytes.length == 0) return "";
                 Uri uri = saveDocumentBytes(context, bytes, fileName, mimeType, ALBUM_NAME);
                 if (uri != null) {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(context, "Document saved to Downloads/KoshurKanvas", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Saved to Downloads/" + ALBUM_NAME, Toast.LENGTH_LONG).show()
                     );
                     return uri.toString();
                 }
@@ -333,8 +500,33 @@ public class KashurMediaExportPlugin extends Plugin {
         }
 
         @JavascriptInterface
+        public void handleBlobDownload(String dataUrl, String fileName, String mimeType) {
+            if (dataUrl == null || dataUrl.isEmpty()) return;
+            try {
+                byte[] bytes = decodeData(dataUrl);
+                if (bytes == null || bytes.length == 0) return;
+                boolean isImage = (mimeType != null && mimeType.startsWith("image/")) ||
+                        fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".svg");
+                Uri uri = isImage ? saveImageBytes(context, bytes, fileName, mimeType, ALBUM_NAME)
+                                  : saveDocumentBytes(context, bytes, fileName, mimeType, ALBUM_NAME);
+                if (uri == null && isImage && fileName.endsWith(".svg")) {
+                    uri = saveDocumentBytes(context, bytes, fileName, mimeType, ALBUM_NAME);
+                }
+                if (uri != null) {
+                    String dest = isImage ? "Pictures/" + ALBUM_NAME : "Downloads/" + ALBUM_NAME;
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            Toast.makeText(context, "Downloaded and saved to " + dest, Toast.LENGTH_LONG).show()
+                    );
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "handleBlobDownload error", e);
+            }
+        }
+
+        @JavascriptInterface
         public boolean isNative() {
             return true;
         }
     }
 }
+

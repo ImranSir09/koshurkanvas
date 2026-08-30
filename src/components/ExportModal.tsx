@@ -143,51 +143,81 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setStatusMessage(null);
         onClose();
       }, 900);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setStatusMessage('Export Failed');
-      setIsExporting(false);
-      setExportingFormat(null);
+      setStatusMessage(`Export Failed: ${err?.message || 'Error saving file'}`);
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportingFormat(null);
+      }, 3000);
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     setIsExporting(true);
     setExportingFormat('doc');
+    setStatusMessage('Preparing Word DOC...');
     try {
-      downloadDocFile(
+      const res = await downloadDocFile(
         projectTitle,
         rawUnicodeText,
         fileName,
         (sizeCategory === 'paper' ? selectedSize : 'a4') as DocumentPaperSize,
         orientation
       );
-      setStatusMessage('Word DOC downloaded');
+      if (res && res.success) {
+        setStatusMessage(res.message || 'Word DOC saved');
+        setTimeout(() => {
+          setIsExporting(false);
+          setExportingFormat(null);
+          setStatusMessage(null);
+          onClose();
+        }, 900);
+      } else {
+        setStatusMessage(`Export Failed: ${res?.message || 'Failed to save Word DOC'}`);
+        setTimeout(() => {
+          setIsExporting(false);
+          setExportingFormat(null);
+        }, 3000);
+      }
+    } catch (e: any) {
+      console.error(e);
+      setStatusMessage(`Export Failed: ${e?.message || 'Error generating DOC'}`);
       setTimeout(() => {
         setIsExporting(false);
         setExportingFormat(null);
-        setStatusMessage(null);
-      }, 1000);
-    } catch (e) {
-      setIsExporting(false);
-      setExportingFormat(null);
+      }, 3000);
     }
   };
 
-  const handleDownloadTxt = () => {
+  const handleDownloadTxt = async () => {
     setIsExporting(true);
     setExportingFormat('txt');
+    setStatusMessage('Preparing Text file...');
     try {
-      downloadTextFile(rawUnicodeText, fileName);
-      setStatusMessage('TXT file downloaded');
+      const res = await downloadTextFile(rawUnicodeText, fileName);
+      if (res && res.success) {
+        setStatusMessage(res.message || 'Text file saved');
+        setTimeout(() => {
+          setIsExporting(false);
+          setExportingFormat(null);
+          setStatusMessage(null);
+          onClose();
+        }, 900);
+      } else {
+        setStatusMessage(`Export Failed: ${res?.message || 'Failed to save Text file'}`);
+        setTimeout(() => {
+          setIsExporting(false);
+          setExportingFormat(null);
+        }, 3000);
+      }
+    } catch (e: any) {
+      console.error(e);
+      setStatusMessage(`Export Failed: ${e?.message || 'Error generating TXT'}`);
       setTimeout(() => {
         setIsExporting(false);
         setExportingFormat(null);
-        setStatusMessage(null);
-      }, 1000);
-    } catch (e) {
-      setIsExporting(false);
-      setExportingFormat(null);
+      }, 3000);
     }
   };
 
