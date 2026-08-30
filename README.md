@@ -206,7 +206,7 @@ Generates optimized static assets in the `dist/` directory.
 
 Kashur Kanvas is built with Capacitor 8 and mobile-first responsive touch targets (minimum 44px for touch accuracy).
 
-To build as an Android APK:
+To build as an Android APK locally:
 ```bash
 # Sync web build to Capacitor Android project
 npm run cap:sync
@@ -214,6 +214,74 @@ npm run cap:sync
 # Open in Android Studio
 npm run cap:open
 ```
+
+---
+
+## 🔒 Automated GitHub Actions Release Pipeline & Keystore Security
+
+KoshurKanvas includes an automated GitHub Actions release workflow (`.github/workflows/release-android.yml`) that compiles, signs, verifies, and packages both **Signed Release APK** (`KoshurKanvas-release.apk`) and **Signed Release AAB** (`KoshurKanvas-release.aab`).
+
+### 🔑 Required GitHub Secrets
+
+To sign Android builds automatically without exposing sensitive credentials, set up the following secrets in your GitHub repository (**Settings → Secrets and variables → Actions → New repository secret**):
+
+| Secret Name | Description | Example / Notes |
+| :--- | :--- | :--- |
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded string of your dedicated `.keystore` / `.jks` file | Created via `base64 -w 0 release.keystore` |
+| `ANDROID_KEYSTORE_PASSWORD` | Master password for your Android keystore | e.g. `StrongStorePass#2026` |
+| `ANDROID_KEY_ALIAS` | Key alias name defined when creating the keystore | e.g. `koshurkanvas-release-key` |
+| `ANDROID_KEY_PASSWORD` | Password for the specific key alias | e.g. `StrongKeyPass#2026` |
+
+---
+
+### 🛡️ Keystore Generation & Security Instructions
+
+> [!CAUTION]
+> **NEVER** commit your production keystore file (`*.keystore`, `*.jks`), key passwords, or alias secrets to Git repository branches. The `.gitignore` file strictly excludes all `.keystore` and `.jks` files to prevent accidental commits.
+
+#### 1. Generate a Dedicated Production Keystore
+Run the following command in your local terminal (do not run inside public repositories):
+
+```bash
+keytool -genkey -v \
+  -keystore release.keystore \
+  -alias koshurkanvas-release-key \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000
+```
+
+#### 2. Convert Keystore to Base64 String
+Encode the generated `release.keystore` file to Base64:
+
+- **macOS / Linux**:
+  ```bash
+  base64 -i release.keystore -o keystore_base64.txt
+  # OR
+  base64 -w 0 release.keystore > keystore_base64.txt
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.keystore")) | Set-Content keystore_base64.txt
+  ```
+
+#### 3. Save Keystore & Secrets Securely
+1. Copy the contents of `keystore_base64.txt` into the `ANDROID_KEYSTORE_BASE64` GitHub secret.
+2. Store your original `release.keystore` file and passwords in a secure offline backup or corporate password manager (e.g. 1Password, Bitwarden, HashiCorp Vault).
+3. Delete local temporary text files (`rm keystore_base64.txt`).
+
+---
+
+### 🚀 Release Pipeline Workflow Steps
+
+When a release is triggered (on push to `main`/`master`, git tag `v*`, or manual `workflow_dispatch`):
+
+1. **Lint & Code Integrity**: Runs `npm run lint` (`tsc --noEmit`) to ensure type safety.
+2. **Web Build & Capacitor Sync**: Executes `npm run build` and `npx cap sync android`.
+3. **Keystore Reconstitution**: Safely decodes `ANDROID_KEYSTORE_BASE64` into a temporary runner file.
+4. **Signed Gradle Builds**: Runs `./gradlew assembleRelease bundleRelease` with `signingConfigs.release`.
+5. **Signature Verification**: Validates APK using `apksigner verify` and AAB using `jarsigner -verify`.
+6. **Artifact Packaging**: Uploads `KoshurKanvas-release.apk` and `KoshurKanvas-release.aab` as downloadable build artifacts.
 
 ---
 
