@@ -7,15 +7,44 @@ import { DEFAULT_TEXT_STYLE } from './kashmiriData';
 import { getCustomFontsCSS } from './customFonts';
 import { saveExportToPublicStorage, shareFileNative, isNativeAndroid } from './nativeStorage';
 
+export type ExportStageName = 'Preparing' | 'Rendering' | 'Encoding' | 'Saving' | 'Complete';
+
+export interface ExportProgressDetails {
+  sizeBytes?: number;
+  dataUrl?: string;
+  uri?: string;
+  path?: string;
+}
+
 export interface ExportOptions {
   fileName: string;
-  format: 'png' | 'jpeg' | 'pdf' | 'transparent_png' | 'svg';
+  format: 'png' | 'jpeg' | 'pdf' | 'transparent_png' | 'svg' | 'doc' | 'txt' | 'share';
   pixelRatio?: number;
   quality?: number;
   aspectRatio?: CanvasAspectRatio;
   paperSize?: DocumentPaperSize;
   orientation?: 'portrait' | 'landscape';
   includeBorder?: boolean;
+  onProgress?: (stage: ExportStageName, percent: number, details?: ExportProgressDetails) => void;
+  signal?: AbortSignal;
+}
+
+export function calculateDataUrlByteSize(dataUrl: string): number {
+  if (!dataUrl) return 0;
+  const commaIdx = dataUrl.indexOf(',');
+  if (commaIdx === -1) return dataUrl.length;
+  const base64Str = dataUrl.slice(commaIdx + 1);
+  const paddingMatches = base64Str.match(/=/g);
+  const padding = paddingMatches ? paddingMatches.length : 0;
+  return Math.floor((base64Str.length * 3) / 4) - padding;
+}
+
+export function formatFileSize(bytes: number | null | undefined): string {
+  if (bytes === null || bytes === undefined || isNaN(bytes)) return 'Calculating size...';
+  if (bytes <= 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 let cachedFontEmbedCSS: string | null = null;
