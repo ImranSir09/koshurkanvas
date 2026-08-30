@@ -1349,7 +1349,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
         {activeLayer ? (
           /* When a text layer is selected: Contextual typography and design tools with direct Layers & Canvas access */
           <div className="w-full flex items-center justify-between gap-1 min-w-max">
-            {/* Primary Action: Edit Unicode Text in Native Mode */}
+            {/* 1. Primary Action: Edit Unicode Text */}
             <button
               id="btn-bottom-edit-unicode"
               type="button"
@@ -1362,6 +1362,10 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <span className="text-[9.5px] font-sans font-bold leading-none mt-0.5 whitespace-nowrap">Edit</span>
             </button>
 
+            {/* Vertical Divider */}
+            <div className="h-5 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
+
+            {/* 2. Typography & Text Formatting Group */}
             {/* Font Picker Trigger */}
             <button
               id="btn-bottom-font"
@@ -1450,6 +1454,10 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Format</span>
             </button>
 
+            {/* Vertical Divider */}
+            <div className="h-5 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
+
+            {/* 3. Visual Effects & Position Group */}
             {/* Border & Corner Radius Shape Trigger */}
             <button
               id="btn-bottom-border"
@@ -1519,8 +1527,9 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
             </button>
 
             {/* Vertical Divider */}
-            <div className="h-6 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
+            <div className="h-5 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
 
+            {/* 4. Canvas & Layer Management Group */}
             {/* Layers Panel Access */}
             <button
               id="btn-bottom-layers-contextual"
@@ -1552,6 +1561,10 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               <span className="text-[9.5px] font-sans font-semibold leading-none mt-0.5 whitespace-nowrap">Canvas</span>
             </button>
 
+            {/* Vertical Divider */}
+            <div className="h-5 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
+
+            {/* 5. Quick Layer Actions */}
             {/* Quick Duplicate Active Layer */}
             <button
               id="btn-bottom-duplicate"

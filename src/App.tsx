@@ -155,23 +155,30 @@ export default function App() {
     }
   };
 
+  // Active View Tab State (Input Text vs Canvas)
+  const [activeTab, setActiveTab] = useState<'input_text' | 'canvas'>('canvas');
+
   // Insert character from picker into editor
   const handleInsertCharFromPicker = (char: string) => {
     // Trigger editor event for cursor-accurate insertion with undo history
     window.dispatchEvent(new CustomEvent('app-insert-char', { detail: { char } }));
   };
 
+  const handleAddTextLayer = () => {
+    window.dispatchEvent(new CustomEvent('app-add-text-layer'));
+  };
+
   return (
     <div className="w-full h-full h-[100dvh] max-h-[100dvh] bg-white text-stone-950 overflow-hidden font-sans relative flex flex-col selection:bg-emerald-100 selection:text-emerald-900 overscroll-none touch-none">
       {/* Top Application Header */}
       <Header
-        currentDocTitle={currentDoc.title}
-        onRenameDocument={(newTitle) => handleRenameDocument(currentDoc.id, newTitle)}
         onOpenProjects={() => setIsProjectsOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onNewDocument={handleNewDocument}
         onOpenCharacterPicker={() => setIsCharPickerOpen(true)}
         onOpenTransliteration={() => setIsTransliterationOpen(true)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         canUndo={canUndo}
         canRedo={canRedo}
         onUndo={handleUndo}
@@ -193,6 +200,8 @@ export default function App() {
               setCanUndo(undoable);
               setCanRedo(redoable);
             }}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
         </main>
 

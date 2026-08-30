@@ -83,6 +83,8 @@ interface KashmiriEditorProps {
   isFocusedWritingMode: boolean;
   setIsFocusedWritingMode: (val: boolean) => void;
   onHistoryChange?: (canUndo: boolean, canRedo: boolean) => void;
+  activeTab?: MobileTab;
+  onTabChange?: (tab: MobileTab) => void;
 }
 
 export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
@@ -95,9 +97,13 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   isFocusedWritingMode,
   setIsFocusedWritingMode,
   onHistoryChange,
+  activeTab: propActiveTab,
+  onTabChange: propOnTabChange,
 }) => {
   // Primary Two-Tab Workflow: 'input_text' (Unicode entry) and 'canvas' (Visual design)
-  const [activeTab, setActiveTab] = useState<MobileTab>('canvas');
+  const [internalTab, setInternalTab] = useState<MobileTab>('canvas');
+  const activeTab = propActiveTab || internalTab;
+  const setActiveTab = propOnTabChange || setInternalTab;
 
   // Keyboard Selector State (Input Text tab only): 'system' | 'kashmiri' | 'none'
   const [activeKeyboard, setActiveKeyboard] = useState<KeyboardType>('kashmiri');
@@ -853,6 +859,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     }, 50);
   };
 
+  // Listen to custom app-add-text-layer event from header
+  useEffect(() => {
+    const handleAddTextEvent = () => handleAddTextLayer();
+    window.addEventListener('app-add-text-layer', handleAddTextEvent);
+    return () => {
+      window.removeEventListener('app-add-text-layer', handleAddTextEvent);
+    };
+  }, [textLayers, doc.defaultStyle]);
+
   const handleDuplicateLayer = (layerId: string) => {
     const source = textLayers.find((l) => l.id === layerId);
     if (!source) return;
@@ -1206,107 +1221,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
   return (
     <div className="relative flex flex-col w-full h-full min-h-0 bg-[#f4f3ee] overflow-hidden font-sans select-none">
-      {/* 1. TOP MOBILE TWO-TAB NAVIGATION BAR */}
-      <div className="w-full bg-white border-b border-stone-300 shadow-2xs z-30 flex flex-col shrink-0">
-        <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 gap-2 overflow-x-auto custom-scrollbar">
-          {/* Main Two-Tab Switcher: [Input Text] | [Canvas] */}
-          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg shrink-0 border border-stone-300">
-            <button
-              id="tab-input-text"
-              type="button"
-              onClick={() => {
-                setActiveTab('input_text');
-                setTimeout(() => textareaRef.current?.focus(), 50);
-              }}
-              className={`w-9 h-8 rounded-md flex items-center justify-center transition-all cursor-pointer ${
-                activeTab === 'input_text'
-                  ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
-                  : 'text-stone-700 hover:text-black hover:bg-stone-200'
-              }`}
-              title="Input Text"
-              aria-label="Input Text"
-            >
-              <Type size={16} />
-            </button>
-
-            <button
-              id="tab-canvas"
-              type="button"
-              onClick={() => setActiveTab('canvas')}
-              className={`w-9 h-8 rounded-md flex items-center justify-center transition-all cursor-pointer ${
-                activeTab === 'canvas'
-                  ? 'bg-emerald-700 text-white shadow-xs border border-emerald-800'
-                  : 'text-stone-700 hover:text-black hover:bg-stone-200'
-              }`}
-              title="Canvas Stage"
-              aria-label="Canvas Stage"
-            >
-              <Layout size={16} />
-            </button>
-          </div>
-
-          {/* Center / Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Undo / Redo Buttons */}
-            <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg border border-stone-300">
-              <button
-                id="editor-undo-btn"
-                type="button"
-                onClick={handleUndo}
-                disabled={!canUndo}
-                className="w-8 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer text-stone-700 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none"
-                title="Undo (Ctrl+Z)"
-                aria-label="Undo"
-              >
-                <RotateCcw size={14} />
-              </button>
-              <button
-                id="editor-redo-btn"
-                type="button"
-                onClick={handleRedo}
-                disabled={!canRedo}
-                className="w-8 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer text-stone-700 hover:text-black hover:bg-stone-200 disabled:opacity-30 disabled:pointer-events-none"
-                title="Redo (Ctrl+Shift+Z / Ctrl+Y)"
-                aria-label="Redo"
-              >
-                <RotateCw size={14} />
-              </button>
-            </div>
-
-            {/* Add Text Button (available in both tabs) */}
-            <button
-              id="btn-add-text-layer-primary"
-              type="button"
-              onClick={handleAddTextLayer}
-              className="w-9 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer border border-emerald-800"
-              title="Add Text Layer"
-              aria-label="Add Text Layer"
-            >
-              <Plus size={16} />
-            </button>
-
-            {/* Input Text-only tools: Layer Switcher Dropdown if multi-layer */}
-            {activeTab === 'input_text' && textLayers.length > 1 && (
-              <div className="flex items-center gap-1 bg-stone-100 border border-stone-300 px-2 py-0.5 rounded-lg text-xs" dir="ltr">
-                <Layers size={13} className="text-stone-600" />
-                <select
-                  value={activeLayerId || ''}
-                  onChange={(e) => handleSelectLayer(e.target.value)}
-                  className="bg-transparent font-sans text-emerald-900 font-bold outline-none cursor-pointer text-xs"
-                  title="Select Layer"
-                >
-                  {textLayers.map((l, idx) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name && !l.name.includes('متن') ? l.name : `Layer ${idx + 1}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Layers Manager Floating Drawer */}
       <LayerManagerPanel
         layers={textLayers}
@@ -1371,14 +1285,14 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
             </div>
           </div>
 
-          {/* 2. Balanced Minimalist Text Input Controls Bar (Size Control, LTR/RTL, Keyboard Switcher) */}
+          {/* 2. Balanced Minimalist Text Input Controls Bar (Size Control, Layer Selector, LTR/RTL, Keyboard Switcher) */}
           <div
             id="text-input-tab-control-bar"
-            className="w-full bg-[#f4f2ed] border-t border-stone-300 px-3 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none"
+            className="w-full bg-[#f4f2ed] border-t border-stone-300 px-3 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none overflow-x-auto no-scrollbar"
             dir="ltr"
           >
-            {/* Left: Size Control (Minimalist Stepper) */}
-            <div className="flex items-center gap-1.5">
+            {/* Left: Size Control (Minimalist Stepper) & Multi-Layer Selector */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <div className="flex items-center bg-stone-200/90 p-0.5 rounded-xl border border-stone-300 shadow-2xs">
                 <button
                   type="button"
@@ -1417,6 +1331,24 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                   <Plus size={14} />
                 </button>
               </div>
+
+              {textLayers.length > 1 && (
+                <div className="flex items-center gap-1 bg-white border border-stone-300 px-2 py-1 rounded-xl text-xs shadow-2xs shrink-0" dir="ltr">
+                  <Layers size={13} className="text-emerald-800" />
+                  <select
+                    value={activeLayerId || ''}
+                    onChange={(e) => handleSelectLayer(e.target.value)}
+                    className="bg-transparent font-sans text-stone-900 font-bold outline-none cursor-pointer text-xs"
+                    title="Select Layer to Edit"
+                  >
+                    {textLayers.map((l, idx) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name && !l.name.includes('متن') ? l.name : `Layer ${idx + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Right: LTR / RTL Direction Switcher & Keyboard Selector */}

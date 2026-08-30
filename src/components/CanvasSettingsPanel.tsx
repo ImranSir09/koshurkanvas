@@ -30,8 +30,6 @@ import {
   X,
   Sparkles,
   Sliders,
-  CheckCircle2,
-  Magnet,
 } from 'lucide-react';
 
 interface CanvasSettingsPanelProps {
@@ -266,8 +264,8 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
     canvasConfig?.aspectRatio || ''
   );
 
-  // Section Tab for the panel: 'format' | 'color' | 'media' | 'snap'
-  const [activeSection, setActiveSection] = useState<'format' | 'color' | 'media' | 'snap'>('format');
+  // Section Tab for the panel: 'format' | 'color' | 'media'
+  const [activeSection, setActiveSection] = useState<'format' | 'color' | 'media'>('format');
 
   // Format category: 'document' | 'social'
   const [activeCategoryTab, setActiveCategoryTab] = useState<'document' | 'social'>(
@@ -379,7 +377,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
       {/* Bottom Sheet Modal Container */}
       <div
         ref={sheetRef}
-        dir="rtl"
+        dir="ltr"
         style={{
           transform: isClosing
             ? 'translateY(100%)'
@@ -489,20 +487,6 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
               <ImageIcon size={15} className={activeSection === 'media' ? 'text-emerald-700' : 'text-stone-500'} />
               <span>Image</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveSection('snap')}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-sans font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                activeSection === 'snap'
-                  ? 'bg-white text-emerald-900 shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Alignment & Magnet Snapping"
-            >
-              <Magnet size={15} className={activeSection === 'snap' ? 'text-emerald-700' : 'text-stone-500'} />
-              <span>Snapping</span>
-            </button>
           </div>
         </div>
 
@@ -526,7 +510,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateCanvasConfig({ aspectRatio: '1:1' })}
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === '1:1'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -550,7 +534,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateCanvasConfig({ aspectRatio: '9:16' })}
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === '9:16'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -574,7 +558,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateCanvasConfig({ aspectRatio: '9:16' })}
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === '9:16'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -598,7 +582,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateCanvasConfig({ aspectRatio: '16:9' })}
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === '16:9'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -622,7 +606,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateCanvasConfig({ aspectRatio: 'a4' })}
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === 'a4'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -652,7 +636,7 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                         customHeight: canvasConfig?.customHeight || 1080,
                       })
                     }
-                    className={`p-2.5 rounded-xl border text-right flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
+                    className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all cursor-pointer active:scale-98 relative shadow-2xs ${
                       currentRatio === 'custom'
                         ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
                         : 'bg-white border-stone-200 text-stone-800 hover:bg-stone-50 hover:border-emerald-300'
@@ -943,99 +927,6 @@ export const CanvasSettingsPanel: React.FC<CanvasSettingsPanelProps> = ({
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* SECTION 4: SNAPPING & ALIGNMENT */}
-          {activeSection === 'snap' && (
-            <div className="flex flex-col gap-4 animate-in fade-in duration-150">
-              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                      <Magnet size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-sans font-bold text-stone-900 leading-tight">
-                        Magnet Alignment Guides
-                      </h4>
-                      <p className="text-[10px] font-sans text-stone-500 leading-tight mt-0.5">
-                        Magnetically lock text to canvas center & other layers
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onToggleSnap && onToggleSnap(!snapEnabled)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      snapEnabled ? 'bg-emerald-700' : 'bg-stone-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
-                        snapEnabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="border-t border-stone-200/80 pt-3 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-xs font-sans">
-                    <span className="font-semibold text-stone-700">Snap Sensitivity Threshold</span>
-                    <span className="font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md text-[11px]">
-                      {snapSensitivity} px
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={4}
-                    max={20}
-                    step={2}
-                    value={snapSensitivity}
-                    onChange={(e) => onChangeSnapSensitivity && onChangeSnapSensitivity(Number(e.target.value))}
-                    disabled={!snapEnabled}
-                    className="w-full accent-emerald-700 h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
-                  />
-                  <div className="flex justify-between text-[10px] text-stone-400 font-mono">
-                    <span>Tight (4px)</span>
-                    <span>Balanced (8px)</span>
-                    <span>Strong (20px)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guide Color Legend */}
-              <div className="bg-white p-3.5 rounded-xl border border-stone-200 flex flex-col gap-2.5">
-                <h5 className="text-[11px] font-sans font-bold text-stone-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <CheckCircle2 size={13} className="text-emerald-700" />
-                  Guide Line Color Indicators
-                </h5>
-                <div className="grid grid-cols-1 gap-2 text-xs font-sans">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Canvas Center</span>
-                    </div>
-                    <span className="text-[10px] text-emerald-800 font-mono font-semibold">Green Line</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50/60 border border-amber-100">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Margin Safety Lines</span>
-                    </div>
-                    <span className="text-[10px] text-amber-800 font-mono font-semibold">Amber Line</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/60 border border-indigo-100">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-2xs" />
-                      <span className="text-stone-800 font-medium">Inter-Layer Alignment</span>
-                    </div>
-                    <span className="text-[10px] text-indigo-800 font-mono font-semibold">Indigo Line</span>
-                  </div>
-                </div>
               </div>
             </div>
           )}
