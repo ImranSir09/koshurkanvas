@@ -179,8 +179,7 @@ kashur-kanvas/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/kashur-kanvas.git
-cd kashur-kanvas
+
 ```
 
 ### 2. Install Dependencies
