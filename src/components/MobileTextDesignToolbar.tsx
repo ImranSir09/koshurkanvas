@@ -203,7 +203,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
     >
       {/* 1. EXPANDABLE BOTTOM DRAWER PANELS (High Contrast, Icon-Driven) */}
       {activeSheet !== 'none' && (activeLayer || activeSheet === 'snap') && (
-        <div className="w-full bg-stone-50 border-b-2 border-stone-300 p-3 sm:p-4 max-h-[320px] overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-2 duration-150">
+        <div className="w-full bg-stone-50 border-b-2 border-stone-300 p-2.5 sm:p-3.5 max-h-[250px] sm:max-h-[290px] overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-2 duration-150">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-300">
             <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
               {activeSheet === 'font' && <Type size={16} className="text-emerald-800" />}
@@ -1345,7 +1345,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
       )}
 
       {/* 2. PRIMARY BOTTOM NAVIGATION BAR (Clean, Professional & Highly Contextual) */}
-      <div className="w-full px-2 sm:px-3 py-1.5 flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar">
+      <div className="w-full px-1.5 sm:px-3 py-1 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
         {activeLayer ? (
           /* When a text layer is selected: Contextual typography and design tools with direct Layers & Canvas access */
           <div className="w-full flex items-center justify-between gap-1 min-w-max">
@@ -1354,12 +1354,12 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-edit-unicode"
               type="button"
               onClick={onOpenUnicodeEditor}
-              className="flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 border border-emerald-800"
+              className="flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 border border-emerald-800"
               title="Edit Text Content"
               aria-label="Edit Text"
             >
-              <Edit3 size={16} />
-              <span className="text-[10px] font-sans font-bold leading-tight mt-0.5 whitespace-nowrap">Edit</span>
+              <Edit3 size={15} />
+              <span className="text-[9.5px] font-sans font-bold leading-none mt-0.5 whitespace-nowrap">Edit</span>
             </button>
 
             {/* Font Picker Trigger */}
@@ -1367,7 +1367,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-font"
               type="button"
               onClick={() => toggleSheet('font')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'font'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1375,8 +1375,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Font Family"
               aria-label="Font Family"
             >
-              <Type size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Font</span>
+              <Type size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Font</span>
             </button>
 
             {/* Size & Spacing Trigger */}
@@ -1384,7 +1384,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-size"
               type="button"
               onClick={() => toggleSheet('size')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'size'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1392,8 +1392,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Size & Spacing"
               aria-label="Size & Spacing"
             >
-              <Maximize2 size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Size</span>
+              <Maximize2 size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Size</span>
             </button>
 
             {/* Color Palette Trigger */}
@@ -1401,7 +1401,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-color"
               type="button"
               onClick={() => toggleSheet('color')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'color'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1410,10 +1410,10 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               aria-label="Color & Background"
             >
               <div
-                className="w-4 h-4 rounded-full border border-stone-400 shadow-xs shrink-0"
+                className="w-3.5 h-3.5 rounded-full border border-stone-400 shadow-xs shrink-0"
                 style={{ backgroundColor: currentStyle.color || '#1c1917' }}
               />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Color</span>
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Color</span>
             </button>
 
             {/* Style & Alignment Trigger */}
@@ -1421,7 +1421,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-style"
               type="button"
               onClick={() => toggleSheet('style')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'style'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1429,8 +1429,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Style & Align"
               aria-label="Style & Align"
             >
-              <Sliders size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Style</span>
+              <Sliders size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Style</span>
             </button>
 
             {/* Paragraph & Direction Trigger */}
@@ -1438,7 +1438,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-paragraph"
               type="button"
               onClick={() => toggleSheet('paragraph')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'paragraph'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1446,8 +1446,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Paragraph & Direction (LTR/RTL)"
               aria-label="Paragraph & Direction"
             >
-              <Pilcrow size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Format</span>
+              <Pilcrow size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Format</span>
             </button>
 
             {/* Border & Corner Radius Shape Trigger */}
@@ -1455,7 +1455,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-border"
               type="button"
               onClick={() => toggleSheet('border')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'border'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1463,8 +1463,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Corner Radius & Border"
               aria-label="Corner Radius & Border"
             >
-              <Square size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Border</span>
+              <Square size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Border</span>
             </button>
 
             {/* Effects (Shadow, Outline, Opacity) */}
@@ -1472,7 +1472,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-effects"
               type="button"
               onClick={() => toggleSheet('effects')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'effects'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1480,8 +1480,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Effects & Shadow"
               aria-label="Effects & Shadow"
             >
-              <Sparkles size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Effects</span>
+              <Sparkles size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Effects</span>
             </button>
 
             {/* Transform & Layers Order */}
@@ -1489,7 +1489,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-transform"
               type="button"
               onClick={() => toggleSheet('transform')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'transform'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1497,8 +1497,8 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Position, Flip & Reorder"
               aria-label="Position, Flip & Reorder"
             >
-              <Move size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Position</span>
+              <Move size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Position</span>
             </button>
 
             {/* Align to Bounds Trigger */}
@@ -1506,7 +1506,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-align"
               type="button"
               onClick={() => toggleSheet('align')}
-              className={`flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+              className={`flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl transition-all cursor-pointer shrink-0 border ${
                 activeSheet === 'align'
                   ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
                   : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-100'
@@ -1514,26 +1514,26 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title="Align to Selection Bounds (6 Edges)"
               aria-label="Align to Selection Bounds"
             >
-              <AlignLeft size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Align</span>
+              <AlignLeft size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Align</span>
             </button>
 
             {/* Vertical Divider */}
-            <div className="h-7 w-[1px] bg-stone-300 mx-1 shrink-0" />
+            <div className="h-6 w-[1px] bg-stone-300 mx-0.5 shrink-0" />
 
             {/* Layers Panel Access */}
             <button
               id="btn-bottom-layers-contextual"
               type="button"
               onClick={onOpenLayersPanel}
-              className="relative flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
+              className="relative flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
               title="Layers Manager"
               aria-label="Layers Manager"
             >
-              <Layers size={16} className="text-emerald-800" />
-              <span className="text-[10px] font-sans font-semibold leading-tight mt-0.5 whitespace-nowrap">Layers</span>
+              <Layers size={15} className="text-emerald-800" />
+              <span className="text-[9.5px] font-sans font-semibold leading-none mt-0.5 whitespace-nowrap">Layers</span>
               {layersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-700 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-700 text-white text-[8.5px] font-bold rounded-full flex items-center justify-center shadow-xs">
                   {layersCount}
                 </span>
               )}
@@ -1544,12 +1544,12 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-canvas-settings-contextual"
               type="button"
               onClick={onOpenCanvasSettings}
-              className="flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
+              className="flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
               title="Canvas Settings (Dimensions, Background, Margins)"
               aria-label="Canvas Settings"
             >
-              <Settings size={16} className="text-emerald-800" />
-              <span className="text-[10px] font-sans font-semibold leading-tight mt-0.5 whitespace-nowrap">Canvas</span>
+              <Settings size={15} className="text-emerald-800" />
+              <span className="text-[9.5px] font-sans font-semibold leading-none mt-0.5 whitespace-nowrap">Canvas</span>
             </button>
 
             {/* Quick Duplicate Active Layer */}
@@ -1557,12 +1557,12 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-duplicate"
               type="button"
               onClick={() => onDuplicateLayer(activeLayer.id)}
-              className="flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
+              className="flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
               title="Duplicate Layer"
               aria-label="Duplicate Layer"
             >
-              <Copy size={16} />
-              <span className="text-[10px] font-sans font-medium leading-tight mt-0.5 whitespace-nowrap">Duplicate</span>
+              <Copy size={15} />
+              <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Duplicate</span>
             </button>
 
             {/* Quick Delete Active Layer */}
@@ -1573,27 +1573,27 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                 onDeleteLayer(activeLayer.id);
                 setActiveSheet('none');
               }}
-              className="flex flex-col items-center justify-center min-w-[46px] h-12 py-1 px-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 transition-all cursor-pointer shrink-0 active:scale-95"
+              className="flex flex-col items-center justify-center min-w-[42px] h-10 py-0.5 px-1 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 transition-all cursor-pointer shrink-0 active:scale-95"
               title="Delete Layer"
               aria-label="Delete Layer"
             >
-              <Trash2 size={16} />
-              <span className="text-[10px] font-sans font-bold leading-tight mt-0.5 whitespace-nowrap">Delete</span>
+              <Trash2 size={15} />
+              <span className="text-[9.5px] font-sans font-bold leading-none mt-0.5 whitespace-nowrap">Delete</span>
             </button>
           </div>
         ) : (
           /* When no layer is selected: High-utility, beautifully organized Canvas & Layers toolbar */
-          <div className="w-full flex items-center justify-between gap-2 py-0.5">
+          <div className="w-full flex items-center justify-between gap-1.5 py-0.5">
             {/* Primary Action: Add Text Layer */}
             <button
               id="btn-bottom-add-layer"
               type="button"
               onClick={onAddNewText}
-              className="flex-1 py-2.5 px-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800 font-sans"
+              className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-98 cursor-pointer border border-emerald-800 font-sans"
               title="Add Text Layer"
               aria-label="Add Text Layer"
             >
-              <Plus size={16} className="stroke-[2.5]" />
+              <Plus size={15} className="stroke-[2.5]" />
               <span className="text-xs font-bold whitespace-nowrap">Add Text</span>
             </button>
 
@@ -1602,14 +1602,14 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-layers-unselected"
               type="button"
               onClick={onOpenLayersPanel}
-              className="relative py-2.5 px-3 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 active:bg-stone-200 text-stone-800 flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans"
+              className="relative py-1.5 px-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 active:bg-stone-200 text-stone-800 flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans"
               title="Manage Layers (Reorder, Group, Lock, Hide)"
               aria-label="Layers Manager"
             >
-              <Layers size={16} className="text-emerald-800" />
+              <Layers size={15} className="text-emerald-800" />
               <span className="text-xs font-semibold whitespace-nowrap">Layers</span>
               {layersCount > 0 && (
-                <span className="bg-emerald-700 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow-2xs">
+                <span className="bg-emerald-700 text-white text-[9.5px] font-bold px-1.5 py-0.2 rounded-full shadow-2xs">
                   {layersCount}
                 </span>
               )}
@@ -1620,11 +1620,11 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-canvas-settings-unselected"
               type="button"
               onClick={onOpenCanvasSettings}
-              className="py-2.5 px-3 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 active:bg-stone-200 text-stone-800 flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans"
+              className="py-1.5 px-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 active:bg-stone-200 text-stone-800 flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans"
               title="Canvas Settings (Dimensions, Background, Margins)"
               aria-label="Canvas Settings"
             >
-              <Settings size={16} className="text-emerald-800" />
+              <Settings size={15} className="text-emerald-800" />
               <span className="text-xs font-semibold whitespace-nowrap">Canvas</span>
             </button>
 
@@ -1633,7 +1633,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               id="btn-bottom-snap-unselected"
               type="button"
               onClick={() => toggleSheet('snap')}
-              className={`py-2.5 px-3 rounded-xl border flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans ${
+              className={`py-1.5 px-2.5 rounded-xl border flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer font-sans ${
                 activeSheet === 'snap'
                   ? 'bg-emerald-700 text-white border-emerald-800'
                   : snapEnabled
@@ -1643,7 +1643,7 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
               title={snapEnabled ? 'Magnet Snap: Enabled' : 'Magnet Snap: Disabled'}
               aria-label="Smart Snapping"
             >
-              <Magnet size={16} className={activeSheet === 'snap' ? 'text-white' : snapEnabled ? 'text-emerald-700' : 'text-stone-600'} />
+              <Magnet size={15} className={activeSheet === 'snap' ? 'text-white' : snapEnabled ? 'text-emerald-700' : 'text-stone-600'} />
               <span className="text-xs font-semibold whitespace-nowrap hidden min-[360px]:inline">Snap</span>
             </button>
           </div>

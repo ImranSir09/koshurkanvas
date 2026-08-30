@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "KashurDocument": {
+      "title": "KashurDocument",
+      "description": "Kashmiri Unicode text document draft or poetry manuscript",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique document identifier" },
+        "title": { "type": "string", "maxLength": 200, "description": "Document title" },
+        "content": { "type": "string", "maxLength": 20000, "description": "Kashmiri Unicode text content" },
+        "spans": { "type": "array", "description": "Formatting style spans" },
+        "defaultStyle": { "type": "object", "description": "Default text styling configuration" },
+        "createdAt": { "type": "number", "description": "Creation unix timestamp" },
+        "updatedAt": { "type": "number", "description": "Last update unix timestamp" },
+        "userId": { "type": "string", "description": "Owner user ID" }
+      },
+      "required": ["id", "title", "content", "createdAt", "updatedAt"]
+    },
+    "DesignProject": {
+      "title": "DesignProject",
+      "description": "Kashmiri Calligraphy poster or canvas design project",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique design project identifier" },
+        "title": { "type": "string", "maxLength": 200, "description": "Design title" },
+        "preset": { "type": "string", "maxLength": 50, "description": "Canvas aspect ratio preset" },
+        "width": { "type": "number", "description": "Canvas width in pixels" },
+        "height": { "type": "number", "description": "Canvas height in pixels" },
+        "layers": { "type": "array", "description": "Visual layers (background, text, shapes, stickers)" },
+        "createdAt": { "type": "number", "description": "Creation unix timestamp" },
+        "updatedAt": { "type": "number", "description": "Last update unix timestamp" },
+        "userId": { "type": "string", "description": "Owner user ID" }
+      },
+      "required": ["id", "title", "preset", "width", "height", "layers", "createdAt", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile document",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User unique identifier" },
+        "displayName": { "type": "string", "maxLength": 100, "description": "User display name" },
+        "email": { "type": "string", "maxLength": 200, "description": "User email address" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "documents/{documentId}": {
+      "schema": { "$ref": "#/entities/KashurDocument" },
+      "description": "User created text documents"
+    },
+    "designs/{designId}": {
+      "schema": { "$ref": "#/entities/DesignProject" },
+      "description": "User created calligraphy designs"
+    },
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User public profiles"
+    }
+  }
+}

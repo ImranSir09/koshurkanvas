@@ -1,7 +1,12 @@
 {
   "projectId": "gen-lang-client-0584827809",
-  "appId": "1:223769575359:web:kashurkanvas",
-  "storageBucket": "gen-lang-client-0584827809.appspot.com",
-  "apiKey": "AIzaSy_Placeholder_Config",
-  "authDomain": "gen-lang-client-0584827809.firebaseapp.com"
+  "appId": "1:84330690486:web:83353d16eac6f79468f317",
+  "apiKey": "AIzaSyD3dsxFoedO1sll0A7TINkwTHKGfugNHX8",
+  "authDomain": "gen-lang-client-0584827809.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-kashurkanvas-64cec86d-65fb-4dba-800c-3f1500b86813",
+  "storageBucket": "gen-lang-client-0584827809.firebasestorage.app",
+  "messagingSenderId": "84330690486",
+  "measurementId": "G-MN789K4JQ6",
+  "oAuthClientId": "84330690486-euu2db9qgd0b93epgq4k3iu6kqop2h8q.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
 }
