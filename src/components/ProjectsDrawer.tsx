@@ -17,6 +17,8 @@ import {
   Send,
   Sparkles,
   Smartphone,
+  RefreshCw,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   getNotificationState,
@@ -24,6 +26,7 @@ import {
   toggleLocalNotifications,
   sendTestNotification,
 } from '../lib/notificationService';
+import { CURRENT_APP_VERSION } from '../lib/versionService';
 
 interface ProjectsDrawerProps {
   isOpen: boolean;
@@ -36,6 +39,7 @@ interface ProjectsDrawerProps {
   onRenameDocument?: (id: string, newTitle: string) => void;
   onDuplicateDocument?: (id: string) => void;
   onExportDocument?: (doc: KashurDocument) => void;
+  onCheckForUpdates?: () => Promise<boolean>;
 }
 
 export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
@@ -49,17 +53,37 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
   onRenameDocument,
   onDuplicateDocument,
   onExportDocument,
+  onCheckForUpdates,
 }) => {
   const [activeMenuDocId, setActiveMenuDocId] = useState<string | null>(null);
   const [renamingDocId, setRenamingDocId] = useState<string | null>(null);
   const [renameText, setRenameText] = useState<string>('');
   const [notifState, setNotifState] = useState(getNotificationState());
   const [testSentMsg, setTestSentMsg] = useState<string | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState<boolean>(false);
+  const [updateStatusMsg, setUpdateStatusMsg] = useState<string | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setNotifState(getNotificationState());
+    setUpdateStatusMsg(null);
   }, [isOpen]);
+
+  const handleManualCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    setUpdateStatusMsg(null);
+    if (onCheckForUpdates) {
+      const hasUpdate = await onCheckForUpdates();
+      if (!hasUpdate) {
+        setUpdateStatusMsg(`You are on the latest version (v${CURRENT_APP_VERSION})`);
+      }
+    } else {
+      setTimeout(() => {
+        setUpdateStatusMsg(`You are on the latest version (v${CURRENT_APP_VERSION})`);
+      }, 600);
+    }
+    setCheckingUpdate(false);
+  };
 
   if (!isOpen) return null;
 
@@ -401,6 +425,43 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
                 />
               </label>
             </div>
+          </div>
+
+          {/* Automatic Update Checker Card */}
+          <div className="mt-3 p-4 rounded-2xl bg-stone-50 border border-stone-200 flex flex-col gap-2.5" dir="ltr">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-sans font-bold text-stone-900 leading-tight">
+                    KoshurKanvas App Version
+                  </h4>
+                  <p className="text-[10px] font-sans text-stone-500">
+                    Installed: <span className="font-semibold text-emerald-800">v{CURRENT_APP_VERSION}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleManualCheckUpdate}
+                disabled={checkingUpdate}
+                className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 disabled:opacity-50 text-white rounded-lg text-xs font-sans font-bold flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer"
+                title="Check for new Android APK releases on GitHub"
+              >
+                <RefreshCw size={13} className={checkingUpdate ? 'animate-spin' : ''} />
+                <span>{checkingUpdate ? 'Checking...' : 'Check Update'}</span>
+              </button>
+            </div>
+
+            {updateStatusMsg && (
+              <div className="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-sans font-medium flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 size={13} className="text-emerald-700 shrink-0" />
+                <span>{updateStatusMsg}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

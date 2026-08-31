@@ -17,6 +17,8 @@ import { ProjectsDrawer } from './components/ProjectsDrawer';
 import { TransliterationModal } from './components/TransliterationModal';
 import { loadSavedCustomFonts } from './lib/customFonts';
 import { initNotificationService } from './lib/notificationService';
+import { checkForAppUpdate, AppReleaseInfo } from './lib/versionService';
+import { UpdateAvailableModal } from './components/UpdateAvailableModal';
 
 export default function App() {
   // Data State
@@ -28,6 +30,40 @@ export default function App() {
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isProjectsOpen, setIsProjectsOpen] = useState<boolean>(false);
   const [isTransliterationOpen, setIsTransliterationOpen] = useState<boolean>(false);
+
+  // App Update State
+  const [updateReleaseInfo, setUpdateReleaseInfo] = useState<AppReleaseInfo | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+
+  // Background Automatic Update Check on Launch
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const release = await checkForAppUpdate();
+        if (release && release.hasUpdate) {
+          setUpdateReleaseInfo(release);
+          setIsUpdateModalOpen(true);
+        }
+      } catch (err) {
+        console.warn('Background update check:', err);
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleManualCheckUpdates = useCallback(async (): Promise<boolean> => {
+    try {
+      const release = await checkForAppUpdate(undefined, true);
+      if (release && release.hasUpdate) {
+        setUpdateReleaseInfo(release);
+        setIsUpdateModalOpen(true);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
 
   // Settings
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -247,6 +283,14 @@ export default function App() {
             setIsProjectsOpen(false);
             setIsExportOpen(true);
           }}
+          onCheckForUpdates={handleManualCheckUpdates}
+        />
+
+        {/* Automatic APK Update Checker Modal */}
+        <UpdateAvailableModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          releaseInfo={updateReleaseInfo}
         />
     </div>
   );
