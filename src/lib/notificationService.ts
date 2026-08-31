@@ -222,7 +222,7 @@ export async function sendTestNotification(customTitle?: string, customBody?: st
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification(title, {
       body,
-      icon: '/pwa-192x192.png',
+      icon: '/icon-192.png',
     });
     return true;
   }

@@ -2,7 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 
-const SOURCE_SVG = path.resolve('public/app-icon.svg');
+const SOURCE_IMAGE = fs.existsSync(path.resolve('public/icon-512.png'))
+  ? path.resolve('public/icon-512.png')
+  : path.resolve('public/app-icon.svg');
 const RES_DIR = path.resolve('android/app/src/main/res');
 
 const MIPMAP_CONFIGS = [
@@ -30,7 +32,7 @@ const SPLASH_LANDSCAPE = [
 ];
 
 async function generateIcons() {
-  console.log('Generating Android Launcher Icons from:', SOURCE_SVG);
+  console.log('Generating Android Launcher Icons from:', SOURCE_IMAGE);
 
   for (const cfg of MIPMAP_CONFIGS) {
     const targetDir = path.join(RES_DIR, cfg.dir);
@@ -39,7 +41,7 @@ async function generateIcons() {
     }
 
     // 1. Standard ic_launcher.png (Squircle / rounded rectangle)
-    await sharp(SOURCE_SVG)
+    await sharp(SOURCE_IMAGE)
       .resize(cfg.launcherSize, cfg.launcherSize)
       .png()
       .toFile(path.join(targetDir, 'ic_launcher.png'));
@@ -51,7 +53,7 @@ async function generateIcons() {
       </svg>`
     );
 
-    const baseIcon = await sharp(SOURCE_SVG)
+    const baseIcon = await sharp(SOURCE_IMAGE)
       .resize(cfg.launcherSize, cfg.launcherSize)
       .png()
       .toBuffer();
@@ -63,7 +65,7 @@ async function generateIcons() {
 
     // 3. Adaptive ic_launcher_foreground.png
     // The adaptive icon foreground canvas is 108dp x 108dp, with centered innerSize
-    const innerIcon = await sharp(SOURCE_SVG)
+    const innerIcon = await sharp(SOURCE_IMAGE)
       .resize(cfg.innerSize, cfg.innerSize)
       .png()
       .toBuffer();
@@ -99,7 +101,7 @@ async function generateIcons() {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const iconBuffer = await sharp(SOURCE_SVG)
+    const iconBuffer = await sharp(SOURCE_IMAGE)
       .resize(splash.iconSize, splash.iconSize)
       .png()
       .toBuffer();
@@ -109,7 +111,7 @@ async function generateIcons() {
         width: splash.width,
         height: splash.height,
         channels: 4,
-        background: { r: 245, g: 239, b: 227, alpha: 1 }, // #F5EFE3 Parchment Background
+        background: { r: 6, g: 78, b: 59, alpha: 1 }, // #064E3B Emerald Background
       },
     })
       .composite([
@@ -128,13 +130,13 @@ async function generateIcons() {
   if (!fs.existsSync(defaultDrawableDir)) {
     fs.mkdirSync(defaultDrawableDir, { recursive: true });
   }
-  const defaultIcon = await sharp(SOURCE_SVG).resize(200, 200).png().toBuffer();
+  const defaultIcon = await sharp(SOURCE_IMAGE).resize(200, 200).png().toBuffer();
   await sharp({
     create: {
       width: 480,
       height: 800,
       channels: 4,
-      background: { r: 245, g: 239, b: 227, alpha: 1 },
+      background: { r: 6, g: 78, b: 59, alpha: 1 },
     },
   })
     .composite([
@@ -146,11 +148,6 @@ async function generateIcons() {
     ])
     .png()
     .toFile(path.join(defaultDrawableDir, 'splash.png'));
-
-  // Also update public/app-icon.png and public/icon-512.png to be pristine 512x512 PNGs
-  await sharp(SOURCE_SVG).resize(512, 512).png().toFile(path.resolve('public/app-icon.png'));
-  await sharp(SOURCE_SVG).resize(512, 512).png().toFile(path.resolve('public/icon-512.png'));
-  await sharp(SOURCE_SVG).resize(192, 192).png().toFile(path.resolve('public/icon-192.png'));
 
   console.log('All launcher icons and splash assets successfully generated!');
 }

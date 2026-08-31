@@ -139,8 +139,8 @@ export const ProjectsDrawer: React.FC<ProjectsDrawerProps> = ({
         {/* Header */}
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-stone-200 flex items-center justify-between bg-white shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center shrink-0">
-              <FolderOpen size={18} />
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+              <img src="icon-192.png" alt="Koshur Kanvas App Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="font-sans text-base sm:text-lg font-bold text-stone-900 leading-tight">
