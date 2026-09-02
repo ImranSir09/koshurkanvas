@@ -821,9 +821,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <div className="px-4 py-2.5 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-[10px] text-stone-500 font-sans shrink-0">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>Noto Nastaliq Urdu v4 Engine</span>
+              <span>High-Resolution Export Ready</span>
             </div>
-            <div className="font-sans text-stone-600">Imran Magloo Studio</div>
+            <div className="font-sans text-stone-600">Koshur Kanvas by Emraan Mugloo</div>
           </div>
         </div>
       )}

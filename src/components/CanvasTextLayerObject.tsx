@@ -5,6 +5,7 @@ import {
   Lock,
   Unlock,
   RotateCw,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface CanvasTextLayerObjectProps {
@@ -102,7 +103,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
     const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
     onSelect(layer.id, isMultiSelect);
 
-    // Double tap / click detection to edit in native input
+    // Double tap / click detection to edit in native input or replace image
     const now = Date.now();
     if (now - lastTapRef.current < 350) {
       lastTapRef.current = 0;
@@ -161,9 +162,9 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
       y: e.clientY,
       startX: layer.x,
       startY: layer.y,
-      startWidth: layer.width || 300,
-      startHeight: layer.height || 100,
-      startFontSize: layer.style.fontSize || 24,
+      startWidth: layer.width || (layer.type === 'image' ? 240 : 300),
+      startHeight: layer.height || (layer.type === 'image' ? 180 : 100),
+      startFontSize: layer.style?.fontSize || 24,
     };
   };
 
@@ -219,7 +220,13 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
         else if (Math.abs(newRot - 180) < 3) newRot = 180;
         else if (Math.abs(newRot - 270) < 3) newRot = 270;
 
-        onUpdateLayer(layer.id, { rotation: newRot });
+        onUpdateLayer(layer.id, {
+          rotation: newRot,
+          style: {
+            ...layer.style,
+            rotation: newRot,
+          },
+        });
       } else if (isResizing && resizeCorner) {
         const dx = (e.clientX - resizeStartRef.current.x) / canvasScale;
         const dy = (e.clientY - resizeStartRef.current.y) / canvasScale;
@@ -231,52 +238,89 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
         let newY = startY;
         let newFontSize = startFontSize;
 
+        const isImage = layer.type === 'image';
+        const lockAspect = isImage ? (layer.lockAspectRatio !== false) : false;
+        const aspect = layer.aspectRatio || (startWidth / Math.max(1, startHeight));
+
         if (resizeCorner === 'br') {
-          newWidth = Math.max(60, startWidth + dx);
-          newHeight = Math.max(30, startHeight + dy);
+          newWidth = Math.max(30, startWidth + dx);
+          if (lockAspect) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          } else {
+            newHeight = Math.max(20, startHeight + dy);
+          }
           const scaleRatio = newWidth / Math.max(1, startWidth);
           newFontSize = Math.max(8, Math.min(180, Math.round(startFontSize * scaleRatio)));
         } else if (resizeCorner === 'bl') {
-          newWidth = Math.max(60, startWidth - dx);
-          newHeight = Math.max(30, startHeight + dy);
+          newWidth = Math.max(30, startWidth - dx);
+          if (lockAspect) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          } else {
+            newHeight = Math.max(20, startHeight + dy);
+          }
           newX = startX + (startWidth - newWidth);
           const scaleRatio = newWidth / Math.max(1, startWidth);
           newFontSize = Math.max(8, Math.min(180, Math.round(startFontSize * scaleRatio)));
         } else if (resizeCorner === 'tr') {
-          newWidth = Math.max(60, startWidth + dx);
-          newHeight = Math.max(30, startHeight - dy);
+          newWidth = Math.max(30, startWidth + dx);
+          if (lockAspect) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          } else {
+            newHeight = Math.max(20, startHeight - dy);
+          }
           newY = startY + (startHeight - newHeight);
           const scaleRatio = newWidth / Math.max(1, startWidth);
           newFontSize = Math.max(8, Math.min(180, Math.round(startFontSize * scaleRatio)));
         } else if (resizeCorner === 'tl') {
-          newWidth = Math.max(60, startWidth - dx);
-          newHeight = Math.max(30, startHeight - dy);
+          newWidth = Math.max(30, startWidth - dx);
+          if (lockAspect) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          } else {
+            newHeight = Math.max(20, startHeight - dy);
+          }
           newX = startX + (startWidth - newWidth);
           newY = startY + (startHeight - newHeight);
           const scaleRatio = newWidth / Math.max(1, startWidth);
           newFontSize = Math.max(8, Math.min(180, Math.round(startFontSize * scaleRatio)));
         } else if (resizeCorner === 'r') {
-          newWidth = Math.max(60, startWidth + dx);
+          newWidth = Math.max(30, startWidth + dx);
+          if (lockAspect && isImage) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          }
         } else if (resizeCorner === 'l') {
-          newWidth = Math.max(60, startWidth - dx);
+          newWidth = Math.max(30, startWidth - dx);
           newX = startX + (startWidth - newWidth);
+          if (lockAspect && isImage) {
+            newHeight = Math.max(30, Math.round(newWidth / aspect));
+          }
         } else if (resizeCorner === 'b') {
-          newHeight = Math.max(30, startHeight + dy);
+          newHeight = Math.max(20, startHeight + dy);
+          if (lockAspect && isImage) {
+            newWidth = Math.max(30, Math.round(newHeight * aspect));
+          }
         } else if (resizeCorner === 't') {
-          newHeight = Math.max(30, startHeight - dy);
+          newHeight = Math.max(20, startHeight - dy);
           newY = startY + (startHeight - newHeight);
+          if (lockAspect && isImage) {
+            newWidth = Math.max(30, Math.round(newHeight * aspect));
+          }
         }
 
-        onUpdateLayer(layer.id, {
+        const updates: Partial<TextLayer> = {
           x: Math.round(newX),
           y: Math.round(newY),
           width: Math.round(newWidth),
           height: Math.round(newHeight),
-          style: {
+        };
+
+        if (!isImage && layer.style) {
+          updates.style = {
             ...layer.style,
             fontSize: newFontSize,
-          },
-        });
+          };
+        }
+
+        onUpdateLayer(layer.id, updates);
       }
     };
 
@@ -307,37 +351,64 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDragging, isRotating, isResizing, resizeCorner, canvasScale, layer.id, onUpdateLayer, onDragStateChange, onSnapPosition, layer.x, layer.y, layer.width, layer.height]);
+  }, [isDragging, isRotating, isResizing, resizeCorner, canvasScale, layer.id, onUpdateLayer, onDragStateChange, onSnapPosition, layer.x, layer.y, layer.width, layer.height, layer.type, layer.aspectRatio, layer.lockAspectRatio, layer.style]);
 
   if (layer.isHidden) return null;
 
-  const fontFamCSS = getFontFamilyCSS(layer.style.fontFamily || 'Noto Nastaliq Urdu');
-  const textShadowCSS = layer.style.shadowColor
+  const isImageLayer = layer.type === 'image';
+  const fontFamCSS = !isImageLayer && layer.style ? getFontFamilyCSS(layer.style.fontFamily || 'Noto Nastaliq Urdu') : undefined;
+  const textShadowCSS = !isImageLayer && layer.style?.shadowColor
     ? `${layer.style.shadowOffsetX || 0}px ${layer.style.shadowOffsetY || 2}px ${layer.style.shadowBlur || 4}px ${layer.style.shadowColor}`
     : 'none';
-  const strokeWidth = layer.style.strokeWidth ?? 0;
-  const strokeCSS = (layer.style.strokeColor && strokeWidth > 0)
+  const strokeWidth = !isImageLayer ? (layer.style?.strokeWidth ?? 0) : 0;
+  const strokeCSS = (!isImageLayer && layer.style?.strokeColor && strokeWidth > 0)
     ? `${strokeWidth}px ${layer.style.strokeColor}`
     : 'none';
+
+  // Compute image filter string
+  const filterParts: string[] = [];
+  if (layer.brightness !== undefined && layer.brightness !== 1) filterParts.push(`brightness(${layer.brightness})`);
+  if (layer.contrast !== undefined && layer.contrast !== 1) filterParts.push(`contrast(${layer.contrast})`);
+  if (layer.grayscale && layer.grayscale > 0) filterParts.push(`grayscale(${layer.grayscale}%)`);
+  if (layer.blur && layer.blur > 0) filterParts.push(`blur(${layer.blur}px)`);
+  const imageFilterCSS = filterParts.join(' ') || undefined;
+
+  // Compute image shadow CSS
+  const imageShadowCSS = (layer.shadow || (layer.style && layer.style.shadowBlur))
+    ? `${layer.shadowOffsetX ?? layer.style?.shadowOffsetX ?? 0}px ${layer.shadowOffsetY ?? layer.style?.shadowOffsetY ?? 4}px ${layer.shadowBlur ?? layer.style?.shadowBlur ?? 8}px ${layer.shadowColor ?? layer.style?.shadowColor ?? 'rgba(0,0,0,0.35)'}`
+    : undefined;
+
+  const effectiveFlipX = layer.flipX ?? layer.style?.flipX ?? false;
+  const effectiveFlipY = layer.flipY ?? layer.style?.flipY ?? false;
+  const effectiveRotation = layer.rotation ?? layer.style?.rotation ?? 0;
+  const effectiveScale = layer.scale || 1;
+
+  const effectiveRadius = layer.cropPreset === 'circle'
+    ? '9999px'
+    : `${layer.borderRadius ?? layer.style?.borderRadius ?? 0}px`;
+
+  const effectiveBorderWidth = layer.borderWidth ?? layer.style?.borderWidth ?? 0;
+  const effectiveBorderColor = layer.borderColor ?? layer.style?.borderColor ?? '#000000';
 
   return (
     <div
       ref={containerRef}
-      id={`canvas-text-layer-${layer.id}`}
+      id={`canvas-layer-${layer.id}`}
       data-layer-id={layer.id}
       onPointerDown={handlePointerDown}
       className={`absolute select-none cursor-pointer transition-shadow ${
         isSelected
-          ? 'ring-1 ring-emerald-500/90'
-          : 'hover:ring-1 hover:ring-emerald-300/40'
+          ? 'ring-2 ring-emerald-600 ring-offset-1 ring-offset-white'
+          : 'hover:ring-1 hover:ring-emerald-400/60'
       }`}
       style={{
         left: `${layer.x}px`,
         top: `${layer.y}px`,
-        width: layer.width ? `${layer.width}px` : 'auto',
-        minWidth: '60px',
+        width: layer.width ? `${layer.width}px` : (isImageLayer ? '200px' : 'auto'),
+        height: layer.height ? `${layer.height}px` : 'auto',
+        minWidth: '30px',
         minHeight: '30px',
-        transform: `rotate(${layer.rotation || 0}deg) scale(${layer.scale || 1}) scaleX(${layer.style.flipX ? -1 : 1}) scaleY(${layer.style.flipY ? -1 : 1})`,
+        transform: `rotate(${effectiveRotation}deg) scale(${effectiveScale}) scaleX(${effectiveFlipX ? -1 : 1}) scaleY(${effectiveFlipY ? -1 : 1})`,
         transformOrigin: 'center center',
         zIndex: layer.zIndex ?? 10,
         opacity: layer.opacity ?? 1,
@@ -345,65 +416,103 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
         willChange: isDragging || isResizing || isRotating ? 'transform, left, top' : 'auto',
       }}
     >
-      {/* Pure Unicode Text Rendering Layer with Noto Nastaliq Urdu OpenType Shaping */}
-      <div
-        className="w-full h-full whitespace-pre-wrap break-words font-nastaliq overflow-visible transition-all"
-        dir={layer.style.direction || 'rtl'}
-        style={{
-          fontFamily: fontFamCSS,
-          fontSize: `${layer.style.fontSize}px`,
-          fontWeight: layer.style.bold ? 'bold' : 'normal',
-          fontStyle: layer.style.italic ? 'italic' : 'normal',
-          textDecoration: layer.style.underline ? 'underline' : 'none',
-          backgroundColor: layer.style.highlightGradient
-            ? undefined
-            : (layer.style.highlightColor || 'transparent'),
-          backgroundImage: layer.style.highlightGradient || undefined,
-          borderRadius: `${layer.style.borderRadius || 0}px`,
-          padding: `${layer.style.padding !== undefined ? layer.style.padding : 6}px`,
-          borderWidth: `${layer.style.borderWidth || 0}px`,
-          borderColor: layer.style.borderColor || 'transparent',
-          borderStyle: layer.style.borderWidth ? 'solid' : 'none',
-          textAlign: layer.style.align || 'center',
-          lineHeight: layer.style.lineHeight || 2.2,
-          letterSpacing: `${layer.style.letterSpacing || 0}px`,
-          textShadow: textShadowCSS,
-          paintOrder: 'stroke fill',
-          WebkitPaintOrder: 'stroke fill',
-          WebkitTextStroke: strokeCSS,
-          opacity: layer.style.opacity ?? 1,
-          fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
-        }}
-      >
-        {layer.style.gradient ? (
-          <span
-            key={`gradient-span-${layer.id}`}
-            style={{
-              backgroundColor: 'transparent',
-              backgroundImage: layer.style.gradient,
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              display: 'inline-block',
-              maxWidth: '100%',
-            }}
-          >
-            {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
-          </span>
-        ) : (
-          <span
-            key={`solid-span-${layer.id}`}
-            style={{
-              backgroundColor: 'transparent',
-              color: layer.style.color || '#1c1917',
-              display: 'inline-block',
-              maxWidth: '100%',
-            }}
-          >
-            {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
-          </span>
-        )}
-      </div>
+      {/* 1. IMAGE LAYER RENDERING */}
+      {isImageLayer ? (
+        <div
+          className="w-full h-full overflow-hidden transition-all flex items-center justify-center pointer-events-none select-none"
+          style={{
+            borderRadius: effectiveRadius,
+            borderWidth: effectiveBorderWidth > 0 ? `${effectiveBorderWidth}px` : '0px',
+            borderColor: effectiveBorderColor,
+            borderStyle: effectiveBorderWidth > 0 ? 'solid' : 'none',
+            boxShadow: imageShadowCSS,
+          }}
+        >
+          {layer.src ? (
+            <img
+              src={layer.src}
+              alt={layer.name || 'Canvas Image'}
+              className="w-full h-full pointer-events-none select-none"
+              referrerPolicy="no-referrer"
+              style={{
+                objectFit:
+                  layer.cropPreset === '1:1' ||
+                  layer.cropPreset === 'circle' ||
+                  layer.cropPreset === '4:3' ||
+                  layer.cropPreset === '16:9'
+                    ? 'cover'
+                    : layer.objectFit || 'contain',
+                filter: imageFilterCSS,
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-stone-100 border-2 border-dashed border-stone-300 flex flex-col items-center justify-center p-2 text-stone-400">
+              <ImageIcon size={24} />
+              <span className="text-[10px] font-sans mt-1">Image Object</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* 2. TEXT LAYER RENDERING WITH NOTO NASTALIQ URDU OPENTYPE SHAPING */
+        <div
+          className="w-full h-full whitespace-pre-wrap break-words font-nastaliq overflow-visible transition-all"
+          dir={layer.style?.direction || 'rtl'}
+          style={{
+            fontFamily: fontFamCSS,
+            fontSize: `${layer.style?.fontSize || 24}px`,
+            fontWeight: layer.style?.bold ? 'bold' : 'normal',
+            fontStyle: layer.style?.italic ? 'italic' : 'normal',
+            textDecoration: layer.style?.underline ? 'underline' : 'none',
+            backgroundColor: layer.style?.highlightGradient
+              ? undefined
+              : (layer.style?.highlightColor || 'transparent'),
+            backgroundImage: layer.style?.highlightGradient || undefined,
+            borderRadius: `${layer.style?.borderRadius || 0}px`,
+            padding: `${layer.style?.padding !== undefined ? layer.style.padding : 6}px`,
+            borderWidth: `${layer.style?.borderWidth || 0}px`,
+            borderColor: layer.style?.borderColor || 'transparent',
+            borderStyle: layer.style?.borderWidth ? 'solid' : 'none',
+            textAlign: layer.style?.align || 'center',
+            lineHeight: layer.style?.lineHeight || 2.2,
+            letterSpacing: `${layer.style?.letterSpacing || 0}px`,
+            textShadow: textShadowCSS,
+            paintOrder: 'stroke fill',
+            WebkitPaintOrder: 'stroke fill',
+            WebkitTextStroke: strokeCSS,
+            opacity: layer.style?.opacity ?? 1,
+            fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
+          }}
+        >
+          {layer.style?.gradient ? (
+            <span
+              key={`gradient-span-${layer.id}`}
+              style={{
+                backgroundColor: 'transparent',
+                backgroundImage: layer.style.gradient,
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                maxWidth: '100%',
+              }}
+            >
+              {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
+            </span>
+          ) : (
+            <span
+              key={`solid-span-${layer.id}`}
+              style={{
+                backgroundColor: 'transparent',
+                color: layer.style?.color || '#1c1917',
+                display: 'inline-block',
+                maxWidth: '100%',
+              }}
+            >
+              {layer.text || <span className="text-stone-400 italic">Enter text...</span>}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Interactive Selection Bounding Box & Transformation Handles */}
       {isSelected && !layer.isLocked && !isMultiSelecting && (

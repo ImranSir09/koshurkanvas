@@ -751,16 +751,20 @@ export function createCleanOffscreenDom(
 
   const rawLayers = doc.textLayers && doc.textLayers.length > 0 ? doc.textLayers : [];
   const visibleLayers = rawLayers.filter((l) => !l.isHidden);
-  const hasTextInLayers = visibleLayers.some((l) => l.text && l.text.trim().length > 0);
+  const hasLayersContent = visibleLayers.some(
+    (l) => (l.text && l.text.trim().length > 0) || (l.type === 'image' && l.src)
+  );
   const hasTextInContent = !!(doc.content && doc.content.trim().length > 0);
-  let hasRenderableContent = hasTextInLayers || hasTextInContent;
+  let hasRenderableContent = hasLayersContent || hasTextInContent;
 
-  if (hasTextInLayers) {
+  if (hasLayersContent) {
     // Sort layers by zIndex for proper depth order
     const sortedLayers = [...visibleLayers].sort((a, b) => (a.zIndex ?? 10) - (b.zIndex ?? 10));
 
     sortedLayers.forEach((layer) => {
-      if (!layer.text && layer.type === 'text') return;
+      const isImageLayer = layer.type === 'image';
+      if (!isImageLayer && (!layer.text || layer.text.trim().length === 0)) return;
+      if (isImageLayer && !layer.src) return;
 
       const layerDiv = document.createElement('div');
       layerDiv.style.position = 'absolute';
@@ -770,85 +774,152 @@ export function createCleanOffscreenDom(
       if (layer.width) {
         layerDiv.style.width = `${Math.round(layer.width * scale)}px`;
       } else {
-        layerDiv.style.width = 'auto';
+        layerDiv.style.width = isImageLayer ? `${Math.round(240 * scale)}px` : 'auto';
         layerDiv.style.maxWidth = `${width - Math.round(layer.x * scale) - 20}px`;
       }
 
-      layerDiv.style.minWidth = `${Math.round(40 * scale)}px`;
+      if (layer.height) {
+        layerDiv.style.height = `${Math.round(layer.height * scale)}px`;
+      }
+
+      layerDiv.style.minWidth = `${Math.round(30 * scale)}px`;
       layerDiv.style.zIndex = `${layer.zIndex ?? 10}`;
       layerDiv.style.opacity = `${layer.opacity ?? 1}`;
 
-      let transformStr = `rotate(${layer.rotation || 0}deg) scale(${layer.scale || 1})`;
-      if (layer.style?.flipX) transformStr += ' scaleX(-1)';
-      if (layer.style?.flipY) transformStr += ' scaleY(-1)';
+      const effectiveRot = layer.rotation ?? layer.style?.rotation ?? 0;
+      const effectiveFlipX = layer.flipX ?? layer.style?.flipX ?? false;
+      const effectiveFlipY = layer.flipY ?? layer.style?.flipY ?? false;
+      let transformStr = `rotate(${effectiveRot}deg) scale(${layer.scale || 1})`;
+      if (effectiveFlipX) transformStr += ' scaleX(-1)';
+      if (effectiveFlipY) transformStr += ' scaleY(-1)';
       layerDiv.style.transform = transformStr;
       layerDiv.style.transformOrigin = 'center center';
       layerDiv.style.boxSizing = 'border-box';
 
-      // Shape borders and highlights
-      if (layer.style?.borderWidth && layer.style.borderWidth > 0) {
-        layerDiv.style.borderWidth = `${Math.round(layer.style.borderWidth * scale)}px`;
-        layerDiv.style.borderColor = layer.style.borderColor || '#000000';
-        layerDiv.style.borderStyle = 'solid';
+      if (isImageLayer) {
+        // IMAGE LAYER RENDERING FOR EXPORT
+        const imgContainer = document.createElement('div');
+        imgContainer.style.width = '100%';
+        imgContainer.style.height = '100%';
+        imgContainer.style.overflow = 'hidden';
+        imgContainer.style.display = 'flex';
+        imgContainer.style.alignItems = 'center';
+        imgContainer.style.justifyContent = 'center';
+        imgContainer.style.boxSizing = 'border-box';
+
+        const effectiveRadius = layer.cropPreset === 'circle'
+          ? '9999px'
+          : `${Math.round((layer.borderRadius ?? layer.style?.borderRadius ?? 0) * scale)}px`;
+        imgContainer.style.borderRadius = effectiveRadius;
+
+        const borderWidth = layer.borderWidth ?? layer.style?.borderWidth ?? 0;
+        if (borderWidth > 0) {
+          imgContainer.style.borderWidth = `${Math.max(1, Math.round(borderWidth * scale))}px`;
+          imgContainer.style.borderColor = layer.borderColor ?? layer.style?.borderColor ?? '#000000';
+          imgContainer.style.borderStyle = 'solid';
+        }
+
+        if (layer.shadow || (layer.style && layer.style.shadowBlur)) {
+          const sx = Math.round((layer.shadowOffsetX ?? layer.style?.shadowOffsetX ?? 0) * scale);
+          const sy = Math.round((layer.shadowOffsetY ?? layer.style?.shadowOffsetY ?? 4) * scale);
+          const sb = Math.round((layer.shadowBlur ?? layer.style?.shadowBlur ?? 8) * scale);
+          const sc = layer.shadowColor ?? layer.style?.shadowColor ?? 'rgba(0,0,0,0.35)';
+          imgContainer.style.boxShadow = `${sx}px ${sy}px ${sb}px ${sc}`;
+        }
+
+        const filterParts: string[] = [];
+        if (layer.brightness !== undefined && layer.brightness !== 1) filterParts.push(`brightness(${layer.brightness})`);
+        if (layer.contrast !== undefined && layer.contrast !== 1) filterParts.push(`contrast(${layer.contrast})`);
+        if (layer.grayscale && layer.grayscale > 0) filterParts.push(`grayscale(${layer.grayscale}%)`);
+        if (layer.blur && layer.blur > 0) filterParts.push(`blur(${Math.round(layer.blur * scale)}px)`);
+        if (filterParts.length > 0) {
+          imgContainer.style.filter = filterParts.join(' ');
+        }
+
+        const imgEl = document.createElement('img');
+        imgEl.src = layer.src || '';
+        imgEl.alt = layer.name || 'Canvas Image Object';
+        imgEl.style.width = '100%';
+        imgEl.style.height = '100%';
+        imgEl.style.display = 'block';
+        imgEl.style.objectFit =
+          layer.cropPreset === '1:1' ||
+          layer.cropPreset === 'circle' ||
+          layer.cropPreset === '4:3' ||
+          layer.cropPreset === '16:9'
+            ? 'cover'
+            : layer.objectFit || 'contain';
+
+        imgContainer.appendChild(imgEl);
+        layerDiv.appendChild(imgContainer);
       } else {
-        layerDiv.style.border = 'none';
-      }
-      if (layer.style?.borderRadius) {
-        layerDiv.style.borderRadius = `${Math.round(layer.style.borderRadius * scale)}px`;
-      }
-      if (layer.style?.padding) {
-        layerDiv.style.padding = `${Math.round(layer.style.padding * scale)}px`;
-      }
-      if (layer.style?.highlightGradient) {
-        layerDiv.style.background = layer.style.highlightGradient;
-      } else if (layer.style?.highlightColor && layer.style.highlightColor !== 'transparent') {
-        layerDiv.style.backgroundColor = layer.style.highlightColor;
-      }
+        // TEXT LAYER RENDERING FOR EXPORT
+        if (layer.style?.borderWidth && layer.style.borderWidth > 0) {
+          layerDiv.style.borderWidth = `${Math.round(layer.style.borderWidth * scale)}px`;
+          layerDiv.style.borderColor = layer.style.borderColor || '#000000';
+          layerDiv.style.borderStyle = 'solid';
+        } else {
+          layerDiv.style.border = 'none';
+        }
+        if (layer.style?.borderRadius) {
+          layerDiv.style.borderRadius = `${Math.round(layer.style.borderRadius * scale)}px`;
+        }
+        const effectivePadding = layer.style?.padding !== undefined ? layer.style.padding : 6;
+        layerDiv.style.padding = `${Math.round(effectivePadding * scale)}px`;
 
-      const textInner = document.createElement('div');
-      textInner.dir = layer.style?.direction || 'rtl';
-      textInner.style.fontFamily = getFontFamilyCSS(layer.style?.fontFamily || 'Noto Nastaliq Urdu');
-      textInner.style.textAlign = layer.style?.align || 'center';
-      textInner.style.lineHeight = `${layer.style?.lineHeight || 2.2}`;
-      textInner.style.letterSpacing = `${Math.round((layer.style?.letterSpacing || 0) * scale)}px`;
-      textInner.style.whiteSpace = 'pre-wrap';
-      textInner.style.wordBreak = 'break-word';
-      textInner.style.overflow = 'visible';
-      textInner.style.width = '100%';
-      textInner.style.boxSizing = 'border-box';
-      textInner.style.opacity = `${layer.style?.opacity ?? 1}`;
-      textInner.style.fontFeatureSettings = '"kern" 1, "liga" 1, "calt" 1';
-      textInner.style.textRendering = 'optimizeLegibility';
-      (textInner.style as any).webkitFontSmoothing = 'antialiased';
-      textInner.style.unicodeBidi = 'isolate';
+        if (layer.style?.highlightGradient) {
+          layerDiv.style.background = layer.style.highlightGradient;
+        } else if (layer.style?.highlightColor && layer.style.highlightColor !== 'transparent') {
+          layerDiv.style.backgroundColor = layer.style.highlightColor;
+        }
 
-      // Build formatted spans
-      const layerSpans = layer.spans && layer.spans.length > 0 ? layer.spans : (doc.spans || []);
-      const slices = buildRenderedSlices(
-        layer.text || '',
-        layerSpans,
-        layer.style || doc.defaultStyle || DEFAULT_TEXT_STYLE
-      );
+        const textInner = document.createElement('div');
+        textInner.dir = layer.style?.direction || 'rtl';
+        textInner.style.fontFamily = getFontFamilyCSS(layer.style?.fontFamily || 'Noto Nastaliq Urdu');
+        textInner.style.fontSize = `${Math.max(12, Math.round((layer.style?.fontSize || 28) * scale))}px`;
+        textInner.style.textAlign = layer.style?.align || 'center';
+        textInner.style.lineHeight = `${layer.style?.lineHeight || 2.2}`;
+        textInner.style.letterSpacing = `${Math.round((layer.style?.letterSpacing || 0) * scale)}px`;
+        textInner.style.whiteSpace = 'pre-wrap';
+        textInner.style.wordBreak = 'break-word';
+        textInner.style.overflow = 'visible';
+        textInner.style.width = '100%';
+        textInner.style.boxSizing = 'border-box';
+        textInner.style.opacity = `${layer.style?.opacity ?? 1}`;
+        textInner.style.fontFeatureSettings = '"kern" 1, "liga" 1, "calt" 1';
+        textInner.style.textRendering = 'optimizeLegibility';
+        (textInner.style as any).webkitFontSmoothing = 'antialiased';
+        textInner.style.unicodeBidi = 'isolate';
 
-      if (slices.length > 0) {
-        slices.forEach((slice) => {
-          const spanEl = document.createElement('span');
-          applySliceStyleToElement(spanEl, slice.style, scale);
-          spanEl.textContent = slice.text;
-          textInner.appendChild(spanEl);
-        });
-      } else {
-        const spanEl = document.createElement('span');
-        applySliceStyleToElement(
-          spanEl,
-          layer.style || doc.defaultStyle || DEFAULT_TEXT_STYLE,
-          scale
+        // Build formatted spans
+        const layerSpans = layer.spans && layer.spans.length > 0 ? layer.spans : (doc.spans || []);
+        const slices = buildRenderedSlices(
+          layer.text || '',
+          layerSpans,
+          layer.style || doc.defaultStyle || DEFAULT_TEXT_STYLE
         );
-        spanEl.textContent = layer.text || '';
-        textInner.appendChild(spanEl);
+
+        if (slices.length > 0) {
+          slices.forEach((slice) => {
+            const spanEl = document.createElement('span');
+            applySliceStyleToElement(spanEl, slice.style, scale);
+            spanEl.textContent = slice.text;
+            textInner.appendChild(spanEl);
+          });
+        } else {
+          const spanEl = document.createElement('span');
+          applySliceStyleToElement(
+            spanEl,
+            layer.style || doc.defaultStyle || DEFAULT_TEXT_STYLE,
+            scale
+          );
+          spanEl.textContent = layer.text || '';
+          textInner.appendChild(spanEl);
+        }
+
+        layerDiv.appendChild(textInner);
       }
 
-      layerDiv.appendChild(textInner);
       contentLayer.appendChild(layerDiv);
     });
   } else if (hasTextInContent) {
@@ -874,6 +945,7 @@ export function createCleanOffscreenDom(
     const textContainer = document.createElement('div');
     textContainer.dir = doc.defaultStyle?.direction || 'rtl';
     textContainer.style.fontFamily = getFontFamilyCSS(doc.defaultStyle?.fontFamily || 'Noto Nastaliq Urdu');
+    textContainer.style.fontSize = `${Math.max(12, Math.round((doc.defaultStyle?.fontSize || 28) * scale))}px`;
     textContainer.style.width = '100%';
     textContainer.style.textAlign = doc.defaultStyle?.align || 'right';
     textContainer.style.lineHeight = `${doc.defaultStyle?.lineHeight || 2.4}`;
@@ -1486,7 +1558,10 @@ export async function downloadDocFile(
               )}</span>`;
             })
             .join('');
-          return `<p style="text-align: ${l.style?.align || 'center'}; line-height: ${
+          const dir = l.style?.direction || 'rtl';
+          const align = l.style?.align || (dir === 'ltr' ? 'left' : 'right');
+          const fontSizePt = Math.round((l.style?.fontSize || 24) * 0.75);
+          return `<p dir="${dir}" style="direction: ${dir}; text-align: ${align}; font-size: ${fontSizePt}pt; line-height: ${
             l.style?.lineHeight || 2.2
           }; margin: 12px 0;">${inner}</p>`;
         })
@@ -1501,7 +1576,7 @@ export async function downloadDocFile(
         doc.spans || [],
         doc.defaultStyle || DEFAULT_TEXT_STYLE
       );
-      bodyHtml = slices
+      const inner = slices
         .map((s) => {
           const font = getFontFamilyCSS(s.style.fontFamily || 'Noto Nastaliq Urdu');
           const color = s.style.color || '#1c1917';
@@ -1518,8 +1593,14 @@ export async function downloadDocFile(
           )}</span>`;
         })
         .join('');
+      const dir = doc.defaultStyle?.direction || 'rtl';
+      const align = doc.defaultStyle?.align || (dir === 'ltr' ? 'left' : 'right');
+      const fontSizePt = Math.round((doc.defaultStyle?.fontSize || 24) * 0.75);
+      bodyHtml = `<p dir="${dir}" style="direction: ${dir}; text-align: ${align}; font-size: ${fontSizePt}pt; line-height: ${
+        doc.defaultStyle?.lineHeight || 2.4
+      }; margin: 12px 0;">${inner}</p>`;
     } else {
-      bodyHtml = content.replace(/\n/g, '<br/>');
+      bodyHtml = `<p dir="rtl" style="direction: rtl; text-align: right; font-size: 18pt; line-height: 2.4; margin: 12px 0;">${content.replace(/\n/g, '<br/>')}</p>`;
     }
   }
 

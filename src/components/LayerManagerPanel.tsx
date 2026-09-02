@@ -13,6 +13,7 @@ import {
   ArrowDown,
   Copy,
   Type,
+  Image as ImageIcon,
   X,
   FolderPlus,
   FolderMinus,
@@ -137,62 +138,74 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
 
   return (
     <div
-      id="layers-manager-panel"
-      className="absolute top-12 left-3 sm:left-4 z-40 w-80 max-h-[calc(100dvh-5.5rem)] bg-white rounded-2xl shadow-2xl border-2 border-stone-300 p-3 flex flex-col gap-2.5 animate-in slide-in-from-top-2 overflow-hidden select-none"
-      dir="ltr"
+      id="layers-manager-overlay"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in overscroll-none select-none"
+      onClick={onClose}
     >
-      {/* 1. Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-stone-300 shrink-0">
-        <div className="flex items-center gap-2 text-stone-900 font-bold text-sm">
-          <Layers size={18} className="text-emerald-700" />
-          <span className="font-sans text-stone-900 text-sm font-semibold">Layers</span>
-          <span className="text-[11px] font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-            {layers.length}
-          </span>
-        </div>
+      <div
+        id="layers-manager-panel"
+        className="relative w-full sm:max-w-lg sm:mx-auto max-h-[82vh] sm:max-h-[75vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border-t-2 sm:border-2 border-stone-300 p-3 sm:p-4 flex flex-col gap-2.5 animate-in slide-in-from-bottom duration-200 overflow-hidden"
+        dir="ltr"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Swipe / Drag Handle Indicator */}
+        <div className="w-10 h-1 bg-stone-300 rounded-full mx-auto -mt-0.5 mb-1 shrink-0" />
 
-        <div className="flex items-center gap-1">
-          {/* Quick Select All / Deselect All Toggle */}
-          {selectedLayerIds.length > 0 ? (
-            <button
-              type="button"
-              onClick={onClearSelection}
-              className="px-2 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
-              title="Clear Selection"
-            >
-              Clear
-            </button>
-          ) : (
-            onSelectAllLayers && layers.length > 1 && (
+        {/* 1. Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-stone-200 shrink-0">
+          <div className="flex items-center gap-2 text-stone-900 font-bold text-sm">
+            <Layers size={18} className="text-emerald-700" />
+            <span className="font-sans text-stone-900 text-sm font-semibold">Layers</span>
+            <span className="text-[11px] font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+              {layers.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {/* Quick Select All / Deselect All Toggle */}
+            {selectedLayerIds.length > 0 ? (
               <button
                 type="button"
-                onClick={onSelectAllLayers}
-                className="px-2 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-emerald-800 hover:bg-stone-100 transition-colors cursor-pointer"
-                title="Select All"
+                onClick={onClearSelection}
+                className="px-2.5 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer border border-stone-200"
+                title="Clear Selection"
               >
-                All
+                Clear ({selectedLayerIds.length})
               </button>
-            )
-          )}
+            ) : (
+              onSelectAllLayers && layers.length > 1 && (
+                <button
+                  type="button"
+                  onClick={onSelectAllLayers}
+                  className="px-2.5 py-1 rounded-lg text-xs font-sans font-medium text-stone-600 hover:text-emerald-800 hover:bg-stone-100 transition-colors cursor-pointer border border-stone-200"
+                  title="Select All"
+                >
+                  Select All
+                </button>
+              )
+            )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 flex items-center justify-center transition-colors cursor-pointer border border-stone-300"
-            title="Close"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-800 flex items-center justify-center transition-colors cursor-pointer border border-stone-300"
+              title="Close"
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* 2. Layers Scrollable List */}
-      <div className="flex flex-col gap-1.5 max-h-72 sm:max-h-84 overflow-y-auto custom-scrollbar touch-pan-y overscroll-contain pr-0.5 flex-1 min-h-0">
+        {/* 2. Layers Scrollable List */}
+        <div className="flex flex-col gap-1.5 max-h-[46vh] sm:max-h-[40vh] overflow-y-auto custom-scrollbar touch-pan-y overscroll-contain pr-0.5 flex-1 min-h-0">
         {sortedLayers.map((layer, index) => {
           const isSelected = selectedLayerIds.includes(layer.id) || layer.id === activeLayerId;
           const isChecked = selectedLayerIds.includes(layer.id);
-          const snippet = layer.text.slice(0, 24) || 'Empty Text Layer';
+          const isImage = layer.type === 'image';
+          const snippet = isImage
+            ? layer.name || 'Image Object'
+            : layer.text.slice(0, 24) || 'Empty Text Layer';
           const isGrouped = !!layer.groupId;
 
           return (
@@ -236,6 +249,19 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 {isGrouped ? (
                   <Folder size={14} className="text-amber-700 shrink-0" title="Grouped Layer" />
+                ) : isImage ? (
+                  layer.src ? (
+                    <img
+                      src={layer.src}
+                      alt="Thumbnail"
+                      className="w-4 h-4 object-cover rounded shrink-0 border border-stone-300"
+                    />
+                  ) : (
+                    <ImageIcon
+                      size={14}
+                      className={isChecked ? 'text-emerald-800 shrink-0 font-bold' : 'text-stone-600 shrink-0'}
+                    />
+                  )
                 ) : (
                   <Type
                     size={14}
@@ -508,6 +534,7 @@ export const LayerManagerPanel: React.FC<LayerManagerPanelProps> = ({
           <span>Add Text Layer</span>
         </button>
       )}
+      </div>
     </div>
   );
 };

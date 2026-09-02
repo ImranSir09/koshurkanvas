@@ -14,6 +14,7 @@ import { CanvasSettingsPanel } from './CanvasSettingsPanel';
 import { CanvasTextLayerObject } from './CanvasTextLayerObject';
 import { CombinedCanvasSelectionBox } from './CombinedCanvasSelectionBox';
 import { LayerManagerPanel } from './LayerManagerPanel';
+import { ImageSourceModal } from './ImageSourceModal';
 import { VoiceInputButton } from './VoiceInputButton';
 import { useVisualViewport } from '../lib/useVisualViewport';
 import {
@@ -120,6 +121,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   // UI Panels
   const [showCanvasPanel, setShowCanvasPanel] = useState<boolean>(false);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(false);
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [isReplacingImage, setIsReplacingImage] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<boolean>(false);
   const [editorDirection, setEditorDirection] = useState<'rtl' | 'ltr'>('rtl');
 
@@ -859,6 +862,129 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
     }, 50);
   };
 
+  // Open Image Modal for inserting or replacing
+  const handleOpenImageModal = (isReplacing = false) => {
+    setIsReplacingImage(isReplacing);
+    setShowImageModal(true);
+  };
+
+  // Handle Image Selection from Modal (Inserts as Editable Canvas Layer)
+  const handleSelectImageFromModal = (
+    dataUrl: string,
+    naturalWidth: number,
+    naturalHeight: number,
+    fileName: string
+  ) => {
+    if (isReplacingImage && activeLayerId) {
+      // Replace existing image in active layer while preserving its current position and rotation
+      const target = textLayers.find((l) => l.id === activeLayerId);
+      const aspect = naturalWidth / Math.max(1, naturalHeight);
+      const curW = target?.width || 240;
+      const curH = target?.lockAspectRatio !== false ? Math.round(curW / aspect) : (target?.height || 180);
+
+      const updatedLayers = textLayers.map((l) =>
+        l.id === activeLayerId
+          ? {
+              ...l,
+              src: dataUrl,
+              originalWidth: naturalWidth,
+              originalHeight: naturalHeight,
+              aspectRatio: aspect,
+              width: curW,
+              height: curH,
+            }
+          : l
+      );
+
+      pushSnapshot('Replace image object', {
+        textLayers: updatedLayers,
+        activeLayerId,
+      });
+
+      onUpdateDocument({
+        textLayers: updatedLayers,
+      });
+      return;
+    }
+
+    // Insert as a new independent editable canvas object (never background)
+    const maxZ = Math.max(0, ...textLayers.map((l) => l.zIndex ?? 0));
+    const newLayerId = `layer-img-${Date.now()}`;
+    const aspect = naturalWidth / Math.max(1, naturalHeight);
+
+    // Calculate reasonable initial display dimensions centered on canvas
+    let initW = naturalWidth;
+    let initH = naturalHeight;
+    const maxBoundW = Math.min(380, refWidth * 0.75);
+    const maxBoundH = Math.min(320, refHeight * 0.6);
+
+    if (initW > maxBoundW || initH > maxBoundH) {
+      if (initW / maxBoundW > initH / maxBoundH) {
+        initW = Math.round(maxBoundW);
+        initH = Math.round(initW / aspect);
+      } else {
+        initH = Math.round(maxBoundH);
+        initW = Math.round(initH * aspect);
+      }
+    } else if (initW < 120 && initH < 120) {
+      initW = Math.round(initW * 1.5);
+      initH = Math.round(initH * 1.5);
+    }
+
+    const initX = Math.max(10, Math.round((refWidth - initW) / 2));
+    const initY = Math.max(10, Math.round((refHeight - initH) / 2));
+
+    const imageCount = textLayers.filter((l) => l.type === 'image').length + 1;
+    const cleanName = fileName ? fileName.replace(/\.[^/.]+$/, '') : `Image ${imageCount}`;
+
+    const newImageLayer: TextLayer = {
+      id: newLayerId,
+      name: cleanName,
+      type: 'image',
+      src: dataUrl,
+      originalWidth: naturalWidth,
+      originalHeight: naturalHeight,
+      aspectRatio: aspect,
+      lockAspectRatio: true,
+      cropPreset: 'original',
+      text: '',
+      x: initX,
+      y: initY,
+      width: initW,
+      height: initH,
+      rotation: 0,
+      scale: 1,
+      opacity: 1,
+      zIndex: maxZ + 1,
+      isLocked: false,
+      isHidden: false,
+      brightness: 1,
+      contrast: 1,
+      grayscale: 0,
+      blur: 0,
+      shadow: false,
+      borderWidth: 0,
+      borderColor: '#000000',
+      borderRadius: 0,
+      style: { ...(doc.defaultStyle || DEFAULT_TEXT_STYLE) },
+    };
+
+    const updatedLayers = [...textLayers, newImageLayer];
+    setActiveLayerId(newLayerId);
+    setSelectedLayerIds([newLayerId]);
+
+    pushSnapshot(`Add image "${cleanName}"`, {
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+      selectedLayerIds: [newLayerId],
+    });
+
+    onUpdateDocument({
+      textLayers: updatedLayers,
+      activeLayerId: newLayerId,
+    });
+  };
+
   // Listen to custom app-add-text-layer event from header
   useEffect(() => {
     const handleAddTextEvent = () => handleAddTextLayer();
@@ -1221,35 +1347,6 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
 
   return (
     <div className="relative flex flex-col w-full h-full min-h-0 bg-[#f4f3ee] overflow-hidden font-sans select-none">
-      {/* Layers Manager Floating Drawer */}
-      <LayerManagerPanel
-        layers={textLayers}
-        activeLayerId={activeLayerId}
-        selectedLayerIds={selectedLayerIds}
-        onSelectLayer={(id, isMulti) => {
-          handleSelectLayer(id, isMulti);
-        }}
-        onToggleSelectLayer={handleToggleSelectLayer}
-        onGroupLayers={handleGroupLayers}
-        onUngroupLayers={handleUngroupLayers}
-        onAddTextLayer={handleAddTextLayer}
-        onUpdateLayer={handleUpdateLayer}
-        onDuplicateLayer={handleDuplicateLayer}
-        onDeleteLayer={handleDeleteLayer}
-        onMoveLayerUp={handleMoveLayerUp}
-        onMoveLayerDown={handleMoveLayerDown}
-        isOpen={showLayersPanel}
-        onClose={() => setShowLayersPanel(false)}
-      />
-
-      {/* Canvas Settings Bottom Sheet */}
-      <CanvasSettingsPanel
-        isOpen={showCanvasPanel}
-        canvasConfig={canvasConfig}
-        onUpdateCanvasConfig={handleUpdateCanvasConfig}
-        onClose={() => setShowCanvasPanel(false)}
-      />
-
       {/* ========================================================================= */}
       {/* 2. TAB 1: INPUT TEXT (Text Input Area and Keyboard Options ONLY) */}
       {/* ========================================================================= */}
@@ -1470,10 +1567,10 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'canvas' && (
         <div className="relative flex-1 w-full h-full min-h-0 flex flex-col overflow-hidden">
-          {/* Main Visual Canvas Stage */}
+          {/* Main Visual Canvas Stage with Warm Studio Desk Background */}
           <div
             ref={stageViewportRef}
-            className="relative flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center p-1 sm:p-2.5 overflow-auto custom-scrollbar bg-stone-200/50 cursor-default touch-pan-x touch-pan-y overscroll-contain"
+            className="relative flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center p-2 sm:p-4 overflow-auto custom-scrollbar studio-desk-bg cursor-default touch-pan-x touch-pan-y overscroll-contain"
             onPointerDown={handleDeselectLayerOnStageClick}
             onTouchStart={handleCanvasTouchStart}
             onTouchMove={handleCanvasTouchMove}
@@ -1487,12 +1584,12 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 height: `${Math.round(refHeight * totalScale)}px`,
               }}
             >
-              {/* Canvas Stage Sheet */}
+              {/* Canvas Stage Sheet with Museum Gallery Paper Elevation */}
               <div
                 id="kashmiri-canvas-document-sheet"
                 data-canvas-stage="true"
                 onPointerDown={handleDeselectLayerOnStageClick}
-                className="absolute bg-white shadow-xl rounded-2xl border border-stone-300 overflow-hidden select-none flex flex-col transition-transform duration-75"
+                className="absolute bg-white gallery-paper-shadow rounded-2xl overflow-hidden select-none flex flex-col transition-transform duration-75"
                 style={{
                   width: `${refWidth}px`,
                   height: `${refHeight}px`,
@@ -1669,29 +1766,28 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
                 </div>
 
                 {/* Minimal Brand Attribution */}
-                <div className="w-full px-4 py-2 flex items-center justify-between text-[11px] text-stone-400 font-sans z-10 pointer-events-none select-none">
-                  <span className="font-semibold text-stone-500">Kashur Kanvas</span>
-                  <span>Kashmiri Calligraphy & Design Studio</span>
+                <div className="w-full px-4 py-2 flex items-center justify-center text-[11px] text-stone-400 font-sans z-10 pointer-events-none select-none">
+                  <span className="font-medium text-stone-500">Koshur Kanvas by Emraan Mugloo</span>
                 </div>
               </div>
             </div>
 
-            {/* Floating High-Contrast Zoom Control Pill */}
-            <div className="fixed bottom-20 left-3 z-30 flex items-center gap-1 bg-white border-2 border-stone-300 rounded-full shadow-lg p-1">
+            {/* Tactile Floating Zoom Control Pill */}
+            <div className="fixed bottom-20 left-3 z-30 flex items-center gap-1 bg-stone-900/90 text-white backdrop-blur-md border border-stone-700/60 rounded-full shadow-2xl p-1">
               <button
                 type="button"
                 onClick={() => setZoomScale((s) => Math.max(0.5, parseFloat((s - 0.1).toFixed(2))))}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-900 hover:bg-stone-200 active:scale-95 transition-all cursor-pointer"
+                className="w-7.5 h-7.5 rounded-full flex items-center justify-center text-stone-300 hover:text-white hover:bg-stone-800 active:scale-95 transition-all cursor-pointer"
                 title="Zoom Out"
                 aria-label="Zoom Out"
               >
-                <ZoomOut size={16} />
+                <ZoomOut size={15} />
               </button>
 
               <button
                 type="button"
                 onClick={() => setZoomScale(1)}
-                className="px-2.5 py-1 text-xs font-mono font-bold text-stone-900 hover:bg-stone-200 rounded-full transition-all cursor-pointer"
+                className="px-2.5 py-0.5 text-xs font-mono font-bold text-stone-200 hover:text-white hover:bg-stone-800 rounded-full transition-all cursor-pointer"
                 title="Reset Zoom (100%)"
                 aria-label="Reset Zoom"
               >
@@ -1701,11 +1797,11 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomScale((s) => Math.min(2.5, parseFloat((s + 0.1).toFixed(2))))}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-900 hover:bg-stone-200 active:scale-95 transition-all cursor-pointer"
+                className="w-7.5 h-7.5 rounded-full flex items-center justify-center text-stone-300 hover:text-white hover:bg-stone-800 active:scale-95 transition-all cursor-pointer"
                 title="Zoom In"
                 aria-label="Zoom In"
               >
-                <ZoomIn size={16} />
+                <ZoomIn size={15} />
               </button>
             </div>
           </div>
@@ -1716,6 +1812,7 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
             layersCount={textLayers.length}
             currentStyle={activeFormatting}
             onUpdateStyle={handleUpdateStyle}
+            onUpdateLayerObject={handleUpdateLayer}
             onOpenUnicodeEditor={() => {
               if (activeLayer) {
                 handleEditInNativeInput(activeLayer);
@@ -1724,12 +1821,17 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
               }
             }}
             onAddNewText={handleAddTextLayer}
+            onOpenImageModal={handleOpenImageModal}
             onDuplicateLayer={handleDuplicateLayer}
             onDeleteLayer={handleDeleteLayer}
             onBringToFront={handleBringToFront}
             onSendToBack={handleSendToBack}
-            onOpenLayersPanel={() => setShowLayersPanel(true)}
-            onOpenCanvasSettings={() => setShowCanvasPanel(true)}
+            onMoveUp={handleMoveLayerUp}
+            onMoveDown={handleMoveLayerDown}
+            onOpenLayersPanel={() => setShowLayersPanel((prev) => !prev)}
+            isLayersPanelOpen={showLayersPanel}
+            onOpenCanvasSettings={() => setShowCanvasPanel((prev) => !prev)}
+            isCanvasSettingsOpen={showCanvasPanel}
             onCenterHorizontally={handleCenterLayerHorizontally}
             onCenterVertically={handleCenterLayerVertically}
             onAlignLayers={handleAlignLayers}
@@ -1741,6 +1843,15 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
           />
         </div>
       )}
+
+      {/* Image Source & Upload Modal */}
+      <ImageSourceModal
+        isOpen={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onSelectImage={handleSelectImageFromModal}
+        isReplacing={isReplacingImage}
+        title={isReplacingImage ? 'Replace Image Object' : 'Import Image to Canvas'}
+      />
 
       {/* Slide-Up Layer Manager Panel */}
       <LayerManagerPanel
@@ -1763,8 +1874,8 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
         onDuplicateLayer={handleDuplicateLayer}
         onBringToFront={handleBringToFront}
         onSendToBack={handleSendToBack}
-        onMoveUp={handleMoveLayerUp}
-        onMoveDown={handleMoveLayerDown}
+        onMoveLayerUp={handleMoveLayerUp}
+        onMoveLayerDown={handleMoveLayerDown}
         onClose={() => setShowLayersPanel(false)}
       />
 

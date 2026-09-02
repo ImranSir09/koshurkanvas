@@ -32,6 +32,7 @@ export interface TextStyleProperties {
   padding?: number;
   borderWidth?: number;
   borderColor?: string;
+  rotation?: number;
   flipX?: boolean;
   flipY?: boolean;
 }
@@ -146,22 +147,60 @@ export interface BaseLayer {
 }
 
 export interface TextLayer extends BaseLayer {
-  type: 'text';
-  text: string; // Real Unicode Kashmiri text
+  type: 'text' | 'image';
+  text?: string; // Real Unicode Kashmiri text
   style: TextStyleProperties;
   scale?: number;
   kashida?: boolean;
   spans?: TextStyleSpan[];
+  // Image properties when type === 'image':
+  src?: string;
+  originalWidth?: number;
+  originalHeight?: number;
+  aspectRatio?: number;
+  lockAspectRatio?: boolean;
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  shadow?: boolean;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  brightness?: number;
+  contrast?: number;
+  grayscale?: number;
+  blur?: number;
+  cropPreset?: 'original' | '1:1' | '4:3' | '16:9' | 'circle';
+  objectFit?: 'contain' | 'cover' | 'fill';
 }
 
 export interface ImageLayer extends BaseLayer {
   type: 'image';
   src: string;
+  originalWidth?: number;
+  originalHeight?: number;
   aspectRatio: number;
+  lockAspectRatio?: boolean;
   borderRadius: number;
   borderWidth: number;
   borderColor: string;
   shadow?: boolean;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  brightness?: number;
+  contrast?: number;
+  grayscale?: number;
+  blur?: number;
+  cropPreset?: 'original' | '1:1' | '4:3' | '16:9' | 'circle';
+  objectFit?: 'contain' | 'cover' | 'fill';
+  style?: TextStyleProperties;
 }
 
 export interface ShapeLayer extends BaseLayer {

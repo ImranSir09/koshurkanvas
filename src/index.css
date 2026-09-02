@@ -193,5 +193,20 @@ input, textarea, [contenteditable="true"], .selectable-text {
   user-select: text !important;
 }
 
+/* Studio Desk & Gallery Canvas Atmosphere */
+.studio-desk-bg {
+  background-color: #f7f5f0;
+  background-image: radial-gradient(circle at 50% 50%, rgba(168, 162, 158, 0.22) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.gallery-paper-shadow {
+  box-shadow: 
+    0 20px 45px -10px rgba(41, 37, 36, 0.15),
+    0 4px 16px -3px rgba(41, 37, 36, 0.07),
+    0 0 0 1px rgba(41, 37, 36, 0.08);
+}
+
+
 
 
