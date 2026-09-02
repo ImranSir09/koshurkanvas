@@ -4,7 +4,7 @@ import { CanvasAspectRatio, DocumentPaperSize, KashurDocument, TextStyleProperti
 import { getFontFamilyCSS } from './fontUtils';
 import { buildRenderedSlices } from './textEngine';
 import { DEFAULT_TEXT_STYLE } from './kashmiriData';
-import { getCustomFontsCSS } from './customFonts';
+import { getCustomFontsCSS, getCustomFonts, loadSavedCustomFonts } from './customFonts';
 import { saveExportToPublicStorage, shareFileNative, isNativeAndroid } from './nativeStorage';
 
 export type ExportStageName = 'Preparing' | 'Rendering' | 'Encoding' | 'Saving' | 'Complete';
@@ -84,23 +84,30 @@ export async function getBase64FontEmbedCSS(): Promise<string> {
       console.warn('Stylesheet font extraction warning:', e);
     }
 
-    // 2. Fetch Google Fonts CSS with base64 embedded binary files if not already cached
+    // 2. Fetch Google Fonts CSS with base64 embedded binary files if not already cached (short timeout so offline exports never freeze)
     try {
       const fontCssUrl =
         'https://fonts.googleapis.com/css2?family=Gulzar&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap';
 
-      const res = await fetch(fontCssUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 400);
+
+      const res = await fetch(fontCssUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         let cssText = await res.text();
         const matches = Array.from(cssText.matchAll(/url\((https:\/\/[^)]+)\)/g));
         const urlToDataMap = new Map<string, string>();
 
         await Promise.allSettled(
-          matches.map(async (m) => {
+          matches.slice(0, 8).map(async (m) => {
             const rawUrl = m[1].replace(/['"]/g, '');
             if (urlToDataMap.has(rawUrl)) return;
             try {
-              const fontRes = await fetch(rawUrl);
+              const fontCtrl = new AbortController();
+              const fontTimeout = setTimeout(() => fontCtrl.abort(), 400);
+              const fontRes = await fetch(rawUrl, { signal: fontCtrl.signal });
+              clearTimeout(fontTimeout);
               const blob = await fontRes.blob();
               const base64 = await new Promise<string>((resolve) => {
                 const reader = new FileReader();
@@ -120,7 +127,7 @@ export async function getBase64FontEmbedCSS(): Promise<string> {
         combinedCSS += '\n' + cssText;
       }
     } catch {
-      // Fallback gracefully to stylesheet rules
+      // Fallback gracefully to stylesheet rules without delay
     }
 
     cachedFontEmbedCSS = combinedCSS;
@@ -145,6 +152,11 @@ export async function ensureFontsReady(): Promise<boolean> {
   if (typeof document === 'undefined' || !document.fonts) return true;
   try {
     await document.fonts.ready;
+    let customFonts = getCustomFonts();
+    if (customFonts.length === 0) {
+      await loadSavedCustomFonts().catch(() => []);
+      customFonts = getCustomFonts();
+    }
     const fontsToCheck = [
       '24px "Noto Nastaliq Urdu"',
       'bold 24px "Noto Nastaliq Urdu"',
@@ -152,6 +164,7 @@ export async function ensureFontsReady(): Promise<boolean> {
       '24px "Amiri"',
       '24px "Noto Sans Arabic"',
       '24px "Plus Jakarta Sans"',
+      ...customFonts.map((cf) => `24px "${cf.name}"`),
     ];
     await Promise.allSettled(fontsToCheck.map((f) => document.fonts.load(f)));
     await document.fonts.ready;
@@ -618,6 +631,7 @@ export function createCleanOffscreenDom(
       textInner.style.overflow = 'visible';
       textInner.style.width = '100%';
       textInner.style.boxSizing = 'border-box';
+      textInner.style.opacity = `${layer.style?.opacity ?? 1}`;
       textInner.style.fontFeatureSettings = '"kern" 1, "liga" 1, "calt" 1';
 
       // Build formatted spans
@@ -675,6 +689,7 @@ export function createCleanOffscreenDom(
     textContainer.style.lineHeight = `${doc.defaultStyle?.lineHeight || 2.4}`;
     textContainer.style.whiteSpace = 'pre-wrap';
     textContainer.style.wordBreak = 'break-word';
+    textContainer.style.opacity = `${doc.defaultStyle?.opacity ?? 1}`;
     textContainer.style.fontFeatureSettings = '"kern" 1, "liga" 1, "calt" 1';
 
     const slices = buildRenderedSlices(
@@ -1220,7 +1235,8 @@ export async function downloadDocFile(
   content: string,
   filename: string,
   paperSize: DocumentPaperSize = 'a4',
-  orientation: 'portrait' | 'landscape' = 'portrait'
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  opacity: number = 1
 ): Promise<{ success: boolean; path?: string; uri?: string; message?: string }> {
   const sizeMap: Record<DocumentPaperSize, string> = {
     a3: '297mm 420mm',
@@ -1286,6 +1302,7 @@ h1.doc-title {
 .content-body {
   white-space: pre-wrap;
   word-wrap: break-word;
+  opacity: ${opacity};
 }
 .watermark {
   margin-top: 40px;

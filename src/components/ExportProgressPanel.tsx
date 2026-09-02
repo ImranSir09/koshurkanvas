@@ -23,7 +23,7 @@ export interface ExportProgressPanelProps {
   formatLabel: string;
   dimensionsStr: string;
   stage: ExportStageName | 'Failed' | 'Cancelled';
-  percent: number;
+  percent?: number;
   sizeBytes: number | null;
   errorMessage?: string | null;
   savedUri?: string | null;
@@ -41,7 +41,6 @@ export const ExportProgressPanel: React.FC<ExportProgressPanelProps> = ({
   formatLabel,
   dimensionsStr,
   stage,
-  percent,
   sizeBytes,
   errorMessage,
   savedUri,
@@ -177,35 +176,16 @@ export const ExportProgressPanel: React.FC<ExportProgressPanelProps> = ({
         </div>
       </div>
 
-      {/* Progress View (During Export) */}
+      {/* Loading View (During Export) */}
       {isExporting && (
-        <div className="flex flex-col gap-2.5 py-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-sans font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-              {stage}
-            </span>
-            <span className="font-mono font-bold text-stone-700">{percent}%</span>
-          </div>
-
-          {/* Smooth Progress Bar */}
-          <div className="w-full h-3 bg-stone-200 rounded-full overflow-hidden border border-stone-300 p-0.5">
-            <div
-              className="h-full bg-emerald-600 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${Math.max(3, percent)}%` }}
-            />
-          </div>
-
-          {/* File Size Indicator */}
-          <div className="flex items-center justify-between text-xs text-stone-500 font-sans mt-0.5">
-            <span>Estimated size:</span>
-            <span className="font-mono font-semibold text-stone-800">
-              {formattedSize}
-            </span>
+        <div className="flex flex-col items-center justify-center gap-3 py-3 text-center">
+          <div className="flex items-center gap-2 text-xs font-sans font-bold text-emerald-800">
+            <Loader2 size={16} className="text-emerald-700 animate-spin" />
+            <span>Processing and saving file...</span>
           </div>
 
           {/* Cancel Action Button */}
-          <div className="pt-2">
+          <div className="w-full pt-1">
             <button
               type="button"
               onClick={onCancel}

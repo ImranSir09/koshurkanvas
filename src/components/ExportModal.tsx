@@ -225,18 +225,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
     try {
       if (format === 'txt') {
-        handleProgress('Preparing', 5);
-        await new Promise((r) => setTimeout(r, 20));
-        if (signal.aborted) return;
-
-        handleProgress('Rendering', 40);
         const textContent = rawUnicodeText || (docProp?.content) || '';
-        handleProgress('Rendering', 70);
-        await new Promise((r) => setTimeout(r, 20));
-        if (signal.aborted) return;
-
-        handleProgress('Encoding', 80);
         const res = await downloadTextFile(textContent, fileName);
+        if (signal.aborted) return;
         const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
         const sizeBytes = blob.size;
 
@@ -244,39 +235,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           throw new Error(res?.message || 'Failed to save Text file');
         }
 
-        handleProgress('Saving', 95, { sizeBytes, uri: res.uri, path: res.path });
-        await new Promise((r) => setTimeout(r, 20));
-        if (signal.aborted) return;
-
         handleProgress('Complete', 100, { sizeBytes, uri: res.uri, path: res.path });
       } else if (format === 'doc') {
-        handleProgress('Preparing', 5);
-        await new Promise((r) => setTimeout(r, 20));
-        if (signal.aborted) return;
-
-        handleProgress('Rendering', 40);
         const paper = (sizeCategory === 'paper' ? selectedSize : 'a4') as DocumentPaperSize;
+        const effectiveDocOpacity = docProp?.defaultStyle?.opacity ?? 1;
         const res = await downloadDocFile(
           projectTitle,
           rawUnicodeText,
           fileName,
           paper,
-          orientation
+          orientation,
+          effectiveDocOpacity
         );
-        handleProgress('Rendering', 70);
-        await new Promise((r) => setTimeout(r, 20));
         if (signal.aborted) return;
 
         if (!res || res.success === false) {
           throw new Error(res?.message || 'Failed to save Word DOC');
         }
 
-        handleProgress('Encoding', 85);
         const sizeBytes = new TextEncoder().encode(rawUnicodeText).length + 2048;
-        handleProgress('Saving', 95, { sizeBytes, uri: res.uri, path: res.path });
-        await new Promise((r) => setTimeout(r, 20));
-        if (signal.aborted) return;
-
         handleProgress('Complete', 100, { sizeBytes, uri: res.uri, path: res.path });
       } else {
         const exportDoc: KashurDocument = docProp
@@ -295,6 +272,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               createdAt: Date.now(),
               updatedAt: Date.now(),
               canvasConfig: {
+                ...docProp.canvasConfig,
                 aspectRatio: selectedSize,
                 orientation,
                 color: '#ffffff',
@@ -302,7 +280,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               textLayers: [],
             };
 
-        await exportDocumentClean(exportDoc, {
+        const exportedDataUrl = await exportDocumentClean(exportDoc, {
           fileName: fileName.replace(/\.[^/.]+$/, ''),
           format,
           pixelRatio: resolutionScale,
@@ -311,6 +289,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           orientation,
           onProgress: handleProgress,
           signal,
+        });
+
+        if (signal.aborted) return;
+
+        let sizeBytes: number | undefined;
+        if (exportedDataUrl && exportedDataUrl.startsWith('data:')) {
+          const base64Len = exportedDataUrl.split(',')[1]?.length || 0;
+          sizeBytes = Math.round(base64Len * 0.75);
+        }
+
+        handleProgress('Complete', 100, {
+          sizeBytes,
+          dataUrl: exportedDataUrl,
         });
       }
     } catch (err: any) {

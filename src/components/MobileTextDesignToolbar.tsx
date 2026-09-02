@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FontChoice, TextStyleProperties, TextLayer } from '../types';
 import { getFontFamilyCSS, SYSTEM_FONTS } from '../lib/fontUtils';
-import { addCustomFont, getCustomFonts, deleteCustomFont, CustomFontItem } from '../lib/customFonts';
+import { addCustomFont, getCustomFonts, deleteCustomFont, onCustomFontsChange, CustomFontItem } from '../lib/customFonts';
 import { LayerAlignmentType } from '../lib/layerUtils';
 import { ColorGradientPicker } from './ColorGradientPicker';
 import {
@@ -164,6 +164,14 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>('none');
   const [customFontsList, setCustomFontsList] = useState<CustomFontItem[]>(() => getCustomFonts());
   const fontFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onCustomFontsChange(() => {
+      setCustomFontsList(getCustomFonts());
+    });
+    setCustomFontsList(getCustomFonts());
+    return unsubscribe;
+  }, []);
 
   const toggleSheet = (sheet: ActiveSheet) => {
     setActiveSheet((prev) => (prev === sheet ? 'none' : sheet));
