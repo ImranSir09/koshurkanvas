@@ -1,6 +1,6 @@
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { CanvasAspectRatio, DocumentPaperSize, KashurDocument, TextStyleProperties, TextStyleSpan } from '../types';
+import { CanvasAspectRatio, DocumentPaperSize, KashurDocument, TextStyleProperties, TextStyleSpan } from '../types/index';
 import { getFontFamilyCSS } from './fontUtils';
 import { buildRenderedSlices } from './textEngine';
 import { DEFAULT_TEXT_STYLE } from './kashmiriData';

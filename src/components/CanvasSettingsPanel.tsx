@@ -4,7 +4,7 @@ import {
   CanvasBackgroundConfig,
   DocumentPaperSize,
   SocialCardSize,
-} from '../types';
+} from '../types/index';
 import { ColorGradientPicker } from './ColorGradientPicker';
 import {
   Layout,
