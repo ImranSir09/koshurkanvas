@@ -245,7 +245,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           fileName,
           paper,
           orientation,
-          effectiveDocOpacity
+          effectiveDocOpacity,
+          docProp
         );
         if (signal.aborted) return;
 
