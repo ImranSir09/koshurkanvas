@@ -11,17 +11,22 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+export interface ColorChangeResult {
+  color?: string;
+  gradient?: string;
+  type: 'solid' | 'gradient' | 'none';
+}
+
 export interface ColorGradientPickerProps {
   label?: string;
+  title?: string;
   value?: string; // solid color (hex/rgb) or gradient string ("linear-gradient(...)")
+  currentColor?: string; // backwards compatibility alias
   gradientValue?: string;
+  currentGradient?: string; // backwards compatibility alias
   allowNone?: boolean;
   noneLabel?: string;
-  onChange: (result: {
-    color?: string;
-    gradient?: string;
-    type: 'solid' | 'gradient' | 'none';
-  }) => void;
+  onChange: ((result: ColorChangeResult) => void) | ((color?: string, gradient?: string) => void);
   compact?: boolean;
 }
 
@@ -29,17 +34,39 @@ const GRADIENT_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 
 export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
   label,
-  value = '#1c1917',
+  title,
+  value,
+  currentColor: propCurrentColor,
   gradientValue,
+  currentGradient: propCurrentGradient,
   allowNone = false,
+  noneLabel = 'None',
   onChange,
 }) => {
+  const displayLabel = label || title;
+
+  // Defensively unwrap color/gradient values whether passed as string or object
+  const rawValue = value ?? propCurrentColor;
+  const rawGradient = gradientValue ?? propCurrentGradient;
+
+  const effectiveValue = typeof rawValue === 'string'
+    ? rawValue
+    : (rawValue && typeof (rawValue as any).color === 'string'
+        ? (rawValue as any).color
+        : undefined);
+
+  const effectiveGradient = typeof rawGradient === 'string'
+    ? rawGradient
+    : (rawGradient && typeof (rawGradient as any).gradient === 'string'
+        ? (rawGradient as any).gradient
+        : undefined);
+
   // Determine initial mode
   const isGradientActive = !!(
-    gradientValue ||
-    (value && (value.startsWith('linear-gradient') || value.startsWith('radial-gradient')))
+    effectiveGradient ||
+    (effectiveValue && (effectiveValue.startsWith('linear-gradient') || effectiveValue.startsWith('radial-gradient')))
   );
-  const isNoneActive = !value && !gradientValue && allowNone;
+  const isNoneActive = !effectiveValue && !effectiveGradient && allowNone;
 
   const [activeTab, setActiveTab] = useState<'solid' | 'gradient'>(
     isGradientActive ? 'gradient' : 'solid'
@@ -51,8 +78,21 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
   const [customColor2, setCustomColor2] = useState<string>('#10b981');
   const [customAngle, setCustomAngle] = useState<number>(135);
 
-  const currentColor = !isGradientActive && value ? value : '#1c1917';
-  const currentGradient = gradientValue || (isGradientActive ? value : undefined);
+  const currentColor = !isGradientActive && effectiveValue && effectiveValue !== 'transparent'
+    ? effectiveValue
+    : '#1c1917';
+  const currentGradient = effectiveGradient || (isGradientActive ? effectiveValue : undefined);
+
+  // Unified change dispatcher supporting both (result) => void and (color, gradient) => void
+  const notifyChange = (res: ColorChangeResult) => {
+    if (typeof onChange === 'function') {
+      if (onChange.length === 2) {
+        (onChange as any)(res.color, res.gradient);
+      } else {
+        (onChange as any)(res, res.color, res.gradient);
+      }
+    }
+  };
 
   // Flattened deduplicated solid color swatches without categories
   const allSolidSwatches = useMemo(() => {
@@ -72,7 +112,7 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
 
   // Handle solid color selection
   const handleSelectSolid = (color: string) => {
-    onChange({
+    notifyChange({
       color,
       gradient: undefined,
       type: 'solid',
@@ -81,7 +121,7 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
 
   // Handle gradient preset selection
   const handleSelectGradient = (gradValue: string) => {
-    onChange({
+    notifyChange({
       color: undefined,
       gradient: gradValue,
       type: 'gradient',
@@ -90,7 +130,7 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
 
   // Handle none / transparent selection
   const handleSelectNone = () => {
-    onChange({
+    notifyChange({
       color: undefined,
       gradient: undefined,
       type: 'none',
@@ -100,7 +140,7 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
   // Apply custom 2-stop gradient
   const handleApplyCustomGradient = (c1: string, c2: string, angle: number) => {
     const grad = `linear-gradient(${angle}deg, ${c1} 0%, ${c2} 100%)`;
-    onChange({
+    notifyChange({
       color: undefined,
       gradient: grad,
       type: 'gradient',
@@ -111,9 +151,9 @@ export const ColorGradientPicker: React.FC<ColorGradientPickerProps> = ({
     <div className="flex flex-col gap-2.5 font-sans">
       {/* Header & Sub-Menu Switcher in Flat Design */}
       <div className="flex items-center justify-between gap-2">
-        {label && (
+        {displayLabel && (
           <span className="text-xs font-semibold text-stone-800 tracking-tight">
-            {label}
+            {displayLabel}
           </span>
         )}
 

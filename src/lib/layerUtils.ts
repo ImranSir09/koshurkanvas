@@ -123,8 +123,21 @@ export function applyStyleToLayers(
   const targetSet = new Set(targetLayerIds);
   return layers.map((layer) => {
     if (targetSet.has(layer.id)) {
+      const mergedStyle: TextStyleProperties = { ...layer.style, ...styleUpdates };
+      if ('gradient' in styleUpdates && styleUpdates.gradient === undefined) {
+        delete mergedStyle.gradient;
+      }
+      if ('color' in styleUpdates && styleUpdates.color === undefined) {
+        delete mergedStyle.color;
+      }
+      if ('highlightGradient' in styleUpdates && styleUpdates.highlightGradient === undefined) {
+        delete mergedStyle.highlightGradient;
+      }
+      if ('highlightColor' in styleUpdates && styleUpdates.highlightColor === undefined) {
+        delete mergedStyle.highlightColor;
+      }
       return deepCloneLayer(layer, {
-        style: { ...layer.style, ...styleUpdates },
+        style: mergedStyle,
       });
     }
     return layer;

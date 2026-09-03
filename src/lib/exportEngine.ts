@@ -468,22 +468,50 @@ function applySliceStyleToElement(
   (el.style as any).webkitFontSmoothing = 'antialiased';
   el.style.unicodeBidi = 'isolate';
 
-  if (style.gradient) {
-    el.style.backgroundImage = style.gradient;
+  const rawTextColor = style.color;
+  const resolvedColor = typeof rawTextColor === 'string'
+    ? rawTextColor
+    : (rawTextColor && typeof (rawTextColor as any).color === 'string'
+        ? (rawTextColor as any).color
+        : '#1c1917');
+
+  const rawGradient = style.gradient;
+  const resolvedGradient = typeof rawGradient === 'string' && rawGradient.trim().length > 0
+    ? rawGradient
+    : (rawGradient && typeof (rawGradient as any).gradient === 'string'
+        ? (rawGradient as any).gradient
+        : undefined);
+
+  if (resolvedGradient) {
+    el.style.backgroundImage = resolvedGradient;
     (el.style as any).webkitBackgroundClip = 'text';
     (el.style as any).backgroundClip = 'text';
     (el.style as any).webkitTextFillColor = 'transparent';
     el.style.color = 'transparent';
   } else {
-    el.style.color = style.color || '#1c1917';
+    el.style.color = resolvedColor;
   }
 
-  if (style.highlightGradient) {
-    el.style.backgroundImage = style.highlightGradient;
+  const rawHlGrad = style.highlightGradient;
+  const resolvedHlGrad = typeof rawHlGrad === 'string' && rawHlGrad.trim().length > 0
+    ? rawHlGrad
+    : (rawHlGrad && typeof (rawHlGrad as any).gradient === 'string'
+        ? (rawHlGrad as any).gradient
+        : undefined);
+
+  const rawHlCol = style.highlightColor;
+  const resolvedHlCol = typeof rawHlCol === 'string' && rawHlCol !== 'transparent'
+    ? rawHlCol
+    : (rawHlCol && typeof (rawHlCol as any).color === 'string' && (rawHlCol as any).color !== 'transparent'
+        ? (rawHlCol as any).color
+        : undefined);
+
+  if (resolvedHlGrad) {
+    el.style.backgroundImage = resolvedHlGrad;
     el.style.borderRadius = `${Math.round(4 * scale)}px`;
     el.style.padding = `0 ${Math.round(4 * scale)}px`;
-  } else if (style.highlightColor && style.highlightColor !== 'transparent') {
-    el.style.backgroundColor = style.highlightColor;
+  } else if (resolvedHlCol) {
+    el.style.backgroundColor = resolvedHlCol;
     el.style.borderRadius = `${Math.round(4 * scale)}px`;
     el.style.padding = `0 ${Math.round(4 * scale)}px`;
   }

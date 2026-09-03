@@ -635,11 +635,37 @@ export const KashmiriEditor: React.FC<KashmiriEditorProps> = ({
   // Formatting Update Handlers
   const handleUpdateStyle = useCallback(
     (styleUpdates: Partial<TextStyleProperties>) => {
-      const newActiveStyle = { ...activeFormatting, ...styleUpdates };
+      const sanitized: Partial<TextStyleProperties> = { ...styleUpdates };
+      if (sanitized.color && typeof sanitized.color === 'object') {
+        sanitized.color = (sanitized.color as any).color || '#1c1917';
+      }
+      if (sanitized.highlightColor && typeof sanitized.highlightColor === 'object') {
+        sanitized.highlightColor = (sanitized.highlightColor as any).color || undefined;
+      }
+      if (sanitized.gradient && typeof sanitized.gradient === 'object') {
+        sanitized.gradient = (sanitized.gradient as any).gradient || undefined;
+      }
+      if (sanitized.highlightGradient && typeof sanitized.highlightGradient === 'object') {
+        sanitized.highlightGradient = (sanitized.highlightGradient as any).gradient || undefined;
+      }
+
+      const newActiveStyle = { ...activeFormatting, ...sanitized };
+      if ('gradient' in sanitized && sanitized.gradient === undefined) {
+        delete newActiveStyle.gradient;
+      }
+      if ('color' in sanitized && sanitized.color === undefined) {
+        delete newActiveStyle.color;
+      }
+      if ('highlightGradient' in sanitized && sanitized.highlightGradient === undefined) {
+        delete newActiveStyle.highlightGradient;
+      }
+      if ('highlightColor' in sanitized && sanitized.highlightColor === undefined) {
+        delete newActiveStyle.highlightColor;
+      }
       setActiveFormatting(newActiveStyle);
 
       const targetIds = selectedLayerIds.length > 0 ? selectedLayerIds : (activeLayerId ? [activeLayerId] : []);
-      const updatedLayers = applyStyleToLayers(textLayers, targetIds, styleUpdates);
+      const updatedLayers = applyStyleToLayers(textLayers, targetIds, sanitized);
 
       const styleKeys = Object.keys(styleUpdates).join(', ');
       pushSnapshot(`Format ${styleKeys || 'style'}`, {

@@ -915,18 +915,42 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
           {activeSheet === 'color' && (
             <div className="flex flex-col gap-3">
               <ColorGradientPicker
-                title="Text Color / Gradient"
-                currentColor={currentStyle.color || '#1c1917'}
-                currentGradient={currentStyle.gradient}
-                onChange={(c, g) => onUpdateStyle({ color: c, gradient: g })}
+                label="Text Color / Gradient"
+                value={typeof currentStyle.color === 'string' ? currentStyle.color : (currentStyle.color as any)?.color || '#1c1917'}
+                gradientValue={typeof currentStyle.gradient === 'string' ? currentStyle.gradient : (currentStyle.gradient as any)?.gradient}
+                onChange={(res) => {
+                  if (typeof res === 'object' && res !== null && 'type' in res) {
+                    if (res.type === 'gradient') {
+                      onUpdateStyle({ gradient: res.gradient, color: undefined });
+                    } else {
+                      onUpdateStyle({ color: res.color || '#1c1917', gradient: undefined });
+                    }
+                  } else {
+                    onUpdateStyle({ color: (res as any) || '#1c1917', gradient: undefined });
+                  }
+                }}
               />
 
               <div className="pt-2 border-t border-stone-300">
                 <ColorGradientPicker
-                  title="Highlight Background"
-                  currentColor={currentStyle.highlightColor || 'transparent'}
-                  currentGradient={currentStyle.highlightGradient}
-                  onChange={(c, g) => onUpdateStyle({ highlightColor: c, highlightGradient: g })}
+                  label="Highlight Background"
+                  allowNone={true}
+                  noneLabel="None"
+                  value={typeof currentStyle.highlightColor === 'string' ? currentStyle.highlightColor : (currentStyle.highlightColor as any)?.color || 'transparent'}
+                  gradientValue={typeof currentStyle.highlightGradient === 'string' ? currentStyle.highlightGradient : (currentStyle.highlightGradient as any)?.gradient}
+                  onChange={(res) => {
+                    if (typeof res === 'object' && res !== null && 'type' in res) {
+                      if (res.type === 'none') {
+                        onUpdateStyle({ highlightColor: undefined, highlightGradient: undefined });
+                      } else if (res.type === 'gradient') {
+                        onUpdateStyle({ highlightGradient: res.gradient, highlightColor: undefined });
+                      } else {
+                        onUpdateStyle({ highlightColor: res.color, highlightGradient: undefined });
+                      }
+                    } else {
+                      onUpdateStyle({ highlightColor: (res as any), highlightGradient: undefined });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -1681,7 +1705,14 @@ export const MobileTextDesignToolbar: React.FC<MobileTextDesignToolbarProps> = (
                 >
                   <div
                     className="w-3.5 h-3.5 rounded-full border border-stone-400 shadow-xs shrink-0"
-                    style={{ backgroundColor: currentStyle.color || '#1c1917' }}
+                    style={{
+                      backgroundColor: typeof currentStyle.color === 'string'
+                        ? currentStyle.color
+                        : ((currentStyle.color as any)?.color || '#1c1917'),
+                      backgroundImage: typeof currentStyle.gradient === 'string'
+                        ? currentStyle.gradient
+                        : ((currentStyle.gradient as any)?.gradient || undefined),
+                    }}
                   />
                   <span className="text-[9.5px] font-sans font-medium leading-none mt-0.5 whitespace-nowrap">Color</span>
                 </button>

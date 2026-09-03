@@ -365,6 +365,35 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
     ? `${strokeWidth}px ${layer.style.strokeColor}`
     : 'none';
 
+  // Safely extract color and gradient values (resilient against string or object formats)
+  const rawColor = layer.style?.color;
+  const effectiveTextColor = typeof rawColor === 'string'
+    ? rawColor
+    : (rawColor && typeof (rawColor as any).color === 'string'
+        ? (rawColor as any).color
+        : '#1c1917');
+
+  const rawGradient = layer.style?.gradient;
+  const effectiveGradient = typeof rawGradient === 'string' && rawGradient.trim().length > 0
+    ? rawGradient
+    : (rawGradient && typeof (rawGradient as any).gradient === 'string'
+        ? (rawGradient as any).gradient
+        : undefined);
+
+  const rawHlColor = layer.style?.highlightColor;
+  const effectiveHlColor = typeof rawHlColor === 'string' && rawHlColor !== 'transparent'
+    ? rawHlColor
+    : (rawHlColor && typeof (rawHlColor as any).color === 'string' && (rawHlColor as any).color !== 'transparent'
+        ? (rawHlColor as any).color
+        : undefined);
+
+  const rawHlGrad = layer.style?.highlightGradient;
+  const effectiveHlGrad = typeof rawHlGrad === 'string' && rawHlGrad.trim().length > 0
+    ? rawHlGrad
+    : (rawHlGrad && typeof (rawHlGrad as any).gradient === 'string'
+        ? (rawHlGrad as any).gradient
+        : undefined);
+
   // Compute image filter string
   const filterParts: string[] = [];
   if (layer.brightness !== undefined && layer.brightness !== 1) filterParts.push(`brightness(${layer.brightness})`);
@@ -463,10 +492,10 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
             fontWeight: layer.style?.bold ? 'bold' : 'normal',
             fontStyle: layer.style?.italic ? 'italic' : 'normal',
             textDecoration: layer.style?.underline ? 'underline' : 'none',
-            backgroundColor: layer.style?.highlightGradient
+            backgroundColor: effectiveHlGrad
               ? undefined
-              : (layer.style?.highlightColor || 'transparent'),
-            backgroundImage: layer.style?.highlightGradient || undefined,
+              : (effectiveHlColor || 'transparent'),
+            backgroundImage: effectiveHlGrad || undefined,
             borderRadius: `${layer.style?.borderRadius || 0}px`,
             padding: `${layer.style?.padding !== undefined ? layer.style.padding : 6}px`,
             borderWidth: `${layer.style?.borderWidth || 0}px`,
@@ -483,12 +512,12 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
             fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
           }}
         >
-          {layer.style?.gradient ? (
+          {effectiveGradient ? (
             <span
               key={`gradient-span-${layer.id}`}
               style={{
                 backgroundColor: 'transparent',
-                backgroundImage: layer.style.gradient,
+                backgroundImage: effectiveGradient,
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -503,7 +532,7 @@ export const CanvasTextLayerObject: React.FC<CanvasTextLayerObjectProps> = ({
               key={`solid-span-${layer.id}`}
               style={{
                 backgroundColor: 'transparent',
-                color: layer.style?.color || '#1c1917',
+                color: effectiveTextColor,
                 display: 'inline-block',
                 maxWidth: '100%',
               }}
